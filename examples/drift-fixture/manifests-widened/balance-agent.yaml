@@ -1,0 +1,16 @@
+apiVersion: agentic-auth/v1
+kind: AgentManifest
+metadata:
+  agent: balance-agent
+spec:
+  tools:
+    - ref: mcp://accounts.internal/read_balance
+      data_classes: [account.read]
+      privileged: false
+  data_classes:
+    reads: [account.read]
+    writes: []
+  downstream_agents:
+    - ref: agent://support-agent
+      max_hop_depth: 4
+  hop_budget: 4

@@ -1,0 +1,3673 @@
+{
+  "components": {
+    "schemas": {
+      "AgentCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "manifest": {
+            "$ref": "#/components/schemas/AgentManifest"
+          },
+          "name": {
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "override": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OverrideDecl"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "manifest"
+        ],
+        "title": "AgentCreate",
+        "type": "object"
+      },
+      "AgentIdentityRead": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "jwks": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jwks"
+          },
+          "manifest_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifest Version"
+          },
+          "principal_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Principal Ref"
+          },
+          "revoked": {
+            "title": "Revoked",
+            "type": "boolean"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "enum": [
+              "registered",
+              "enrolled",
+              "quarantined",
+              "revoked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trust_anchor_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Anchor Version"
+          }
+        },
+        "required": [
+          "agent",
+          "status",
+          "trust_anchor_version",
+          "jwks",
+          "principal_ref",
+          "manifest_version",
+          "revoked",
+          "revoked_at",
+          "as_of"
+        ],
+        "title": "AgentIdentityRead",
+        "type": "object"
+      },
+      "AgentListItem": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latest_manifest_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Manifest Version"
+          },
+          "latest_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "reconciled",
+                  "needs_review",
+                  "rejected"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Status"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "registered",
+              "enrolled",
+              "quarantined",
+              "revoked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trust_anchor_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Anchor Version"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "trust_anchor_version",
+          "latest_manifest_version",
+          "latest_status"
+        ],
+        "title": "AgentListItem",
+        "type": "object"
+      },
+      "AgentManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "apiVersion": {
+            "const": "agentic-auth/v1",
+            "title": "Apiversion",
+            "type": "string"
+          },
+          "kind": {
+            "const": "AgentManifest",
+            "title": "Kind",
+            "type": "string"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ManifestMetadata"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/ManifestSpec"
+          }
+        },
+        "required": [
+          "apiVersion",
+          "kind",
+          "metadata",
+          "spec"
+        ],
+        "title": "AgentManifest",
+        "type": "object"
+      },
+      "AuditDecisionListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "acting_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acting Agent"
+          },
+          "caller": {
+            "title": "Caller",
+            "type": "string"
+          },
+          "chain_complete": {
+            "title": "Chain Complete",
+            "type": "boolean"
+          },
+          "data_class": {
+            "title": "Data Class",
+            "type": "string"
+          },
+          "deny_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DenyReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enforced": {
+            "title": "Enforced",
+            "type": "boolean"
+          },
+          "guarantee_level": {
+            "$ref": "#/components/schemas/Guarantee",
+            "default": "full"
+          },
+          "hop": {
+            "title": "Hop",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "allow",
+              "deny"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "privileged": {
+            "default": false,
+            "title": "Privileged",
+            "type": "boolean"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "step_up_ref": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Up Ref"
+          },
+          "taint": {
+            "anyOf": [
+              {
+                "enum": [
+                  "trusted_internal",
+                  "untrusted_external"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taint"
+          },
+          "taint_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taint Source"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "target_kind": {
+            "enum": [
+              "tool",
+              "agent"
+            ],
+            "title": "Target Kind",
+            "type": "string"
+          },
+          "transaction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransactionFingerprint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ts": {
+            "format": "date-time",
+            "title": "Ts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ts",
+          "session_id",
+          "acting_agent",
+          "caller",
+          "target",
+          "target_kind",
+          "data_class",
+          "hop",
+          "outcome",
+          "deny_reason",
+          "enforced",
+          "policy_version",
+          "chain_complete"
+        ],
+        "title": "AuditDecisionListItem",
+        "type": "object"
+      },
+      "AuditDecisionPage": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AuditDecisionListItem"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditPageInfo"
+          }
+        },
+        "required": [
+          "data",
+          "page"
+        ],
+        "title": "AuditDecisionPage",
+        "type": "object"
+      },
+      "AuditPageInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Seq"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "limit",
+          "as_of_seq"
+        ],
+        "title": "AuditPageInfo",
+        "type": "object"
+      },
+      "AuthorizeDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "acting_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The verified token holder. Null for a token minted for a tool call.",
+            "title": "Acting Agent"
+          },
+          "action_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The audit row for this decision. Required by the token exchange. Null only when the decision could not be recorded.",
+            "title": "Action Id"
+          },
+          "guarantee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Guarantee"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Echoed from the request and written to the audit row. Null only on a response rendered before the request was parsed."
+          },
+          "hop": {
+            "description": "Derived from the verified act chain",
+            "minimum": 1.0,
+            "title": "Hop",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Human-readable detail; never the machine contract",
+            "title": "Message"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "privileged": {
+            "default": false,
+            "description": "The target is privileged in the session's pinned policy.",
+            "title": "Privileged",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DenyReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded": {
+            "default": true,
+            "description": "The audit row was committed before this response was sent.",
+            "title": "Recorded",
+            "type": "boolean"
+          },
+          "recoverable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recoverable"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "step_up": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StepUpChallenge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only on a RECOVERABLE deny with step-up enabled: the challenge to put to the consenting human. A non-recoverable deny never carries one, so a client cannot offer a prompt for something that can never be granted (FR-024)."
+          },
+          "taint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Taint"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The EFFECTIVE taint the decision was made under, not an echo of the request."
+          },
+          "taint_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The target that introduced the taint into this context.",
+            "title": "Taint Source"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "transaction_required": {
+            "default": false,
+            "description": "privileged AND transaction tokens enabled: mint POST /v1/token/transaction before calling the resource.",
+            "title": "Transaction Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "outcome",
+          "hop",
+          "policy_version",
+          "session_id"
+        ],
+        "title": "AuthorizeDecision",
+        "type": "object"
+      },
+      "AuthorizeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "caller": {
+            "description": "agent://<name>, or user:<sub> at hop 1",
+            "maxLength": 255,
+            "title": "Caller",
+            "type": "string"
+          },
+          "data_class": {
+            "description": "exactly one data class",
+            "maxLength": 128,
+            "title": "Data Class",
+            "type": "string"
+          },
+          "enforced": {
+            "default": true,
+            "description": "Reported by the enforcement point: will it act on a deny, or is it in observe mode? An allow is always recorded as enforced, since it is forwarded either way \u2014 so `enforced=false` means exactly 'would have been blocked'. NEVER an input to the decision itself: the PDP is mode-blind, which is what makes the observe-mode report a trustworthy prediction of enforcement.",
+            "title": "Enforced",
+            "type": "boolean"
+          },
+          "guarantee": {
+            "$ref": "#/components/schemas/Guarantee",
+            "description": "How strong the enforcement at this point actually is. Reported by the enforcement point, exactly like `enforced`, and NEVER an input to the decision. **Deliberately no default**: a PEP that omits it gets a 422, which is how FR-018 ('refuse to emit a decision whose guarantee level cannot be determined') is enforced by the schema rather than by a runtime branch some path could miss."
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "taint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Taint"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agent-reported label. ADDITIVE ONLY: it can raise the effective taint the decision uses, never lower it (Phase 4). The control plane derives the rest."
+          },
+          "target": {
+            "description": "mcp://host/tool, or agent://<name>",
+            "maxLength": 512,
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "caller",
+          "target",
+          "data_class",
+          "guarantee"
+        ],
+        "title": "AuthorizeRequest",
+        "type": "object"
+      },
+      "Body_exchange_token_v1_token_exchange_post": {
+        "properties": {
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
+          },
+          "actor_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Token"
+          },
+          "actor_token_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Token Type"
+          },
+          "audience": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
+          "grant_type": {
+            "title": "Grant Type",
+            "type": "string"
+          },
+          "resource": {
+            "title": "Resource",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "subject_token": {
+            "title": "Subject Token",
+            "type": "string"
+          },
+          "subject_token_type": {
+            "title": "Subject Token Type",
+            "type": "string"
+          },
+          "taint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taint"
+          }
+        },
+        "required": [
+          "grant_type",
+          "subject_token",
+          "subject_token_type",
+          "resource",
+          "scope"
+        ],
+        "title": "Body_exchange_token_v1_token_exchange_post",
+        "type": "object"
+      },
+      "CatalogTool": {
+        "properties": {
+          "binding_params": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding Params"
+          },
+          "data_classes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Data Classes",
+            "type": "array"
+          },
+          "privileged": {
+            "title": "Privileged",
+            "type": "boolean"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "data_classes",
+          "privileged"
+        ],
+        "title": "CatalogTool",
+        "type": "object"
+      },
+      "ChainBreak": {
+        "enum": [
+          "LEGACY_RECORD",
+          "LEGACY_TOKEN",
+          "PARENT_NOT_FOUND",
+          "PARENT_MISMATCH",
+          "PARENT_INCOMPLETE"
+        ],
+        "title": "ChainBreak",
+        "type": "string"
+      },
+      "ChainBreakRead": {
+        "additionalProperties": false,
+        "properties": {
+          "at_hop": {
+            "description": "The first hop whose link could not be established",
+            "minimum": 1.0,
+            "title": "At Hop",
+            "type": "integer"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ChainBreak"
+          }
+        },
+        "required": [
+          "at_hop",
+          "reason"
+        ],
+        "title": "ChainBreakRead",
+        "type": "object"
+      },
+      "ChainHop": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "ChainRead": {
+        "additionalProperties": false,
+        "description": "One recorded action's full delegation path, from one row plus its session.",
+        "properties": {
+          "action_id": {
+            "format": "uuid",
+            "title": "Action Id",
+            "type": "string"
+          },
+          "break": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChainBreakRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chain": {
+            "items": {
+              "$ref": "#/components/schemas/ChainHop"
+            },
+            "minItems": 1,
+            "title": "Chain",
+            "type": "array"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "root_consent": {
+            "$ref": "#/components/schemas/RootConsent"
+          }
+        },
+        "required": [
+          "action_id",
+          "complete",
+          "root_consent",
+          "policy_version",
+          "chain"
+        ],
+        "title": "ChainRead",
+        "type": "object"
+      },
+      "ConsentCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "data_classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Subset of the pinned policy's data classes to consent to. Omit for all of them. Every entry must be declared by some agent in the compiled scope.",
+            "title": "Data Classes"
+          },
+          "scope": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Scope",
+            "type": "string"
+          },
+          "ttl_seconds": {
+            "anyOf": [
+              {
+                "maximum": 86400.0,
+                "minimum": 60.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ttl Seconds"
+          },
+          "user_sub": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "User Sub",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope",
+          "user_sub"
+        ],
+        "title": "ConsentCreate",
+        "type": "object"
+      },
+      "ConsentRead": {
+        "additionalProperties": false,
+        "description": "What the integrator gets back. ``root_grant`` is the hop-1 token.",
+        "properties": {
+          "data_classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Classes"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "hop_budget": {
+            "title": "Hop Budget",
+            "type": "integer"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "root_grant": {
+            "title": "Root Grant",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "user_sub": {
+            "title": "User Sub",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "root_grant",
+          "policy_version",
+          "scope",
+          "user_sub",
+          "hop_budget",
+          "expires_at"
+        ],
+        "title": "ConsentRead",
+        "type": "object"
+      },
+      "DataClassDecl": {
+        "additionalProperties": false,
+        "properties": {
+          "reads": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reads",
+            "type": "array"
+          },
+          "writes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Writes",
+            "type": "array"
+          }
+        },
+        "title": "DataClassDecl",
+        "type": "object"
+      },
+      "DenyReason": {
+        "enum": [
+          "OUT_OF_SCOPE",
+          "HOP_BUDGET_EXCEEDED",
+          "EDGE_NOT_IN_DAG",
+          "SCOPE_NOT_CONSENTED",
+          "PDP_UNAVAILABLE",
+          "TOKEN_SERVICE_UNAVAILABLE",
+          "AUDIT_UNAVAILABLE",
+          "TAINTED_INTO_PRIVILEGED",
+          "AGENT_REVOKED",
+          "AGENT_NOT_ENROLLED"
+        ],
+        "title": "DenyReason",
+        "type": "string"
+      },
+      "DiffCode": {
+        "enum": [
+          "DECLARED_EXCEEDS_DISCOVERED",
+          "DATA_CLASS_CONFLICT",
+          "DISCOVERY_UNAVAILABLE",
+          "UNKNOWN_TOOL"
+        ],
+        "title": "DiffCode",
+        "type": "string"
+      },
+      "DiffEntry": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/DiffCode"
+          },
+          "declared": {
+            "title": "Declared"
+          },
+          "discovered": {
+            "title": "Discovered"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "remedy": {
+            "title": "Remedy",
+            "type": "string"
+          },
+          "tool_ref": {
+            "title": "Tool Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool_ref",
+          "field",
+          "declared",
+          "discovered",
+          "code",
+          "remedy"
+        ],
+        "title": "DiffEntry",
+        "type": "object"
+      },
+      "DownstreamDecl": {
+        "additionalProperties": false,
+        "properties": {
+          "max_hop_depth": {
+            "minimum": 1.0,
+            "title": "Max Hop Depth",
+            "type": "integer"
+          },
+          "ref": {
+            "pattern": "^agent://[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "max_hop_depth"
+        ],
+        "title": "DownstreamDecl",
+        "type": "object"
+      },
+      "EnrollBegin": {
+        "additionalProperties": false,
+        "properties": {
+          "identity_doc": {
+            "$ref": "#/components/schemas/IdentityDocument"
+          }
+        },
+        "required": [
+          "identity_doc"
+        ],
+        "title": "EnrollBegin",
+        "type": "object"
+      },
+      "EnrollChallenge": {
+        "additionalProperties": false,
+        "properties": {
+          "challenge_id": {
+            "format": "uuid",
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "nonce": {
+            "title": "Nonce",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "nonce",
+          "expires_at"
+        ],
+        "title": "EnrollChallenge",
+        "type": "object"
+      },
+      "EnrollComplete": {
+        "additionalProperties": false,
+        "properties": {
+          "challenge_id": {
+            "format": "uuid",
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "signed_response": {
+            "maxLength": 8192,
+            "title": "Signed Response",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "signed_response"
+        ],
+        "title": "EnrollComplete",
+        "type": "object"
+      },
+      "EnrollOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "principal_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Principal Ref"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "PRINCIPAL_UNBINDABLE",
+                  "PRINCIPAL_IDP_NOT_CONFIGURED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "enrolled",
+              "quarantined"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trust_anchor_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Anchor Version"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "EnrollOutcome",
+        "type": "object"
+      },
+      "Guarantee": {
+        "description": "Strongest to weakest. The order of declaration is not the contract \u2014 ``STRENGTH``\nis \u2014 but keeping them aligned makes the file readable.",
+        "enum": [
+          "full",
+          "connector",
+          "network",
+          "consent_only"
+        ],
+        "title": "Guarantee",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IdentityDocument": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "additionalProperties": true,
+            "title": "Claims",
+            "type": "object"
+          },
+          "jwks": {
+            "$ref": "#/components/schemas/Jwks"
+          },
+          "principal_assertion": {
+            "anyOf": [
+              {
+                "maxLength": 8192,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Principal Assertion"
+          },
+          "sub": {
+            "pattern": "^agent://[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Sub",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub",
+          "jwks"
+        ],
+        "title": "IdentityDocument",
+        "type": "object"
+      },
+      "Jwk": {
+        "additionalProperties": false,
+        "properties": {
+          "alg": {
+            "const": "EdDSA",
+            "default": "EdDSA",
+            "title": "Alg",
+            "type": "string"
+          },
+          "crv": {
+            "const": "Ed25519",
+            "title": "Crv",
+            "type": "string"
+          },
+          "kid": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Kid",
+            "type": "string"
+          },
+          "kty": {
+            "const": "OKP",
+            "title": "Kty",
+            "type": "string"
+          },
+          "use": {
+            "const": "sig",
+            "default": "sig",
+            "title": "Use",
+            "type": "string"
+          },
+          "x": {
+            "description": "base64url, 32 bytes",
+            "title": "X",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kty",
+          "crv",
+          "x",
+          "kid"
+        ],
+        "title": "Jwk",
+        "type": "object"
+      },
+      "Jwks": {
+        "additionalProperties": false,
+        "properties": {
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/Jwk"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Keys",
+            "type": "array"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "title": "Jwks",
+        "type": "object"
+      },
+      "ManifestCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/AgentManifest"
+          },
+          "override": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OverrideDecl"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "agent",
+          "manifest"
+        ],
+        "title": "ManifestCreate",
+        "type": "object"
+      },
+      "ManifestMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Agent",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "agent"
+        ],
+        "title": "ManifestMetadata",
+        "type": "object"
+      },
+      "ManifestRead": {
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "attested_by": {
+            "title": "Attested By",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "doc": {
+            "additionalProperties": true,
+            "title": "Doc",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "reconciled",
+              "needs_review",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "agent",
+          "version",
+          "status",
+          "attested_by",
+          "doc",
+          "created_at"
+        ],
+        "title": "ManifestRead",
+        "type": "object"
+      },
+      "ManifestSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "data_classes": {
+            "$ref": "#/components/schemas/DataClassDecl"
+          },
+          "downstream_agents": {
+            "items": {
+              "$ref": "#/components/schemas/DownstreamDecl"
+            },
+            "title": "Downstream Agents",
+            "type": "array"
+          },
+          "hop_budget": {
+            "maximum": 16.0,
+            "minimum": 1.0,
+            "title": "Hop Budget",
+            "type": "integer"
+          },
+          "taint_policy": {
+            "$ref": "#/components/schemas/TaintPolicyDecl"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolDecl"
+            },
+            "minItems": 1,
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tools",
+          "hop_budget"
+        ],
+        "title": "ManifestSpec",
+        "type": "object"
+      },
+      "OverrideDecl": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "OverrideDecl",
+        "type": "object"
+      },
+      "PageInfo": {
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "PageInfo",
+        "type": "object"
+      },
+      "Page_AgentListItem_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AgentListItem"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "data",
+          "page"
+        ],
+        "title": "Page[AgentListItem]",
+        "type": "object"
+      },
+      "ReconciliationReport": {
+        "properties": {
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/DiffEntry"
+            },
+            "title": "Diff",
+            "type": "array"
+          },
+          "discovery_ok": {
+            "title": "Discovery Ok",
+            "type": "boolean"
+          },
+          "manifest_version": {
+            "title": "Manifest Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "reconciled",
+              "needs_review",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "manifest_version",
+          "status",
+          "discovery_ok",
+          "diff"
+        ],
+        "title": "ReconciliationReport",
+        "type": "object"
+      },
+      "RevocationItem": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "title": "Revoked At",
+            "type": "string"
+          },
+          "trust_anchor_version": {
+            "title": "Trust Anchor Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "agent",
+          "trust_anchor_version",
+          "revoked_at"
+        ],
+        "title": "RevocationItem",
+        "type": "object"
+      },
+      "RevocationListRead": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RevocationItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/RevocationPage"
+          }
+        },
+        "required": [
+          "as_of",
+          "items",
+          "page"
+        ],
+        "title": "RevocationListRead",
+        "type": "object"
+      },
+      "RevocationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "limit"
+        ],
+        "title": "RevocationPage",
+        "type": "object"
+      },
+      "RevokeOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "revoked_at": {
+            "format": "date-time",
+            "title": "Revoked At",
+            "type": "string"
+          },
+          "status": {
+            "const": "revoked",
+            "title": "Status",
+            "type": "string"
+          },
+          "trust_anchor_version": {
+            "title": "Trust Anchor Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "trust_anchor_version",
+          "revoked_at"
+        ],
+        "title": "RevokeOutcome",
+        "type": "object"
+      },
+      "RevokeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "RevokeRequest",
+        "type": "object"
+      },
+      "RootConsent": {
+        "additionalProperties": false,
+        "description": "The human at the start of every chain, and what they approved.",
+        "properties": {
+          "consented_at": {
+            "format": "date-time",
+            "title": "Consented At",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "user_sub": {
+            "title": "User Sub",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_sub",
+          "scope",
+          "consented_at",
+          "session_id"
+        ],
+        "title": "RootConsent",
+        "type": "object"
+      },
+      "ScopeCatalog": {
+        "properties": {
+          "data_classes": {
+            "$ref": "#/components/schemas/DataClassDecl"
+          },
+          "downstream_agents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Downstream Agents",
+            "type": "array"
+          },
+          "hop_budget": {
+            "title": "Hop Budget",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogTool"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scope",
+          "version",
+          "tools",
+          "data_classes",
+          "downstream_agents",
+          "hop_budget"
+        ],
+        "title": "ScopeCatalog",
+        "type": "object"
+      },
+      "StepUpChallenge": {
+        "additionalProperties": false,
+        "description": "The challenge handed back on a recoverable deny.\n\nDefined here rather than in ``app.schemas.stepup`` to keep ``AuthorizeDecision``'s\nimports acyclic: the step-up schemas import the deny vocabulary from this module.",
+        "properties": {
+          "blocked_action_id": {
+            "format": "uuid",
+            "title": "Blocked Action Id",
+            "type": "string"
+          },
+          "blocked_hop": {
+            "minimum": 1.0,
+            "title": "Blocked Hop",
+            "type": "integer"
+          },
+          "challenge_id": {
+            "description": "Single use. Only its SHA-256 is ever stored.",
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "data_class": {
+            "title": "Data Class",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/DenyReason"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "session_id",
+          "blocked_hop",
+          "blocked_action_id",
+          "data_class",
+          "target",
+          "reason",
+          "expires_at"
+        ],
+        "title": "StepUpChallenge",
+        "type": "object"
+      },
+      "Taint": {
+        "enum": [
+          "trusted_internal",
+          "untrusted_external"
+        ],
+        "title": "Taint",
+        "type": "string"
+      },
+      "TaintPolicyDecl": {
+        "additionalProperties": false,
+        "description": "Phase 4 provenance policy for THIS agent (contracts/taint.md \u00a72).\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
+        "properties": {
+          "block_tainted_into": {
+            "items": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "const": "privileged",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Block Tainted Into",
+            "type": "array"
+          },
+          "trusted_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trusted Sources"
+          }
+        },
+        "title": "TaintPolicyDecl",
+        "type": "object"
+      },
+      "ToolDecl": {
+        "additionalProperties": false,
+        "properties": {
+          "binding_params": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 512,
+                  "pattern": "^(/([^/~]|~0|~1)*)+$",
+                  "type": "string"
+                },
+                "maxItems": 64,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding Params"
+          },
+          "data_classes": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Data Classes",
+            "type": "array"
+          },
+          "privileged": {
+            "default": false,
+            "title": "Privileged",
+            "type": "boolean"
+          },
+          "ref": {
+            "pattern": "^mcp://[^/]+/.+",
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "data_classes"
+        ],
+        "title": "ToolDecl",
+        "type": "object"
+      },
+      "TransactionFingerprint": {
+        "additionalProperties": false,
+        "description": "The FR-042 fingerprint of a privileged call's transaction token: the binding digest\nand lifetime, never the token. Joined from ``transaction_tokens`` on ``action_id``.",
+        "properties": {
+          "binding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "params_hash": {
+            "title": "Params Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "params_hash",
+          "binding",
+          "issued_at",
+          "expires_at"
+        ],
+        "title": "TransactionFingerprint",
+        "type": "object"
+      },
+      "TransactionMintRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "params": {
+            "additionalProperties": true,
+            "description": "The call's parameters, a JSON object. Bound per contracts/canonicalization.md.",
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "params"
+        ],
+        "title": "TransactionMintRequest",
+        "type": "object"
+      },
+      "TransactionMinted": {
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "format": "uuid",
+            "title": "Action Id",
+            "type": "string"
+          },
+          "binding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "RFC 6901 pointers applied, or null for the whole body",
+            "title": "Binding"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "params_hash": {
+            "description": "base64url SHA-256 of the canonical binding document",
+            "title": "Params Hash",
+            "type": "string"
+          },
+          "transaction_token": {
+            "title": "Transaction Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_token",
+          "expires_in",
+          "params_hash",
+          "binding",
+          "action_id"
+        ],
+        "title": "TransactionMinted",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "description": "The admin bearer token (AGENTIC_AUTH_ADMIN_TOKEN in a local dev setup) for most routes, or the audit-reader token for /v1/audit/*. GET /.well-known/jwks.json needs no token at all.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "Agentic Authorization SDK \u2014 Control Plane",
+    "version": "0.1.0",
+    "x-generated-from": "app.main.create_app().openapi()"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/.well-known/jwks.json": {
+      "get": {
+        "operationId": "get_jwks__well_known_jwks_json_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Jwks  Well Known Jwks Json Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Jwks",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Healthz Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Readyz Readyz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Readyz",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/v1/agents": {
+      "get": {
+        "operationId": "list_agents_v1_agents_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "registered",
+                    "enrolled",
+                    "quarantined",
+                    "revoked"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AgentListItem_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Agents",
+        "tags": [
+          "agents"
+        ]
+      },
+      "post": {
+        "operationId": "register_agent_v1_agents_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/enroll": {
+      "post": {
+        "operationId": "begin_enrollment_v1_agents__agent_id__enroll_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollBegin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollChallenge"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Begin Enrollment",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/enroll/complete": {
+      "post": {
+        "operationId": "complete_enrollment_v1_agents__agent_id__enroll_complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollComplete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollOutcome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Enrollment",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/identity": {
+      "get": {
+        "operationId": "get_identity_v1_agents__agent_id__identity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentIdentityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Identity",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/reconciliation": {
+      "get": {
+        "operationId": "get_reconciliation_v1_agents__agent_id__reconciliation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Reconciliation",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/revoke": {
+      "post": {
+        "description": "Idempotent. Cuts off the anchor and every hop that would extend this agent's\nauthority \u2014 checked at the next authorize and exchange, and by offline verifiers within\ntheir freshness window.",
+        "operationId": "revoke_agent_v1_agents__agent_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RevokeRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeOutcome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Agent",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/v1/audit/actions/{action_id}/chain": {
+      "get": {
+        "description": "The full delegation chain for one recorded action, back to the consenting human.",
+        "operationId": "get_chain_v1_audit_actions__action_id__chain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Chain",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/v1/audit/decisions": {
+      "get": {
+        "description": "Filtered decision history, newest first, stable under concurrent appends.",
+        "operationId": "list_decisions_v1_audit_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "session_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agent"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "deny_reason",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deny Reason"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enforced",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Enforced"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "in": "query",
+            "name": "taint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Taint"
+            }
+          },
+          {
+            "in": "query",
+            "name": "privileged",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Privileged"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditDecisionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Decisions",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/v1/authorize": {
+      "post": {
+        "operationId": "authorize_v1_authorize_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeDecision"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Authorize",
+        "tags": [
+          "authorize"
+        ]
+      }
+    },
+    "/v1/consent": {
+      "post": {
+        "operationId": "create_consent_v1_consent_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Consent",
+        "tags": [
+          "consent"
+        ]
+      }
+    },
+    "/v1/decisions": {
+      "get": {
+        "deprecated": true,
+        "operationId": "list_decisions_v1_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "session_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "deny_reason",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deny Reason"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enforced",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Enforced"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditDecisionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Decisions",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/v1/identity/agents/{agent_name}": {
+      "get": {
+        "description": "The same material as ``/agents/{id}/identity``, addressed by the agent's name.\n\nA resource server knows the agents it expects by name and holds only an identity-reader\ntoken, which cannot list agents (that listing is admin-only) \u2014 so it bootstraps through\nthis route instead.",
+        "operationId": "get_identity_by_name_v1_identity_agents__agent_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_name",
+            "required": true,
+            "schema": {
+              "title": "Agent Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentIdentityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Identity By Name",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/v1/identity/revocations": {
+      "get": {
+        "operationId": "list_revocations_v1_identity_revocations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationListRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Revocations",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/v1/manifests": {
+      "post": {
+        "operationId": "submit_manifest_v1_manifests_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManifestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Manifest",
+        "tags": [
+          "manifests"
+        ]
+      }
+    },
+    "/v1/manifests/{scope}": {
+      "get": {
+        "operationId": "read_manifest_v1_manifests__scope__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManifestRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Manifest",
+        "tags": [
+          "manifests"
+        ]
+      }
+    },
+    "/v1/scopes/{scope}/catalog": {
+      "get": {
+        "operationId": "get_scope_catalog_v1_scopes__scope__catalog_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeCatalog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Scope Catalog",
+        "tags": [
+          "scopes"
+        ]
+      }
+    },
+    "/v1/token/exchange": {
+      "post": {
+        "operationId": "exchange_token_v1_token_exchange_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_exchange_token_v1_token_exchange_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Exchange Token",
+        "tags": [
+          "token"
+        ]
+      }
+    },
+    "/v1/token/transaction": {
+      "post": {
+        "operationId": "mint_transaction_token_v1_token_transaction_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionMintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionMinted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mint Transaction Token",
+        "tags": [
+          "token"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Local control plane \u2014 see the Get Started tutorial",
+      "url": "http://localhost:8000"
+    }
+  ]
+}

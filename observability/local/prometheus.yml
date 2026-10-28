@@ -1,0 +1,29 @@
+# Local Prometheus for `docker compose --profile observability up -d`.
+#
+# Loads the shipped alert rules unmodified, so a local run exercises the same artifacts an
+# integrator imports — including the ones that fail the build if a metric is renamed
+# (tests/unit/test_dashboard_artifacts.py).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/guardrail.rules.yml
+
+scrape_configs:
+  # The Collector re-exports what it scraped, so Prometheus has one target and the
+  # Collector owns the scrape configuration.
+  - job_name: otel-collector
+    static_configs:
+      - targets: ["otel-collector:8889"]
+
+  # Direct scrapes as well, so a local run still works with the Collector stopped.
+  - job_name: agentic-auth-control-plane
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+
+  - job_name: agentic-auth-pep
+    metrics_path: /__agentic/metrics
+    static_configs:
+      - targets: ["host.docker.internal:8081"]

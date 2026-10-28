@@ -1,0 +1,15 @@
+# The sidecar for support-agent: signs an actor_token at every exchange and an
+# Agent-Identity on every forwarded call, and buffers privileged bodies to bind them.
+pdp_url: http://127.0.0.1:8199
+listen_addr: 127.0.0.1:8181
+agent_name: support-agent
+identity_key_path: /tmp/aa4/keys/support-agent.pem   # AA4_DIR/keys/support-agent.pem
+upstream_map:
+  /kb:
+    url: http://127.0.0.1:9010
+    target: mcp://kb.internal/search
+    data_class: kb.internal
+  /accounts:
+    url: http://127.0.0.1:9200/tools
+    target: mcp://accounts.internal/terminate_account
+    data_class: account.write

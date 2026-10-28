@@ -1,0 +1,169 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "uid": "agentic-auth-rollout",
+  "title": "Agentic Auth \u2014 Rollout Tuning",
+  "description": "What would turning enforcement on break? Run the enforcement points in observe mode and taint enforcement off, then watch these go to zero before flipping the switch. Metric labels carry no identities by design, so 'which reason' hands off to GET /v1/audit/decisions for 'which calls'.",
+  "tags": [
+    "agentic-auth",
+    "rollout"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Would-be blocks (drive this to zero)",
+      "type": "stat",
+      "description": "Calls an enforcing PEP would have refused. This is the flip-the-switch signal.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(agentic_auth_pep_calls_total{outcome=\"observed_would_block\"}[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Observe-mode denies (control plane)",
+      "type": "stat",
+      "description": "The same question from the PDP side: decisions recorded as not acted on.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(agentic_auth_decisions_total{outcome=\"deny\",enforced=\"false\"}[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Would-be blocks by deny reason",
+      "type": "timeseries",
+      "description": "EDGE_NOT_IN_DAG rising means drift reached production. For the specific calls: GET /v1/audit/decisions?outcome=deny&deny_reason=<reason>",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (increase(agentic_auth_denials_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Taint marks by propagation",
+      "type": "timeseries",
+      "description": "Tune trusted_sources from this before enforcing taint: self, ancestor or the sentinel.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (propagation) (increase(agentic_auth_taint_marks_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Taint blocks by source class",
+      "type": "timeseries",
+      "description": "What would start refusing privileged calls once taint enforcement is on. For the calls: GET /v1/audit/decisions?taint=untrusted_external",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (source_class) (increase(agentic_auth_taint_blocks_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Transaction mint outcomes",
+      "type": "timeseries",
+      "description": "tainted and too_large are refusals an integrator usually wants to see before enabling transaction tokens.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result) (increase(agentic_auth_transaction_mints_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    }
+  ]
+}

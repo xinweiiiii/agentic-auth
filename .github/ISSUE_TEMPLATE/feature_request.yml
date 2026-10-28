@@ -1,0 +1,31 @@
+name: Feature request
+description: Propose something this should do and does not
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >-
+        What are you trying to do that you cannot do today? Describe the situation, not
+        the solution — the fix may not be the one you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Including anything you ruled out, and why.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I checked the [documentation](https://authzai.dev)
+        - label: I searched existing issues

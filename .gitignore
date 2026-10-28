@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# mutmut
+/mutants/
+.mutmut-cache
+mutmut-results/
+html/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Local stack data
+pgdata/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,44 @@
+{
+  "name": "kb-search-agent",
+  "manifest": {
+    "apiVersion": "agentic-auth/v1",
+    "kind": "AgentManifest",
+    "metadata": {
+      "agent": "kb-search-agent"
+    },
+    "spec": {
+      "tools": [
+        {
+          "ref": "mcp://kb.internal/search",
+          "data_classes": [
+            "kb.public",
+            "kb.internal"
+          ],
+          "privileged": false
+        },
+        {
+          "ref": "mcp://accounts.internal/read_account",
+          "data_classes": [
+            "account.read"
+          ],
+          "privileged": false
+        }
+      ],
+      "data_classes": {
+        "reads": [
+          "kb.public",
+          "kb.internal",
+          "account.read"
+        ],
+        "writes": []
+      },
+      "downstream_agents": [
+        {
+          "ref": "agent://ledger-agent",
+          "max_hop_depth": 2
+        }
+      ],
+      "hop_budget": 4
+    }
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "uid": "agentic-auth-chain",
+  "title": "Agentic Auth \u2014 Chain Integrity",
+  "description": "Can the audit trail still answer 'who authorized this, and through which agents'? These queries were prose tables in the Phase 3 contract; they are artifacts here so a renamed metric fails a build instead of silently emptying a panel.",
+  "tags": [
+    "agentic-auth",
+    "audit",
+    "chain"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Audit write failures (page on any)",
+      "type": "stat",
+      "description": "outcome=allow means calls were blocked for lack of a record. outcome=deny means refusal records were lost.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (outcome) (increase(agentic_auth_audit_write_failures_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Chain completeness",
+      "type": "stat",
+      "description": "Target 1.0 for chains written after Phase 3.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(agentic_auth_chain_queries_total{result=\"complete\"}[1h])) / sum(rate(agentic_auth_chain_queries_total{result=~\"complete|incomplete\"}[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Chain query latency p95",
+      "type": "timeseries",
+      "description": "SLO: under 0.5 s.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(agentic_auth_chain_query_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{__auto}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Write-time chain breaks",
+      "type": "timeseries",
+      "description": "The leading indicator for the query-side ratio. Anything other than LEGACY_TOKEN is a linkage bug.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (break) (increase(agentic_auth_chain_writes_total{complete=\"false\"}[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Inbound trace context rejected",
+      "type": "timeseries",
+      "description": "absent is normal for agents the integrator does not control. malformed rising is a caller bug or an attempt.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cause) (rate(agentic_auth_trace_context_rejected_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Revocations and refused hops",
+      "type": "timeseries",
+      "description": "A revocation should be followed by refused hops, not by continued use.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(agentic_auth_revocations_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (where) (increase(agentic_auth_revoked_hop_refusals_total[1h]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    }
+  ]
+}

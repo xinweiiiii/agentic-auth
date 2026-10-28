@@ -1,0 +1,251 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "uid": "agentic-auth-health",
+  "title": "Agentic Auth \u2014 Guardrail Health",
+  "description": "Is every enforcement point alive, is it enforcing, and what does it cost? A non-zero 'observing' count in the first panel is the headline: a PEP nobody meant to leave in observe mode decides and records, but does not block.",
+  "tags": [
+    "agentic-auth",
+    "guardrail",
+    "health"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Enforcement mode (observing > 0 is the headline)",
+      "type": "stat",
+      "description": "A PEP reporting mode=observing is not blocking anything.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (mode) (agentic_auth_pep_info)",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Enforcement points reporting",
+      "type": "stat",
+      "description": "Compare against the number you deployed. Liveness is absent() over agentic_auth_pep_up, so a PEP that is never scraped cannot be seen here (contracts/pep-telemetry.md \u00a74).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(agentic_auth_pep_up)",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Identity disclosure",
+      "type": "stat",
+      "description": "1 means real agent names and act chains are leaving this deployment in traces and logs.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(agentic_auth_telemetry_identity_disclosure)",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Blocks by cause",
+      "type": "timeseries",
+      "description": "cause=policy means the guardrail worked. pdp_unreachable, exchange_unreachable, mint_unreachable and audit_unavailable all mean it is fail-closing because it is broken.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cause) (rate(agentic_auth_pep_blocks_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Calls by outcome",
+      "type": "timeseries",
+      "description": "observed_would_block was forwarded but refused on the merits.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (outcome) (rate(agentic_auth_pep_calls_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Guardrail overhead p95",
+      "type": "timeseries",
+      "description": "Total minus the upstream call: what the guardrail costs per hop.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(agentic_auth_pep_overhead_seconds_bucket[5m])))",
+          "legendFormat": "{{__auto}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Stage latency p95",
+      "type": "timeseries",
+      "description": "Which stage is slow: decide, exchange, mint or upstream.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, stage) (rate(agentic_auth_pep_stage_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{__auto}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "title": "Decisions by outcome (control plane)",
+      "type": "timeseries",
+      "description": "Phase 3 series. A deny spike usually follows a manifest or policy change.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (outcome) (rate(agentic_auth_decisions_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Telemetry loss",
+      "type": "timeseries",
+      "description": "The layer admitting its own gaps: sampling drops and queue overflow.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 21,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (signal) (rate(agentic_auth_telemetry_dropped_total[5m]))",
+          "legendFormat": "{{__auto}}"
+        }
+      ]
+    }
+  ]
+}

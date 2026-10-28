@@ -1,0 +1,67 @@
+# Local OpenTelemetry Collector for `docker compose --profile observability up -d`.
+#
+# Two inputs, because this project uses two transports on purpose (research.md R1):
+#   - OTLP/HTTP for traces and logs, from AGENTIC_AUTH_TELEMETRY_ENABLED=true
+#   - the prometheus receiver scraping /metrics and /__agentic/metrics, because metrics stay
+#     on prometheus-client so the published Phase 3/4 names and labels keep working
+#
+# This is the same shape as the snippet in observability/README.md, kept runnable so the
+# quickstart can be followed literally rather than adapted.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: agentic-auth-control-plane
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["host.docker.internal:8000"]
+
+        # An enforcement point that is not scraped is not observable: AgenticAuthPepSilent
+        # works by absent(agentic_auth_pep_up), so a sidecar nobody scrapes produces no series
+        # and absence cannot be told from "never deployed".
+        - job_name: agentic-auth-pep
+          scrape_interval: 15s
+          metrics_path: /__agentic/metrics
+          static_configs:
+            - targets: ["host.docker.internal:8081"]
+
+processors:
+  batch:
+    timeout: 5s
+
+exporters:
+  # Traces and logs, visible at http://localhost:16686
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Metrics, scraped by the prometheus service in docker-compose.yml
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [prometheus]

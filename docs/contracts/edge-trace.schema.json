@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-auth.dev/schemas/edge-trace/v1",
+  "title": "Agentic Auth edge recording",
+  "description": "Two documents. EdgeEvent is one line of the JSONL events file that the sidecar and SDK append. EdgeTrace is the aggregated file that `agentic-auth drift record` writes and `agentic-auth drift check` reads. Both are closed (additionalProperties: false), and neither has any field that could carry a token, header, credential, query string, or payload.",
+  "$defs": {
+    "AgentName": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,62}$" },
+    "Target": { "type": "string", "pattern": "^(mcp://[^/\\s]+/\\S+|agent://[a-z0-9][a-z0-9-]{0,62})$", "maxLength": 512 },
+    "Kind": { "type": "string", "enum": ["tool", "delegation"] },
+    "Timestamp": { "type": "string", "format": "date-time" },
+
+    "EdgeEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "ts", "source", "acting_agent", "target", "kind", "outcome", "reason"],
+      "properties": {
+        "v": { "const": 1 },
+        "ts": { "$ref": "#/$defs/Timestamp" },
+        "source": { "type": "string", "enum": ["sidecar", "sdk"] },
+        "acting_agent": { "oneOf": [ { "$ref": "#/$defs/AgentName" }, { "type": "null" } ] },
+        "target": { "oneOf": [ { "$ref": "#/$defs/Target" }, { "type": "null" } ] },
+        "kind": { "oneOf": [ { "$ref": "#/$defs/Kind" }, { "type": "null" } ] },
+        "outcome": { "type": "string", "enum": ["allow", "deny", "observed", "blocked_infra", "blocked_local"] },
+        "reason": { "type": ["string", "null"], "pattern": "^[A-Z_]{1,32}$" }
+      }
+    },
+
+    "RecorderErrorLine": {
+      "description": "Written by a recorder after it recovers from failed writes, so lost events are counted rather than silently missing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "ts", "source", "recorder_error"],
+      "properties": {
+        "v": { "const": 1 },
+        "ts": { "$ref": "#/$defs/Timestamp" },
+        "source": { "type": "string", "enum": ["sidecar", "sdk"] },
+        "recorder_error": { "type": "integer", "minimum": 1, "description": "number of events that could not be written since the last successful write" }
+      }
+    },
+
+    "ObservedEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "kind", "count", "outcomes"],
+      "properties": {
+        "from": { "$ref": "#/$defs/AgentName" },
+        "to": { "$ref": "#/$defs/Target" },
+        "kind": { "$ref": "#/$defs/Kind" },
+        "count": { "type": "integer", "minimum": 1 },
+        "outcomes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["allow", "deny", "observed"],
+          "properties": {
+            "allow": { "type": "integer", "minimum": 0 },
+            "deny": { "type": "integer", "minimum": 0 },
+            "observed": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "EdgeTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "run", "edges", "unattributed", "recorder_errors", "events_total"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["started_at", "finished_at", "command", "event_files", "exit_code"],
+          "properties": {
+            "started_at": { "$ref": "#/$defs/Timestamp" },
+            "finished_at": { "$ref": "#/$defs/Timestamp" },
+            "command": { "type": ["array", "null"], "items": { "type": "string" } },
+            "event_files": { "type": "array", "items": { "type": "string" } },
+            "exit_code": { "type": ["integer", "null"] }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "description": "One entry per distinct (from, to), sorted by (from, to). Only attributed events that resolved a target contribute. An event with outcome blocked_infra that still carries acting_agent and target counts toward neither the outcome breakdown nor count. It is tallied under unattributed.by_reason instead, because the policy never evaluated the edge.",
+          "items": { "$ref": "#/$defs/ObservedEdge" }
+        },
+        "unattributed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["count", "by_reason"],
+          "properties": {
+            "count": { "type": "integer", "minimum": 0 },
+            "by_reason": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+          }
+        },
+        "recorder_errors": { "type": "integer", "minimum": 0, "description": "Recorder-reported lost events plus malformed or unknown-field lines found during aggregation. Any value above 0 makes drift check exit 2." },
+        "events_total": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/EdgeTrace" },
+    { "$ref": "#/$defs/EdgeEvent" },
+    { "$ref": "#/$defs/RecorderErrorLine" }
+  ]
+}

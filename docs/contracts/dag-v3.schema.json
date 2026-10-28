@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-auth.dev/schemas/compiled-dag-v3.json",
+  "title": "Compiled scope→capability DAG, schema version 3",
+  "description": "The JSONB stored in compiled_policies.dag. Version 3 (Phase 4) is ADDITIVE over version 2: every node carries `taint_policy` (trusted_sources materialized to the declared downstream agents when the manifest omits it) and every tool entry carries `binding_params`. The runtime still accepts version 2 with the documented defaults ( §2); recompiling produces version N+1 and mutates nothing.",
+  "type": "object",
+  "required": [
+    "dag_schema_version",
+    "scope",
+    "version",
+    "tools",
+    "data_classes",
+    "downstream_agents",
+    "hop_budget",
+    "paths",
+    "source_agents",
+    "nodes",
+    "edges"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dag_schema_version": {
+      "type": "integer",
+      "const": 3,
+      "description": "3 for policies compiled from Phase 4 on. Absent on Phase 1 rows; 2 on Phase 2/3 rows, which the runtime still accepts."
+    },
+    "scope": {
+      "type": "string",
+      "description": "The root agent name this policy was compiled for."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Server-assigned, monotonic per scope."
+    },
+    "tools": {
+      "type": "array",
+      "description": "Phase 1 key, retained. Flattened union across every reachable agent — sufficient for the human-readable scope catalog, NOT sufficient for a per-caller runtime decision. Use `nodes` for that.",
+      "items": {
+        "$ref": "#/$defs/tool"
+      }
+    },
+    "data_classes": {
+      "$ref": "#/$defs/dataClasses",
+      "description": "Phase 1 key, retained. Union across the closure."
+    },
+    "downstream_agents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^agent://[a-z0-9][a-z0-9-]{0,62}$"
+      },
+      "description": "Phase 1 key, retained. The root agent's direct declarations."
+    },
+    "hop_budget": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Phase 1 key, retained. The root scope's budget; copied onto the session at consent."
+    },
+    "paths": {
+      "type": "array",
+      "description": "Phase 1 key, retained and still authoritative for HOP_BUDGET_EXCEEDED. A path's effective budget is the running minimum along it, which `edges` alone cannot express.",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "effective_hop_budget"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string",
+              "pattern": "^agent://[a-z0-9][a-z0-9-]{0,62}$"
+            },
+            "description": "Ordered agent URIs from the root."
+          },
+          "effective_hop_budget": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "unresolved_downstream": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Phase 1 key, retained. Declared downstream agents not registered at compile time. A delegation to one of these denies with EDGE_NOT_IN_DAG — it is not in `edges`."
+    },
+    "source_agents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Phase 1 key, retained. Names of every agent in the closure; the key set of `nodes`."
+    },
+    "nodes": {
+      "type": "object",
+      "description": "ADDED IN V2. Per-agent capability, keyed by agent name. Answers 'may THIS caller reach THIS target' — the question the flattened `tools` list cannot answer, and the basis for OUT_OF_SCOPE.",
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "tools",
+          "data_classes",
+          "hop_budget",
+          "taint_policy"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/tool"
+            },
+            "description": "Only the tools THIS agent declared."
+          },
+          "data_classes": {
+            "$ref": "#/$defs/dataClasses"
+          },
+          "hop_budget": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "This agent's own declared budget."
+          },
+          "taint_policy": {
+            "$ref": "#/$defs/taintPolicy",
+            "description": "ADDED IN V3. This agent's provenance policy, defaults materialized."
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "ADDED IN V2. The direct declared delegation edges in the closure. EDGE_NOT_IN_DAG is a membership test against this list, not an inference over `paths`.",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "max_hop_depth"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+          },
+          "max_hop_depth": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The edge's own declared cap, from DownstreamDecl.max_hop_depth."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "required": [
+        "ref",
+        "data_classes",
+        "privileged",
+        "binding_params"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^mcp://[^/]+/.+"
+        },
+        "data_classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "privileged": {
+          "type": "boolean",
+          "description": "Consulted by Phase 4's tainted-into-privileged rule and by the transaction-token mint."
+        },
+        "binding_params": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "pattern": "^(/([^/~]|~0|~1)*)+$"
+          },
+          "description": "ADDED IN V3. RFC 6901 pointers a transaction token binds; null = the whole parameter body. Only meaningful when privileged."
+        }
+      }
+    },
+    "dataClasses": {
+      "type": "object",
+      "required": [
+        "reads",
+        "writes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "writes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "taintPolicy": {
+      "type": "object",
+      "required": [
+        "trusted_sources",
+        "block_tainted_into"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trusted_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "fnmatch globs over target refs whose results are trusted_internal for this agent. Materialized: never absent in a compiled node."
+        },
+        "block_tainted_into": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "\"privileged\", or a glob matched against the target ref or the call's data class, that a tainted context may not call."
+        }
+      }
+    }
+  }
+}

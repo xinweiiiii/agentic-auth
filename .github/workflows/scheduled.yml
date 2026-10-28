@@ -1,0 +1,45 @@
+name: Scheduled
+
+# Deliberately off the pull-request path. mutmut runs 20 modules at a 15x timeout
+# multiplier and the load suite needs a stable environment to mean anything — neither
+# fits a ten-minute feedback loop, and a permanently-slow required check teaches
+# contributors to ignore all of them.
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: agentic_auth
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app -d agentic_auth"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e '.[dev,otel]'
+      - run: mutmut run || true
+      - run: mutmut results

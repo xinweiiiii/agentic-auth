@@ -1,0 +1,117 @@
+name: agentic-auth drift check
+description: >-
+  Fail a pull request when an agent's observed calls include an edge its manifests do not
+  declare, naming each undeclared edge in the step summary and as an annotation on the
+  manifest that would have to change.
+author: agentic-auth
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  manifests:
+    description: Newline-separated manifest directories. Their union is the declared set.
+    required: true
+  trace:
+    description: Edge trace written by `agentic-auth drift record`.
+    required: true
+  package:
+    description: >-
+      pip requirement to install agentic-auth from. Empty installs this action's own
+      repository and ref, so the CLI and the action never diverge.
+    required: false
+    default: ""
+  python-version:
+    description: Python version for actions/setup-python.
+    required: false
+    default: "3.12"
+  report-path:
+    description: Where to write the JSON drift report.
+    required: false
+    default: drift-report.json
+  fail-on-drift:
+    description: >-
+      When "false", a drift result sets the outputs without failing the step. A check that
+      could not run always fails.
+    required: false
+    default: "true"
+
+outputs:
+  result:
+    description: pass | drift | error
+    value: ${{ steps.check.outputs.result }}
+  undeclared-count:
+    description: Number of undeclared edges.
+    value: ${{ steps.check.outputs.undeclared-count }}
+  report-path:
+    description: Path to the JSON report.
+    value: ${{ steps.check.outputs.report-path }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install agentic-auth
+      shell: bash
+      # Inputs reach the script only through the environment, never interpolated into it,
+      # so a manifest path or package string cannot inject shell.
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: |
+        set -euo pipefail
+        if [ -z "$PACKAGE" ]; then
+          if [ -z "${GITHUB_ACTION_REPOSITORY:-}" ]; then
+            echo "::error title=agentic-auth drift check::set the 'package' input when using this action from a local path"
+            exit 2
+          fi
+          PACKAGE="agentic-auth @ git+https://github.com/${GITHUB_ACTION_REPOSITORY}@${GITHUB_ACTION_REF}"
+        fi
+        python -m pip install --quiet "$PACKAGE"
+
+    - name: Check observed edges against manifests
+      id: check
+      shell: bash
+      env:
+        MANIFESTS: ${{ inputs.manifests }}
+        TRACE: ${{ inputs.trace }}
+        REPORT_PATH: ${{ inputs.report-path }}
+        FAIL_ON_DRIFT: ${{ inputs.fail-on-drift }}
+      run: |
+        set -uo pipefail
+        args=()
+        while IFS= read -r dir || [ -n "$dir" ]; do
+          dir="$(printf '%s' "$dir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -n "$dir" ]; then
+            args+=(--manifest "$dir")
+          fi
+        done <<< "$MANIFESTS"
+
+        rm -f "$REPORT_PATH"
+        agentic-auth drift check "${args[@]}" --trace "$TRACE" --format github --report "$REPORT_PATH"
+        rc=$?
+
+        if [ -f "$REPORT_PATH" ]; then
+          python - "$REPORT_PATH" >> "$GITHUB_OUTPUT" <<'PY'
+        import json
+        import sys
+
+        with open(sys.argv[1], encoding="utf-8") as handle:
+            report = json.load(handle)
+        print(f"result={report['result']}")
+        print(f"undeclared-count={len(report['undeclared'])}")
+        PY
+        else
+          # The CLI did not get as far as a report (bad arguments, crash): never a pass.
+          echo "result=error" >> "$GITHUB_OUTPUT"
+          echo "undeclared-count=0" >> "$GITHUB_OUTPUT"
+          rc=2
+        fi
+        echo "report-path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
+
+        if [ "$rc" -eq 1 ] && [ "$FAIL_ON_DRIFT" = "false" ]; then
+          exit 0
+        fi
+        exit "$rc"

@@ -1,0 +1,187 @@
+{
+  "vectors": [
+    {
+      "name": "rfc-b-arrays",
+      "input": [
+        56,
+        {
+          "d": true,
+          "10": null,
+          "1": []
+        }
+      ],
+      "canonical": "[56,{\"1\":[],\"10\":null,\"d\":true}]"
+    },
+    {
+      "name": "rfc-b-french",
+      "input": {
+        "peach": "This sorting order",
+        "péché": "is wrong according to French",
+        "pêché": "but canonicalization MUST",
+        "sin": "ignore locale"
+      },
+      "canonical": "{\"peach\":\"This sorting order\",\"péché\":\"is wrong according to French\",\"pêché\":\"but canonicalization MUST\",\"sin\":\"ignore locale\"}"
+    },
+    {
+      "name": "rfc-b-structures",
+      "input": {
+        "1": {
+          "f": {
+            "f": "hi",
+            "F": 5
+          },
+          "\n": 56.0
+        },
+        "10": {},
+        "": "empty",
+        "a": {},
+        "111": [
+          {
+            "e": "yes",
+            "E": "no"
+          }
+        ],
+        "A": {}
+      },
+      "canonical": "{\"\":\"empty\",\"1\":{\"\\n\":56,\"f\":{\"F\":5,\"f\":\"hi\"}},\"10\":{},\"111\":[{\"E\":\"no\",\"e\":\"yes\"}],\"A\":{},\"a\":{}}"
+    },
+    {
+      "name": "rfc-b-unicode",
+      "input": {
+        "Unnormalized Unicode": "Å"
+      },
+      "canonical": "{\"Unnormalized Unicode\":\"Å\"}"
+    },
+    {
+      "name": "rfc-b-values",
+      "input": {
+        "numbers": [
+          333333333.3333333,
+          1e+30,
+          4.5,
+          0.002,
+          1e-27
+        ],
+        "string": "€$\u000f\nA'B\"\\\\\"/",
+        "literals": [
+          null,
+          true,
+          false
+        ]
+      },
+      "canonical": "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}"
+    },
+    {
+      "name": "key-order",
+      "input": {
+        "b": 1,
+        "a": 2
+      },
+      "canonical": "{\"a\":2,\"b\":1}"
+    },
+    {
+      "name": "integral-float",
+      "input": {
+        "a": 1.0
+      },
+      "canonical": "{\"a\":1}"
+    },
+    {
+      "name": "exponent-int",
+      "input": {
+        "a": 100.0
+      },
+      "canonical": "{\"a\":100}"
+    },
+    {
+      "name": "fraction",
+      "input": {
+        "a": 0.1
+      },
+      "canonical": "{\"a\":0.1}"
+    },
+    {
+      "name": "negative-zero",
+      "input": {
+        "a": -0.0
+      },
+      "canonical": "{\"a\":0}"
+    },
+    {
+      "name": "small-exponent",
+      "input": {
+        "a": 1e-07
+      },
+      "canonical": "{\"a\":1e-7}"
+    },
+    {
+      "name": "large-exponent",
+      "input": {
+        "a": 1e+21
+      },
+      "canonical": "{\"a\":1e+21}"
+    },
+    {
+      "name": "big-integer-float",
+      "input": {
+        "a": 1.2345678901234568e+20
+      },
+      "canonical": "{\"a\":123456789012345680000}"
+    },
+    {
+      "name": "non-ascii-and-control",
+      "input": {
+        "€": "é",
+        "a": "\n"
+      },
+      "canonical": "{\"a\":\"\\n\",\"€\":\"é\"}"
+    },
+    {
+      "name": "nested-arrays-keep-order",
+      "input": {
+        "z": [
+          3,
+          1,
+          2
+        ],
+        "y": [
+          [
+            2
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "canonical": "{\"y\":[[2],[1]],\"z\":[3,1,2]}"
+    },
+    {
+      "name": "nan",
+      "input_repr": "NaN",
+      "error": true
+    },
+    {
+      "name": "infinity",
+      "input_repr": "Infinity",
+      "error": true
+    },
+    {
+      "name": "neg-infinity",
+      "input_repr": "-Infinity",
+      "error": true
+    }
+  ],
+  "binding_vector": {
+    "target": "mcp://accounts.internal/terminate_account",
+    "params": {
+      "reason": "fraud",
+      "account_id": "acc-42",
+      "notify": true
+    },
+    "binding": [
+      "/account_id"
+    ],
+    "document_canonical": "{\"params\":{\"/account_id\":\"acc-42\"},\"target\":\"mcp://accounts.internal/terminate_account\"}",
+    "whole_body_canonical": "{\"params\":{\"account_id\":\"acc-42\",\"notify\":true,\"reason\":\"fraud\"},\"target\":\"mcp://accounts.internal/terminate_account\"}"
+  }
+}

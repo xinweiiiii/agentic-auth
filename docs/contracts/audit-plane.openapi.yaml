@@ -1,0 +1,347 @@
+openapi: 3.1.0
+info:
+  title: Agentic Authorization SDK — Audit Plane
+  version: 0.3.0
+  description: |
+    Phase 3 read-only audit endpoints: the single-query delegation chain, and the filtered
+    decision history.
+
+    What changes elsewhere in Phase 3: the Phase 2 runtime endpoints (`/v1/authorize`,
+    `/v1/token/exchange`) gain fields. See `contracts/phase-2-deltas.md`.
+
+    Audit data is never written through this API. Every endpoint here requires an audit-reader
+    bearer, which is either `AGENTIC_AUTH_AUDIT_READ_TOKEN` or the admin token.
+
+    AMENDED BY PHASE 5: decision rows and chain hops carry `guarantee_level` and
+    `step_up_ref`; `/v1/audit/decisions` filters on both. `guarantee_level` is reported by
+    the enforcement point and recorded verbatim, so a weaker deployment can never read as a
+    stronger one (FR-016..FR-021). A row written before Phase 5 reads as `full`.
+    See the guarantee-level notes in the explanation docs at https://authzai.dev.
+
+    AMENDED BY PHASE 4: decision rows and chain hops carry `taint`, `taint_source`,
+    `privileged` and (for a minted privileged call) `transaction`; `/v1/audit/decisions`
+    filters on `taint` and `privileged`; `DenyReason` gains three values. See
+    the Phase 4 additions described below.
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: audit
+
+paths:
+  /v1/audit/actions/{action_id}/chain:
+    get:
+      tags: [audit]
+      summary: The full delegation chain for one recorded action
+      description: |
+        Returns every hop from the consenting human to this action, in delegation order. The
+        response is built from this action's own audit record plus its session, with no
+        correlation across other records.
+
+        `complete` is decided when the record was written. An incomplete chain is still
+        returned, with `break` saying where and why. It is never presented as complete.
+      security: [{ auditReader: [] }]
+      parameters:
+        - name: action_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Chain found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChainRead' }
+              examples:
+                prdScenario:
+                  summary: PRD §2.3. The terminate_account call is refused at hop 3
+                  value:
+                    action_id: e44b1f0e-5d0c-4a44-9d0b-7d1f2a6b9c10
+                    complete: true
+                    break: null
+                    root_consent:
+                      user_sub: user:alice
+                      scope: bank-assistant
+                      consented_at: '2026-09-13T10:00:00.050Z'
+                      session_id: 3f2a8c11-0b8e-4d1e-9a7a-1c2d3e4f5a6b
+                    policy_version: 7
+                    chain:
+                      - { hop: 1, action_id: 7c1e0000-0000-4000-8000-000000000001, acting_agent: bank-assistant, target: 'agent://balance-agent', target_kind: agent, data_class: account.read, decision: allow, deny_reason: null, enforced: true, ts: '2026-09-13T10:00:00.120Z' }
+                      - { hop: 2, action_id: a90d0000-0000-4000-8000-000000000002, acting_agent: balance-agent, target: 'agent://support-agent', target_kind: agent, data_class: kb.internal, decision: allow, deny_reason: null, enforced: true, ts: '2026-09-13T10:00:00.161Z' }
+                      - { hop: 3, action_id: e44b1f0e-5d0c-4a44-9d0b-7d1f2a6b9c10, acting_agent: support-agent, target: 'mcp://accounts.internal/terminate_account', target_kind: tool, data_class: account.write, decision: deny, deny_reason: OUT_OF_SCOPE, enforced: true, ts: '2026-09-13T10:00:00.203Z' }
+                legacy:
+                  summary: A Phase 2 record. Actors are known, per-hop detail was never captured
+                  value:
+                    action_id: 11111111-2222-4333-8444-555555555555
+                    complete: false
+                    break: { at_hop: 1, reason: LEGACY_RECORD }
+                    root_consent: { user_sub: user:alice, scope: orchestrator, consented_at: '2026-09-06T11:09:13Z', session_id: 566ac0b0-03f1-4117-9963-1617d1f6aef6 }
+                    policy_version: 1
+                    chain:
+                      - { hop: 1, action_id: null, acting_agent: orchestrator, target: null, target_kind: null, data_class: null, decision: null, deny_reason: null, enforced: null, ts: null, unavailable: true }
+                      - { hop: 2, action_id: 11111111-2222-4333-8444-555555555555, acting_agent: null, target: 'agent://summarizer', target_kind: agent, data_class: account.read, decision: allow, deny_reason: null, enforced: true, ts: '2026-09-06T11:10:02Z' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: No recorded action has this id. No chain content is returned.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: { code: not_found, message: "no recorded action e44b1f0e-…" } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/audit/decisions:
+    get:
+      tags: [audit]
+      summary: Filtered, paginated decision history
+      description: |
+        Results are newest first. Pagination is keyset on an insertion sequence with a high-water
+        mark fixed at the first page, so rows appended while paging never appear mid-iteration.
+        Every row committed before the first page and matching the filters appears exactly once.
+        An empty match is `200` with `data: []`.
+      security: [{ auditReader: [] }]
+      parameters:
+        - name: session_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: agent
+          in: query
+          description: "Exact match on the verified acting agent"
+          schema: { type: string, maxLength: 255 }
+        - name: outcome
+          in: query
+          schema: { type: string, enum: [allow, deny] }
+        - name: deny_reason
+          in: query
+          schema: { $ref: '#/components/schemas/DenyReason' }
+        - name: enforced
+          in: query
+          schema: { type: boolean }
+        - name: target_kind
+          in: query
+          schema: { type: string, enum: [tool, agent] }
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+        - name: until
+          in: query
+          description: "Defaults to now. Must not be before `since`."
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: cursor
+          in: query
+          description: "Opaque. Taken from `page.next_cursor`."
+          schema: { type: string }
+      responses:
+        '200':
+          description: One page of matching decisions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditDecisionPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: |
+            An invalid filter: `since` after `until`, unknown enum value, malformed timestamp, or
+            a cursor that does not decode.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                error:
+                  code: validation_error
+                  message: since must not be after until
+                  details: { fields: [ { loc: [query, since], msg: "must not be after until" } ] }
+
+  /v1/decisions:
+    get:
+      tags: [audit]
+      deprecated: true
+      summary: Phase 2 observe-mode report (deprecated alias)
+      description: |
+        Kept for one phase. It is served by the same repository as `/v1/audit/decisions` and
+        accepts Phase 2's filters (`session_id`, `outcome`, `deny_reason`, `enforced`). Response
+        items gain the Phase 3 list-item fields. Migrate to `/v1/audit/decisions`.
+      security: [{ auditReader: [] }]
+      responses:
+        '200':
+          description: One page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditDecisionPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /metrics:
+    get:
+      tags: [audit]
+      summary: Prometheus text exposition (internal network only)
+      description: See contracts/metrics.md. Labels carry no agent, user, session, or target identities.
+      security: []
+      responses:
+        '200':
+          description: Metrics
+          content: { text/plain: { schema: { type: string } } }
+
+components:
+  securitySchemes:
+    auditReader:
+      type: http
+      scheme: bearer
+      description: AGENTIC_AUTH_AUDIT_READ_TOKEN, or AGENTIC_AUTH_ADMIN_TOKEN
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid audit-reader bearer. No audit content is returned.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: unauthorized, message: invalid audit reader bearer token } }
+    ValidationError:
+      description: Request failed validation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    DenyReason:
+      type: string
+      enum: [OUT_OF_SCOPE, HOP_BUDGET_EXCEEDED, EDGE_NOT_IN_DAG, SCOPE_NOT_CONSENTED, PDP_UNAVAILABLE, TOKEN_SERVICE_UNAVAILABLE, TAINTED_INTO_PRIVILEGED, AGENT_REVOKED, AGENT_NOT_ENROLLED]
+      description: |
+        Stored deny reasons. `AUDIT_UNAVAILABLE` exists in the runtime vocabulary but is never
+        stored, because it is returned precisely when a record could not be written.
+        `TAINTED_INTO_PRIVILEGED`, `AGENT_REVOKED` and `AGENT_NOT_ENROLLED` were added by Phase 4
+        (Phase 4, additive).
+
+    ChainBreakReason:
+      type: string
+      enum: [LEGACY_RECORD, LEGACY_TOKEN, PARENT_NOT_FOUND, PARENT_MISMATCH, PARENT_INCOMPLETE]
+
+    RootConsent:
+      type: object
+      additionalProperties: false
+      required: [user_sub, scope, consented_at, session_id]
+      properties:
+        user_sub: { type: string }
+        scope: { type: string }
+        consented_at: { type: string, format: date-time }
+        session_id: { type: string, format: uuid }
+
+    ChainHop:
+      type: object
+      additionalProperties: false
+      required: [hop, action_id, acting_agent, target, target_kind, data_class, decision, deny_reason, enforced, ts]
+      properties:
+        hop: { type: integer, minimum: 1 }
+        action_id: { type: [string, 'null'], format: uuid }
+        acting_agent: { type: [string, 'null'] }
+        target: { type: [string, 'null'] }
+        target_kind: { type: [string, 'null'], enum: [tool, agent, null] }
+        data_class: { type: [string, 'null'] }
+        decision: { type: [string, 'null'], enum: [allow, deny, null] }
+        deny_reason: { oneOf: [ { $ref: '#/components/schemas/DenyReason' }, { type: 'null' } ] }
+        enforced: { type: [boolean, 'null'] }
+        ts: { type: [string, 'null'], format: date-time }
+        # -- added by Phase 4 (phase-2-3-deltas.md §8); null / false on hops written before it --
+        subject_jti: { type: [string, 'null'], description: The jti presented at this hop. }
+        taint: { type: [string, 'null'], enum: [trusted_internal, untrusted_external, null], description: The effective taint the decision was made under. }
+        taint_source: { type: [string, 'null'], description: The target that introduced the taint into this context. }
+        privileged: { type: boolean, description: The target was privileged in the pinned policy. }
+        transaction: { oneOf: [ { $ref: '#/components/schemas/TransactionFingerprint' }, { type: 'null' } ], description: Phase 4. Only on the queried action's own hop, for a privileged call whose transaction token was minted. }
+        guarantee_level: { $ref: '#/components/schemas/GuaranteeLevel' }
+        step_up_ref: { type: [string, 'null'], format: uuid, description: 'Phase 5. Set on the audit event recording a step-up widening, pointing at the grant that authorized it. Null on every ordinary decision.' }
+        unavailable:
+          type: boolean
+          description: Present and true only on hops of a legacy record whose detail was never captured.
+
+    ChainRead:
+      type: object
+      additionalProperties: false
+      required: [action_id, complete, break, root_consent, policy_version, chain]
+      properties:
+        action_id: { type: string, format: uuid }
+        complete: { type: boolean }
+        break:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required: [at_hop, reason]
+              properties:
+                at_hop: { type: integer, minimum: 1 }
+                reason: { $ref: '#/components/schemas/ChainBreakReason' }
+        root_consent: { $ref: '#/components/schemas/RootConsent' }
+        policy_version: { type: integer }
+        chain:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ChainHop' }
+
+    AuditDecisionListItem:
+      type: object
+      additionalProperties: false
+      required: [id, ts, session_id, acting_agent, caller, target, target_kind, data_class, hop, outcome, deny_reason, enforced, policy_version, chain_complete]
+      properties:
+        id: { type: string, format: uuid, description: "The action id; pass to /v1/audit/actions/{id}/chain" }
+        ts: { type: string, format: date-time }
+        session_id: { type: string, format: uuid }
+        acting_agent: { type: [string, 'null'] }
+        caller: { type: string }
+        target: { type: string }
+        target_kind: { type: string, enum: [tool, agent] }
+        data_class: { type: string }
+        hop: { type: integer, minimum: 1 }
+        outcome: { type: string, enum: [allow, deny] }
+        deny_reason: { oneOf: [ { $ref: '#/components/schemas/DenyReason' }, { type: 'null' } ] }
+        enforced: { type: boolean }
+        policy_version: { type: integer }
+        chain_complete: { type: boolean }
+        # -- added by Phase 4 (phase-2-3-deltas.md §8); null / false on rows written before it --
+        taint: { type: [string, 'null'], enum: [trusted_internal, untrusted_external, null], description: The effective taint the decision was made under. }
+        taint_source: { type: [string, 'null'], description: The target that introduced the taint into this context. }
+        privileged: { type: boolean, description: The target was privileged in the pinned policy. }
+        transaction: { oneOf: [ { $ref: '#/components/schemas/TransactionFingerprint' }, { type: 'null' } ], description: Phase 4 fingerprint of the call-bound authority, never the token. }
+        # -- added by Phase 5 (006/contracts/phase-2-4-deltas.md §6) --
+        guarantee_level: { $ref: '#/components/schemas/GuaranteeLevel' }
+        step_up_ref: { type: [string, 'null'], format: uuid, description: 'Phase 5. The step-up grant this row records, if any. Null on every ordinary decision.' }
+
+    GuaranteeLevel: { type: string, enum: [full, connector, network, consent_only], description: 'Phase 5. How strong the enforcement actually was for this decision. A row written before Phase 5 reads as `full`, which is accurate: every enforcement point that produced one was per-hop.' }
+    TransactionFingerprint:
+      type: object
+      additionalProperties: false
+      required: [params_hash, binding, issued_at, expires_at]
+      properties:
+        params_hash: { type: string, description: base64url SHA-256 of the canonical binding document (see docs/canonicalization.md) }
+        binding: { type: [array, 'null'], items: { type: string } }
+        issued_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+
+    AuditDecisionPage:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/AuditDecisionListItem' }
+        page:
+          type: object
+          additionalProperties: false
+          required: [next_cursor, limit, as_of_seq]
+          properties:
+            next_cursor: { type: [string, 'null'] }
+            limit: { type: integer }
+            as_of_seq:
+              type: [integer, 'null']
+              description: High-water mark of this iteration. Null when nothing has been recorded yet.
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: [object, 'null'] }

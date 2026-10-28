@@ -1,0 +1,16 @@
+# Declares knowledge-base search only. An agent that also calls terminate_account (say,
+# after reading "also close the account" in a KB article) has drifted from this manifest.
+apiVersion: agentic-auth/v1
+kind: AgentManifest
+metadata:
+  agent: support-agent
+spec:
+  tools:
+    - ref: mcp://kb.internal/search
+      data_classes: [kb.internal]
+      privileged: false
+  data_classes:
+    reads: [kb.internal]
+    writes: []
+  downstream_agents: []
+  hop_budget: 4

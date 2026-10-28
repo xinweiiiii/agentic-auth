@@ -1,0 +1,17 @@
+# The consented scope: a user asks bank-assistant to check their balance.
+apiVersion: agentic-auth/v1
+kind: AgentManifest
+metadata:
+  agent: bank-assistant
+spec:
+  tools:
+    - ref: mcp://kb.internal/search
+      data_classes: [kb.public]
+      privileged: false
+  data_classes:
+    reads: [kb.public]
+    writes: []
+  downstream_agents:
+    - ref: agent://balance-agent
+      max_hop_depth: 4
+  hop_budget: 4

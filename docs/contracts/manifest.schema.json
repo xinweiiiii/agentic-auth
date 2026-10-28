@@ -1,0 +1,232 @@
+{
+  "$defs": {
+    "DataClassDecl": {
+      "additionalProperties": false,
+      "properties": {
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "title": "DataClassDecl",
+      "type": "object"
+    },
+    "DownstreamDecl": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "pattern": "^agent://[a-z0-9][a-z0-9-]{0,62}$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "max_hop_depth": {
+          "minimum": 1,
+          "title": "Max Hop Depth",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ref",
+        "max_hop_depth"
+      ],
+      "title": "DownstreamDecl",
+      "type": "object"
+    },
+    "ManifestMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "agent": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+          "title": "Agent",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "agent"
+      ],
+      "title": "ManifestMetadata",
+      "type": "object"
+    },
+    "ManifestSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "tools": {
+          "items": {
+            "$ref": "#/$defs/ToolDecl"
+          },
+          "minItems": 1,
+          "title": "Tools",
+          "type": "array"
+        },
+        "data_classes": {
+          "$ref": "#/$defs/DataClassDecl"
+        },
+        "downstream_agents": {
+          "items": {
+            "$ref": "#/$defs/DownstreamDecl"
+          },
+          "title": "Downstream Agents",
+          "type": "array"
+        },
+        "hop_budget": {
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Hop Budget",
+          "type": "integer"
+        },
+        "taint_policy": {
+          "$ref": "#/$defs/TaintPolicyDecl"
+        }
+      },
+      "required": [
+        "tools",
+        "hop_budget"
+      ],
+      "title": "ManifestSpec",
+      "type": "object"
+    },
+    "TaintPolicyDecl": {
+      "additionalProperties": false,
+      "description": "Phase 4 provenance policy for THIS agent (contracts/taint.md \u00a72).\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
+      "properties": {
+        "trusted_sources": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trusted Sources"
+        },
+        "block_tainted_into": {
+          "items": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "const": "privileged",
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Block Tainted Into",
+          "type": "array"
+        }
+      },
+      "title": "TaintPolicyDecl",
+      "type": "object"
+    },
+    "ToolDecl": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "pattern": "^mcp://[^/]+/.+",
+          "title": "Ref",
+          "type": "string"
+        },
+        "data_classes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Data Classes",
+          "type": "array"
+        },
+        "privileged": {
+          "default": false,
+          "title": "Privileged",
+          "type": "boolean"
+        },
+        "binding_params": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 512,
+                "pattern": "^(/([^/~]|~0|~1)*)+$",
+                "type": "string"
+              },
+              "maxItems": 64,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Binding Params"
+        }
+      },
+      "required": [
+        "ref",
+        "data_classes"
+      ],
+      "title": "ToolDecl",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "agentic-auth/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "const": "AgentManifest",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ManifestMetadata"
+    },
+    "spec": {
+      "$ref": "#/$defs/ManifestSpec"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "AgentManifest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-auth.dev/schemas/agent-manifest/v1.json",
+  "x-generated-from": "app.schemas.manifest.AgentManifest"
+}

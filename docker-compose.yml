@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: agentic_auth
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d agentic_auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ------------------------------------------------------------------ observability
+  # Opt-in: `docker compose --profile observability up -d`. The default `up -d` is unchanged,
+  # so a developer who does not want a telemetry stack never starts one (spec 007 FR-029).
+  #
+  #   export AGENTIC_AUTH_TELEMETRY_ENABLED=true
+  #   export AGENTIC_AUTH_TELEMETRY_KEY="$(openssl rand -hex 32)"
+  #   export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+  #
+  # Traces:  http://localhost:16686   (Jaeger)
+  # Metrics: http://localhost:9090    (Prometheus, with the shipped alert rules loaded)
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.115.1
+    profiles: ["observability"]
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./observability/local/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"   # OTLP/HTTP — what OTEL_EXPORTER_OTLP_ENDPOINT points at
+      - "4317:4317"   # OTLP/gRPC
+      - "8889:8889"   # re-exported metrics, scraped by prometheus below
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    profiles: ["observability"]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # the UI: paste an action id here to find its decision
+
+  prometheus:
+    image: prom/prometheus:v3.0.1
+    profiles: ["observability"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ./observability/local/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # The shipped rules, mounted unmodified — a local run exercises the same artifacts an
+      # integrator imports.
+      - ./observability/alerts:/etc/prometheus/rules:ro
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:

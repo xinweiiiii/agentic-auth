@@ -1,0 +1,112 @@
+# Proves the drift-check action end to end on every relevant pull request:
+# a drifted run must report `drift`, a widened manifest must report `pass`, and a malformed
+# trace must report `error` — never `pass`.
+name: drift-check-fixture
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "examples/drift-fixture/**"
+      - "actions/**"
+      - ".github/workflows/drift-check-fixture.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: agentic_auth
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app -d agentic_auth"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the product
+        run: python -m pip install -e ".[dev]"
+
+      - name: Record the drifted fixture trace through the in-process sidecar
+        env:
+          AGENTIC_AUTH_WRITE_FIXTURE_TRACES: "1"
+        run: python -m pytest -q tests/integration/test_drift_fixture_traces.py
+
+      - name: Drifted manifests
+        id: drifted
+        continue-on-error: true
+        uses: ./actions/drift-check
+        with:
+          manifests: examples/drift-fixture/manifests
+          trace: examples/drift-fixture/drifted.edge-trace.json
+          package: .
+          report-path: drifted-report.json
+
+      - name: Expect drift, naming exactly one edge
+        env:
+          RESULT: ${{ steps.drifted.outputs.result }}
+          COUNT: ${{ steps.drifted.outputs['undeclared-count'] }}
+        run: |
+          test "$RESULT" = "drift" || { echo "expected drift, got '$RESULT'"; exit 1; }
+          test "$COUNT" = "1" || { echo "expected 1 undeclared edge, got '$COUNT'"; exit 1; }
+
+      - name: Widened manifests
+        id: widened
+        continue-on-error: true
+        uses: ./actions/drift-check
+        with:
+          manifests: examples/drift-fixture/manifests-widened
+          trace: examples/drift-fixture/drifted.edge-trace.json
+          package: .
+          report-path: widened-report.json
+
+      - name: Expect pass
+        env:
+          RESULT: ${{ steps.widened.outputs.result }}
+        run: test "$RESULT" = "pass" || { echo "expected pass, got '$RESULT'"; exit 1; }
+
+      - name: Malformed trace
+        id: malformed
+        continue-on-error: true
+        uses: ./actions/drift-check
+        with:
+          manifests: examples/drift-fixture/manifests
+          trace: examples/drift-fixture/malformed.edge-trace.json
+          package: .
+          report-path: malformed-report.json
+
+      - name: Expect error, never pass
+        env:
+          RESULT: ${{ steps.malformed.outputs.result }}
+        run: test "$RESULT" = "error" || { echo "expected error, got '$RESULT'"; exit 1; }
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-reports
+          path: |
+            drifted-report.json
+            widened-report.json
+            malformed-report.json
+            examples/drift-fixture/drifted.edge-trace.json
+          if-no-files-found: ignore

@@ -1,0 +1,152 @@
+# Prometheus alerting rules for the Agentic Authorization SDK.
+#
+# Shipped as an artifact rather than described in prose, because prose cannot fail a build:
+# tests/unit/test_dashboard_artifacts.py resolves every metric name and every label
+# value here against the live registry, so a renamed signal breaks CI instead of silently
+# disarming an alert (spec 007 FR-026, FR-027a, SC-013).
+#
+#   rule_files:
+#     - observability/alerts/guardrail.rules.yml
+#
+# The four criticals are the signals that must page. Everything else is a warning, on purpose:
+# an alert that fires for the caller's mistakes teaches people to ignore it.
+
+groups:
+  - name: agentic-auth-guardrail
+    interval: 30s
+    rules:
+      # ---------------------------------------------------------------- critical
+      - alert: AgenticAuthAuditWriteFailing
+        expr: increase(agentic_auth_audit_write_failures_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: control-plane
+        annotations:
+          summary: "Audit records are not committing ({{ $labels.outcome }})"
+          description: >-
+            outcome=allow means calls are being blocked because no durable record could be
+            written — the guardrail is fail-closing correctly, but the service is degraded.
+            outcome=deny means refusal records are being LOST, which is an audit gap.
+            Check the database and the audit_write_timeout_seconds budget. There is no safe
+            way to silence this one.
+
+      - alert: AgenticAuthPepCannotReachPolicy
+        expr: |
+          increase(
+            agentic_auth_pep_blocks_total{
+              cause=~"pdp_unreachable|exchange_unreachable|mint_unreachable|audit_unavailable"
+            }[5m]
+          ) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: enforcement-point
+        annotations:
+          summary: "Enforcement point is fail-closing on {{ $labels.cause }}"
+          description: >-
+            An enforcement point is refusing calls because it cannot reach part of the control
+            plane, NOT because policy said no. From the agent's side these look identical to a
+            policy refusal, which is why this alert exists. cause names which dependency
+            failed. Agents are being blocked right now.
+
+      - alert: AgenticAuthPepSilent
+        expr: absent(agentic_auth_pep_up)
+        for: 2m
+        labels:
+          severity: critical
+          component: enforcement-point
+        annotations:
+          summary: "No enforcement point is reporting"
+          description: >-
+            A guardrail that is silently not enforcing is worse than no guardrail, because the
+            system looks protected. NOTE: this can only fire for a PEP that is actually
+            scraped. A sidecar bound to loopback and never scraped produces no series at all,
+            and absence is then indistinguishable from "never deployed". Every PEP you
+            deploy must therefore be scraped. Prefer a per-target rule using your own job labels.
+
+      - alert: AgenticAuthChainIncomplete
+        expr: |
+          increase(
+            agentic_auth_chain_writes_total{complete="false", break!="LEGACY_TOKEN"}[15m]
+          ) > 0
+        for: 0m
+        labels:
+          severity: warning
+          component: audit
+        annotations:
+          summary: "Delegation chains are being written incomplete ({{ $labels.break }})"
+          description: >-
+            A chain that cannot be completed at write time can never be completed later — it is
+            materialized once. break=LEGACY_TOKEN is pre-Phase-3 data and is excluded; anything
+            else is a linkage bug, and the audit promise ("one query, the full chain") is
+            already broken for those rows.
+
+      # ---------------------------------------------------------------- warning
+      - alert: AgenticAuthChainQuerySlow
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(agentic_auth_chain_query_duration_seconds_bucket[5m]))
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: audit
+        annotations:
+          summary: "Delegation-chain query p95 is over the 0.5 s SLO"
+          description: >-
+            An auditor's "show me who authorized this" is getting slow. Usually index health on
+            audit_decisions, or chains that have grown deeper than the hop budget suggests.
+
+      - alert: AgenticAuthEnforcementPointObserving
+        expr: sum(agentic_auth_pep_info{mode="observing"}) > 0
+        for: 30m
+        labels:
+          severity: warning
+          component: enforcement-point
+        annotations:
+          summary: "An enforcement point has been in observe mode for 30 minutes"
+          description: >-
+            Observe mode decides and records but does not block. Intended during a rollout, and
+            a problem if nobody remembers. Silence this deliberately while tuning.
+
+      - alert: AgenticAuthTelemetryLoss
+        expr: sum(rate(agentic_auth_telemetry_dropped_total[10m])) > 0
+        for: 15m
+        labels:
+          severity: warning
+          component: telemetry
+        annotations:
+          summary: "Telemetry is being dropped ({{ $labels.signal }})"
+          description: >-
+            Sustained loss from queue overflow or a failing sink. Telemetry is fail-open by
+            design, so authorization is unaffected — but the dashboards are now lying by
+            omission. Expected if telemetry_allow_sample_ratio is below 1.
+
+      - alert: AgenticAuthIdentityDisclosureOn
+        expr: max(agentic_auth_telemetry_identity_disclosure) == 1
+        for: 5m
+        labels:
+          severity: info
+          component: telemetry
+        annotations:
+          summary: "Full identities are being exported in traces and logs"
+          description: >-
+            This deployment has AGENTIC_AUTH_TELEMETRY_IDENTITY_DISCLOSURE on, so real agent
+            names and delegation chains are leaving it for the telemetry backend, outside the
+            audit-reader check. Some deployments mean this; it is informational so that the
+            ones that do not find out.
+
+      - alert: AgenticAuthDeniedByDriftInProduction
+        expr: increase(agentic_auth_denials_total{reason="EDGE_NOT_IN_DAG"}[30m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          component: policy
+        annotations:
+          summary: "An undeclared edge is being attempted in production"
+          description: >-
+            EDGE_NOT_IN_DAG in production means drift that the CI drift check did not catch.
+            Either a manifest is behind the code, or an agent is doing something nobody
+            declared. The PRD's headline ratio is "caught in CI vs caught only in production".

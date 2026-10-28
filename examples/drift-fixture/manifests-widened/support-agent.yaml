@@ -1,0 +1,26 @@
+# The "widen the manifest" branch: terminate_account is now declared, privileged, as a
+# deliberate and reviewable change — the drift check passes, and the runtime allows it.
+apiVersion: agentic-auth/v1
+kind: AgentManifest
+metadata:
+  agent: support-agent
+spec:
+  tools:
+    - ref: mcp://kb.internal/search
+      data_classes: [kb.internal]
+      privileged: false
+    - ref: mcp://accounts.internal/terminate_account
+      data_classes: [account.write]
+      privileged: true
+      # Phase 4: the transaction token binds this parameter; the resource refuses the token
+      # for any other account_id. Other parameters may vary.
+      binding_params: ["/account_id"]
+  data_classes:
+    reads: [kb.internal]
+    writes: [account.write]
+  downstream_agents: []
+  hop_budget: 4
+  # Phase 4: no taint_policy is declared, so the default applies — only declared downstream
+  # agents are trusted sources. The knowledge base is NOT one, so a KB read taints this
+  # agent's context and a following terminate_account is refused TAINTED_INTO_PRIVILEGED.
+  # Declare `taint_policy: {trusted_sources: ["mcp://kb.internal/*"]}` to accept that risk.

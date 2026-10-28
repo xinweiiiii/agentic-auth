@@ -1,0 +1,33 @@
+# A recording sidecar for the drift fixture.
+#
+# observe_mode: an undeclared call is recorded, not blocked, so every edge the test run would
+# exercise is observed in one pass. Enforcement is unchanged in meaning — the decision and
+# its audit record are identical; only the consequence differs.
+#
+# trace_path: one edge event per call. When this sidecar runs inside
+# `agentic-auth drift record`, AGENTIC_AUTH_TRACE_PATH is used if this key is omitted.
+pdp_url: http://127.0.0.1:8099
+listen_addr: 127.0.0.1:8081
+observe_mode: true
+trace_path: ./edge-events.jsonl
+upstream_map:
+  /balance:
+    url: http://127.0.0.1:9000
+    target: agent://balance-agent
+    data_class: account.read
+  /support:
+    url: http://127.0.0.1:9000
+    target: agent://support-agent
+    data_class: kb.internal
+  /tools/read_balance:
+    url: http://127.0.0.1:9000
+    target: mcp://accounts.internal/read_balance
+    data_class: account.read
+  /tools/search:
+    url: http://127.0.0.1:9000
+    target: mcp://kb.internal/search
+    data_class: kb.internal
+  /tools/terminate_account:
+    url: http://127.0.0.1:9000
+    target: mcp://accounts.internal/terminate_account
+    data_class: account.write
