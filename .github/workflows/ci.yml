@@ -76,7 +76,13 @@ jobs:
       # of it at runtime, which is what test_observability_optional.py proves.
       - run: python -m pip install -e '.[dev,otel]'
 
+      # Rich wraps CLI output at the terminal width, and a couple of tests assert on
+      # that text. A runner defaults to 80 columns, which splits "does not exist" across
+      # a line break and fails an assertion about the message, not about the behaviour.
+      # Pinning the width makes the output deterministic everywhere.
       - name: pytest
+        env:
+          COLUMNS: "120"
         run: pytest -q --durations=10
 
   secrets:

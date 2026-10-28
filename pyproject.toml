@@ -15,12 +15,14 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    # Upper bound is load-bearing, not caution. FastAPI 0.162 imports opentelemetry at
-    # import time (fastapi/telemetry/_api.py), which breaks this project's guarantee that
-    # the observability layer is optional and the control plane builds without the OTel
-    # SDK installed. tests/unit/test_observability_optional.py asserts that guarantee and
-    # fails on 0.162. Raise this only together with that test.
-    "fastapi>=0.115,<0.162",
+    # Upper bound is load-bearing, not caution. From 0.142.0 FastAPI imports opentelemetry
+    # at import time (fastapi/telemetry/_api.py), which breaks this project's guarantee
+    # that the observability layer is optional and the control plane builds without the
+    # OTel SDK installed. 0.141.1 is the last version that does not; verified by bisecting
+    # 0.141.1 -> 0.162 against an import blocker.
+    # tests/unit/test_observability_optional.py asserts that guarantee and fails above it.
+    # Raising this bound means fixing that test first, or dropping the guarantee.
+    "fastapi>=0.115,<0.142",
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
