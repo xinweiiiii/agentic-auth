@@ -4,8 +4,7 @@
 document. ``complete`` consumes it (``GETDEL``) before doing anything else, verifies the
 signature against a key IN THE PRESENTED DOCUMENT (never the issuer's keys, never a key the
 agent names but did not present), runs principal binding, then hands every fact to the pure
-:func:`app.services.enrollment_rules.decide` and applies the outcome in one transaction
-(contracts/identity.md §2–§3).
+:func:`app.services.enrollment_rules.decide` and applies the outcome in one transaction.
 
 Completing enrollment grants nothing. It pins a trust anchor; authorization is elsewhere.
 """
@@ -114,7 +113,7 @@ class EnrollmentService:
             # The assertion is a short-lived IdP credential. It is held ONLY here, in the
             # control plane's own Redis, for at most enroll_challenge_ttl_seconds, consumed
             # by GETDEL on the first `complete`, and never written to a table, a metric or
-            # a log (security audit, Phase 4). Requiring the agent to re-present it at
+            # a log (security audit). Requiring the agent to re-present it at
             # `complete` would let a caller swap in a different principal than the one the
             # challenge was issued for, which is why it is bound to the challenge instead.
             "principal_assertion": body.identity_doc.principal_assertion,

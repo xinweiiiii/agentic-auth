@@ -1,4 +1,4 @@
-"""No allowed call leaves without a durable record (T020, FR-004–FR-006, SC-005).
+"""No allowed call leaves without a durable record.
 
 Every "blocked" test asserts the same fact the Phase 2 fail-closed tests do: the upstream
 received **zero** requests. The audit store is broken at exactly one step —

@@ -1,4 +1,4 @@
-"""A fake OIDC identity provider for principal binding (contracts/identity.md §4).
+"""A fake OIDC identity provider for principal binding.
 
 Serves its JWKS and mints ID tokens for a human principal that name an agent through the
 binding claim. ``down`` makes every request fail the way an unreachable provider does, so

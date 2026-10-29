@@ -1,4 +1,4 @@
-"""``classify_edge`` — the one edge rule, and what each verdict means at runtime (T037)."""
+"""``classify_edge`` — the one edge rule, and what each verdict means at runtime."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Verifying the ``Agent-Identity`` assertion at a resource (contracts/identity.md §6).
+"""Verifying the ``Agent-Identity`` assertion at a resource.
 
 The assertion is a JWT the agent signed with a key in its CURRENT pinned trust anchor. It
 proves who is calling and is bound to the exact grant string through ``grant_hash``, so an

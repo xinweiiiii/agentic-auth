@@ -1,4 +1,4 @@
-"""The PRD §2.2 injection scenario, end to end through the sidecar (US2, T042; SC-004)."""
+"""The PRD §2.2 injection scenario, end to end through the sidecar."""
 
 from __future__ import annotations
 

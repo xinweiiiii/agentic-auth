@@ -48,13 +48,13 @@ SPAN_NAMES = frozenset(
 
 # Spans emitted on the dispatch path. These never record an exception: the SDK would attach
 # `exception.message` and a full `exception.stacktrace`, and a traceback through token
-# verification can carry a token fragment (research.md R7).
+# verification can carry a token fragment.
 DISPATCH_PATH_SPANS = SPAN_NAMES
 
 # ------------------------------------------------------------------------ attribute keys
 
 # Correlation. Opaque UUIDs that carry no identity on their own and are useless without the
-# audit-reader check — they are the pointer FR-008 and SC-001 depend on, so they are NOT
+# audit-reader check — they are the pointer from a trace back to the audit record, so they are NOT
 # pseudonymised.
 ATTR_ACTION_ID = "authz.action_id"
 ATTR_SESSION_ID = "authz.session_id"
@@ -85,7 +85,7 @@ ATTR_PEP_OUTCOME = "authz.pep.outcome"
 ATTR_PEP_BLOCK_CAUSE = "authz.pep.block_cause"
 
 # Identity. Pseudonymous by default; the plaintext forms appear only with the disclosure opt-in,
-# and never alongside their `_ref` counterpart (contracts/pseudonymisation.md §1).
+# and never alongside their `_ref` counterpart.
 ATTR_AGENT_REF = "authz.agent_ref"
 ATTR_ACT_CHAIN_REF = "authz.act_chain_ref"
 ATTR_TAINT_SOURCE_REF = "authz.taint_source_ref"
@@ -96,7 +96,7 @@ ATTR_TAINT_SOURCE = "authz.taint_source"
 PSEUDONYMOUS_ATTRS = frozenset({ATTR_AGENT_REF, ATTR_ACT_CHAIN_REF, ATTR_TAINT_SOURCE_REF})
 DISCLOSED_ATTRS = frozenset({ATTR_AGENT, ATTR_ACT_CHAIN, ATTR_TAINT_SOURCE})
 
-# Standard conventions, reused with their standard meaning (research.md R2).
+# Standard conventions, reused with their standard meaning.
 ATTR_ERROR_TYPE = "error.type"
 ATTR_HTTP_METHOD = "http.request.method"
 ATTR_HTTP_STATUS = "http.response.status_code"
@@ -132,7 +132,7 @@ ATTR_KEYS = (
 )
 
 # Never an attribute, on any span, at any disclosure setting. Checked by name so a future
-# refactor that starts passing one of these through fails loudly (FR-019).
+# refactor that starts passing one of these through fails loudly.
 FORBIDDEN_ATTR_SUBSTRINGS = (
     "token",
     "jti",
@@ -190,14 +190,14 @@ NEW_METRIC_NAMES = frozenset(
 # ------------------------------------------------------------------ closed value sets
 #
 # Every label value and every enum attribute value, enumerated. This is what bounds metric
-# cardinality regardless of how many agents, sessions or targets exist (FR-020, SC-007), and
+# cardinality regardless of how many agents, sessions or targets exist, and
 # what lets test_dashboard_artifacts.py catch a typo'd matcher like {cause="pdp_unavailable"}
 # against the real value `pdp_unreachable`.
 
 PEP_OUTCOMES = frozenset({"allowed", "blocked", "observed_would_block"})
 # Derived by enumerating every return path in app/sidecar/enforce.py, not from a guess. The
 # planning draft listed six; four more are needed to cover the code as written:
-#   audit_unavailable  FR-005 names "audit record not committed" explicitly, and enforce()
+#   audit_unavailable  the contract names "audit record not committed" explicitly, and enforce()
 #                      refuses on it (DenyReason.AUDIT_UNAVAILABLE)
 #   unauthorized       a missing/malformed/refused bearer: the caller's fault, so neither a
 #                      policy verdict nor a guardrail outage
@@ -219,8 +219,8 @@ PEP_BLOCK_CAUSES = frozenset(
     }
 )
 # Refusals caused by the guardrail's own unavailability rather than by policy. The distinction
-# FR-005 exists for: the difference between a guardrail that works and one that is broken.
-# Refusals caused by the guardrail's own unavailability rather than by policy: the FR-005
+# the cause label exists for: the difference between a guardrail that works and one that is broken.
+# Refusals caused by the guardrail's own unavailability rather than by policy: the
 # distinction, and the only causes that page. `unauthorized`, `unbindable`, `body_too_large`
 # and `unresolvable_call` are deliberately absent — they are the caller's or the operator's
 # mistake, and alerting on them would cry wolf.

@@ -1,4 +1,4 @@
-"""US4 — the sidecar swaps the token and forwards (T048).
+"""The sidecar swaps the token and forwards.
 
 The upstream fixture records what it actually received, so these tests assert the
 narrowed token arrived and the presented one did not.
@@ -37,7 +37,7 @@ async def test_the_narrowed_token_reaches_the_upstream_not_the_presented_one(
     assert sidecar_stack.recorder.count == 1
 
     arrived = sidecar_stack.recorder.last["token"]
-    assert arrived != session["root_grant"]  # FR-030
+    assert arrived != session["root_grant"]
 
     c = claims(arrived)
     assert c["aud"] == "mcp://kb.internal/search"  # narrowed to exactly this target
@@ -195,7 +195,7 @@ async def test_a_tampered_token_is_rejected_by_the_pdp_not_the_sidecar(
 async def test_a_second_call_with_the_same_token_is_a_new_recorded_decision(
     sidecar_stack, register_chain, consent
 ) -> None:
-    """Phase 4 (research.md R1): the single-use guard is per recorded DECISION, not per
+    """Phase 4: the single-use guard is per recorded DECISION, not per
     token, so an agent can make more than one call at a hop. Each call is decided,
     recorded and narrowed on its own. Phase 2 blocked the second call with 401 here."""
     session = await _rooted(register_chain, consent)
@@ -213,7 +213,7 @@ async def test_a_second_call_with_the_same_token_is_a_new_recorded_decision(
 
 async def test_the_sidecar_pools_one_http_client_for_the_process(sidecar_stack) -> None:
     """A per-request client would spend the whole per-hop latency budget on connection
-    setup. One pooled client is built at startup and reused (T067)."""
+    setup. One pooled client is built at startup and reused."""
     import httpx
 
     from app.sidecar.app import build_app

@@ -1,4 +1,4 @@
-"""Minting and verifying transaction tokens through the profile (US1, T026)."""
+"""Minting and verifying transaction tokens through the profile."""
 
 from __future__ import annotations
 

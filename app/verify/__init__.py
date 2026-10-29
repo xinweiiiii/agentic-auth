@@ -43,7 +43,7 @@ from app.verify.transaction import VerifiedTransaction, verify_transaction
 @runtime_checkable
 class TelemetrySink(Protocol):
     """How an integrator gets the verifier's spans and events, without this package growing a
-    dependency on OpenTelemetry (spec 007 FR-030, research.md R12).
+    dependency on OpenTelemetry.
 
     This package is importable with **only** ``pyjwt[crypto]``, which
     ``tests/unit/test_verify_imports.py`` enforces — so the seam is a ``Protocol``, not an
@@ -66,7 +66,7 @@ class TelemetrySink(Protocol):
 
 def _build_metrics(registry: Any) -> Any:
     """The verifier's own metric objects, defined here so this package never imports the
-    control plane's ``app.services.metrics``. Names mirror contracts/metrics.md."""
+    control plane's ``app.services.metrics``. Names mirror docs/contracts/metrics/."""
     from prometheus_client import Counter, Gauge
 
     class _Metrics:
@@ -99,7 +99,7 @@ class Verifier:
     issuer: str = "agentic-auth"
     leeway_seconds: int = 60
     metrics_registry: Any = None
-    # Phase 6 (spec 007). Supplied by the integrator; None means emit nothing. The verifier
+    # Phase 6. Supplied by the integrator; None means emit nothing. The verifier
     # never constructs one, and never touches process-global telemetry.
     telemetry: TelemetrySink | None = None
     _metrics: Any = field(default=None, init=False, repr=False)

@@ -1,4 +1,4 @@
-"""DiscoveryClient — RFC 9728 fetch, mcp:// mapping, failure handling (US2)."""
+"""DiscoveryClient — RFC 9728 fetch, mcp:// mapping, failure handling."""
 
 from __future__ import annotations
 

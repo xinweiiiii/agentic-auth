@@ -27,7 +27,7 @@ services:
 
   # ------------------------------------------------------------------ observability
   # Opt-in: `docker compose --profile observability up -d`. The default `up -d` is unchanged,
-  # so a developer who does not want a telemetry stack never starts one (spec 007 FR-029).
+  # so a developer who does not want a telemetry stack never starts one.
   #
   #   export AGENTIC_AUTH_TELEMETRY_ENABLED=true
   #   export AGENTIC_AUTH_TELEMETRY_KEY="$(openssl rand -hex 32)"

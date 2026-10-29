@@ -1,6 +1,6 @@
-"""Minting and verifying hop tokens (T022).
+"""Minting and verifying hop tokens.
 
-The verification order under test is the one in ``contracts/hop-token.md``. Every case
+The verification order under test is the hop-token profile's. Every case
 here is a rejection that must happen *before* any claim is trusted.
 """
 
@@ -69,7 +69,7 @@ def test_hop_token_round_trips(profile: JwtTokenProfile) -> None:
 
 
 def test_hop_token_names_the_decision_that_authorized_it(profile: JwtTokenProfile) -> None:
-    """The next hop's audit row links to its parent through this claim (Phase 3)."""
+    """The next hop's audit row links to its parent through this claim."""
     assert profile.verify(_hop_token(profile), audience=TARGET).action_id == ACTION_ID
 
 
@@ -165,7 +165,7 @@ def test_wrong_issuer_is_rejected(profile: JwtTokenProfile) -> None:
 
 
 def test_hop_claim_disagreeing_with_act_depth_is_rejected(profile: JwtTokenProfile) -> None:
-    """A hand-assembled token that under-reports its depth. SC-010."""
+    """A hand-assembled token that under-reports its depth."""
     deep = nest(nest(nest(None, "agent://a"), "agent://b"), "agent://c")
     lying = _hop_token(profile, hop=2, act=deep)  # act depth 3 -> hop should be 4
     with pytest.raises(TokenVerificationError, match="disagrees with act depth"):

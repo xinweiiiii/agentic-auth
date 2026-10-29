@@ -1,4 +1,4 @@
-"""Verification is offline after bootstrap, and fast (US3, T059; SC-008, FR-040)."""
+"""Verification is offline after bootstrap, and fast."""
 
 from __future__ import annotations
 

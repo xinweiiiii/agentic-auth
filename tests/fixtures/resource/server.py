@@ -1,4 +1,4 @@
-"""A protected tool server that admits calls with ``app.verify`` (US3 demonstration).
+"""A protected tool server that admits calls with ``app.verify``.
 
 Two tools: ``read_balance`` (ordinary) and ``terminate_account`` (privileged). Every
 request is decided by ``Verifier.admit()`` and recorded, so tests can assert the exact

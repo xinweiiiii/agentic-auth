@@ -14,10 +14,10 @@ Three things this table makes true in the database rather than in code:
 
 **The ceiling is enforced before the insert, not here.** ``data_class`` is checked against
 ``PolicyIndex.data_classes_by_agent`` in :mod:`app.services.stepup`, so a row outside the
-pinned policy cannot exist (FR-028). A check constraint could not express it: the policy
+pinned policy cannot exist. A check constraint could not express it: the policy
 lives in another table, versioned per session.
 
-The challenge value itself is never stored — only its SHA-256 (SC-018).
+The challenge value itself is never stored — only its SHA-256.
 """
 
 from __future__ import annotations

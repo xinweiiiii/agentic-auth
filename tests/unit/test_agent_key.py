@@ -1,4 +1,4 @@
-"""``AgentKey``: the agent's Ed25519 key and the three small tokens it signs (US4, T057)."""
+"""``AgentKey``: the agent's Ed25519 key and the three small tokens it signs."""
 
 from __future__ import annotations
 

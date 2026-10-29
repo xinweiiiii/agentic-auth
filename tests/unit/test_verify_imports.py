@@ -1,4 +1,4 @@
-"""``app.verify`` must be importable without the control plane (US3, T060).
+"""``app.verify`` must be importable without the control plane.
 
 A resource server installs this package to guard its tools. If any module under
 ``app/verify/`` imported FastAPI, SQLAlchemy, Redis or the control plane's own services at
@@ -52,7 +52,7 @@ def test_only_pyjwt_and_cryptography_are_required_for_static_verification() -> N
 
 
 # ---------------------------------------------------------------------------------------
-# Phase 6 (spec 007 FR-030): the telemetry seam must not widen this floor.
+# Phase 6: the telemetry seam must not widen this floor.
 #
 # Appended, not edited: the cases above are the Phase 4 contract and stay exactly as they were
 # (see the no-regression gate in tests/conftest.py).

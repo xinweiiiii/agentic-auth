@@ -96,8 +96,7 @@ async def latest_resolvable(session: AsyncSession, agent_id: uuid.UUID) -> Manif
     """The newest manifest that may take part in a decision — never a proposal.
 
     ``get_latest`` deliberately still returns a ``proposed`` row, because the proposal
-    endpoints need to read it. Anything on a decision path calls this instead
-    (research.md R12).
+    endpoints need to read it. Anything on a decision path calls this instead.
     """
     return (
         await session.execute(
@@ -134,10 +133,9 @@ async def all_reconciled(session: AsyncSession) -> list[Manifest]:
     **This is where a proposal stops.** The filter below already excludes
     ``status = 'proposed'``, so an observation-derived manifest never reaches the
     compiler, no ``compiled_policies`` row exists for it, and therefore
-    ``SessionService.consent()`` raises before its insert and no session can pin it
-    (FR-036, research.md R12). Inertness is a property of this one predicate, so
-    ``tests/unit/test_proposed_is_inert.py`` asserts it explicitly rather than trusting
-    that it stays true by accident.
+    ``SessionService.consent()`` raises before its insert and no session can pin it.
+    Inertness is a property of this one predicate, so ``tests/unit/test_proposed_is_inert.py``
+    asserts it explicitly rather than trusting that it stays true by accident.
     """
     sub = (
         select(Manifest.agent_id, func.max(Manifest.version).label("v"))

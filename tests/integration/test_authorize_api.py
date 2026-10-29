@@ -1,4 +1,4 @@
-"""US2 — the authorize endpoint end to end (T036)."""
+"""The authorize endpoint end to end."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 
 async def _authorize(client, token, **body):
-    # Phase 5: `guarantee` is mandatory on the request with no default (FR-018). These
+    # Phase 5: `guarantee` is mandatory on the request with no default. These
     # tests stand in for an in-path enforcement point, which is `full`; a test that cares
     # passes its own.
     body.setdefault("guarantee", "full")
@@ -200,7 +200,7 @@ async def test_malformed_body_is_rejected(client, rooted, body) -> None:
 
 
 async def test_a_client_supplied_hop_count_is_not_accepted(client, rooted) -> None:
-    """SC-010's structural half: there is no field to lie in."""
+    """Depth under-reporting, structurally: there is no field to lie in."""
     r = await _authorize(
         client,
         rooted["root_grant"],

@@ -158,7 +158,7 @@ class TokenProfile(ABC):
     def verify_actor_token(
         self, token: str, *, anchor_jwks: dict[str, Any], subject_token: str, expected_agent: str
     ) -> str:
-        """Proof of possession at the exchange (Phase 4): the actor token verifies against
+        """Proof of possession at the exchange: the actor token verifies against
         the holder's pinned keys, names ``expected_agent``, is addressed to this issuer, is
         fresh, and hashes the exact ``subject_token``. Returns the agent name, or raises."""
 

@@ -1,4 +1,4 @@
-"""US1 — register an agent, pin & read back its manifest."""
+"""Register an agent, pin & read back its manifest."""
 
 from __future__ import annotations
 

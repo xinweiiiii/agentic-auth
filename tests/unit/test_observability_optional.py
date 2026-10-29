@@ -1,4 +1,4 @@
-"""The layer is a no-op when the OpenTelemetry extra is absent (spec 007 FR-029).
+"""The layer is a no-op when the OpenTelemetry extra is absent.
 
 ``opentelemetry`` is an optional extra. A deployment that never enables telemetry must not need
 it installed, which means **nothing in ``app.observability`` may import it at module scope** —

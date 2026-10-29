@@ -558,7 +558,7 @@
                 "type": "null"
               }
             ],
-            "description": "Present only on a RECOVERABLE deny with step-up enabled: the challenge to put to the consenting human. A non-recoverable deny never carries one, so a client cannot offer a prompt for something that can never be granted (FR-024)."
+            "description": "Present only on a RECOVERABLE deny with step-up enabled: the challenge to put to the consenting human. A non-recoverable deny never carries one, so a client cannot offer a prompt for something that can never be granted."
           },
           "taint": {
             "anyOf": [
@@ -633,7 +633,7 @@
           },
           "guarantee": {
             "$ref": "#/components/schemas/Guarantee",
-            "description": "How strong the enforcement at this point actually is. Reported by the enforcement point, exactly like `enforced`, and NEVER an input to the decision. **Deliberately no default**: a PEP that omits it gets a 422, which is how FR-018 ('refuse to emit a decision whose guarantee level cannot be determined') is enforced by the schema rather than by a runtime branch some path could miss."
+            "description": "How strong the enforcement at this point actually is. Reported by the enforcement point, exactly like `enforced`, and NEVER an input to the decision. **Deliberately no default**: a PEP that omits it gets a 422, which is how the rule ('refuse to emit a decision whose guarantee level cannot be determined') is enforced by the schema rather than by a runtime branch some path could miss."
           },
           "session_id": {
             "title": "Session Id",
@@ -648,7 +648,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent-reported label. ADDITIVE ONLY: it can raise the effective taint the decision uses, never lower it (Phase 4). The control plane derives the rest."
+            "description": "Agent-reported label. ADDITIVE ONLY: it can raise the effective taint the decision uses, never lower it. The control plane derives the rest."
           },
           "target": {
             "description": "mcp://host/tool, or agent://<name>",
@@ -1839,7 +1839,7 @@
       },
       "TaintPolicyDecl": {
         "additionalProperties": false,
-        "description": "Phase 4 provenance policy for THIS agent (contracts/taint.md \u00a72).\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
+        "description": "Phase 4 provenance policy for THIS agent.\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
         "properties": {
           "block_tainted_into": {
             "items": {
@@ -1927,7 +1927,7 @@
       },
       "TransactionFingerprint": {
         "additionalProperties": false,
-        "description": "The FR-042 fingerprint of a privileged call's transaction token: the binding digest\nand lifetime, never the token. Joined from ``transaction_tokens`` on ``action_id``.",
+        "description": "The fingerprint of a privileged call's transaction token: the binding digest\nand lifetime, never the token. Joined from ``transaction_tokens`` on ``action_id``.",
         "properties": {
           "binding": {
             "anyOf": [
@@ -1972,7 +1972,7 @@
         "properties": {
           "params": {
             "additionalProperties": true,
-            "description": "The call's parameters, a JSON object. Bound per contracts/canonicalization.md.",
+            "description": "The call's parameters, a JSON object. Bound per docs/canonicalization.md.",
             "title": "Params",
             "type": "object"
           }

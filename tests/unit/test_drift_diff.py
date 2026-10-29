@@ -1,4 +1,4 @@
-"""``diff`` — judging observed edges against declared manifests, purely (T039)."""
+"""``diff`` — judging observed edges against declared manifests, purely."""
 
 from __future__ import annotations
 

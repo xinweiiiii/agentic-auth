@@ -108,8 +108,8 @@ def record(
 
 
 def write_drift_metrics(report: DriftReport, path: Path) -> None:
-    """One run's drift metrics, written atomically for the node-exporter textfile collector
-    (contracts/metrics.md). Labels carry verdicts and results — never agent names."""
+    """One run's drift metrics, written atomically for the node-exporter textfile collector.
+    Labels carry verdicts and results — never agent names."""
     metrics = build_drift_metrics()
     metrics.checks.labels(result=report.result).inc()
     for verdict in VERDICTS:

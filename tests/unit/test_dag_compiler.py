@@ -1,4 +1,4 @@
-"""DagCompiler — transitive budget, cycle rejection, data-class union (US3)."""
+"""DagCompiler — transitive budget, cycle rejection, data-class union."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""US4 — scope catalog reads (latest, pinned, 404, cache back-fill)."""
+"""Scope catalog reads (latest, pinned, 404, cache back-fill)."""
 
 from __future__ import annotations
 

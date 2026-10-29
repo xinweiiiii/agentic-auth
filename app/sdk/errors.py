@@ -63,7 +63,7 @@ class PolicyDenied(Exception):
         # Phase 5. Present only when this refusal is recoverable AND the deployment has
         # step-up enabled: the question to put to the consenting human. A non-recoverable
         # refusal never carries one, so `if denied.challenge:` is a safe thing to branch
-        # on without re-checking recoverability (FR-024).
+        # on without re-checking recoverability.
         self.challenge = challenge
         self.data_class = data_class
 
@@ -73,7 +73,7 @@ class PolicyDenied(Exception):
 
         Since Phase 5 that means "the human did not consent to this data class", not
         "the manifest never declared it" — the second is ``OUT_OF_SCOPE`` and final,
-        because consent may only widen within the pinned manifest (research.md R5).
+        because consent may only widen within the pinned manifest.
         """
         return is_recoverable(self.reason)
 
@@ -85,7 +85,7 @@ class ControlPlaneUnavailable(Exception):
 
 class TransactionParamsRequired(Exception):
     """The decision says this privileged call needs a transaction token, and no ``params``
-    were supplied to bind. Raised BEFORE any exchange, so nothing was spent (Phase 4)."""
+    were supplied to bind. Raised BEFORE any exchange, so nothing was spent."""
 
 
 class ControlPlaneRejected(Exception):

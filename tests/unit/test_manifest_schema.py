@@ -1,4 +1,4 @@
-"""Schema validation for the agent manifest (US1)."""
+"""Schema validation for the agent manifest."""
 
 from __future__ import annotations
 

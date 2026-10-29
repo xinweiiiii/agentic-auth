@@ -1,5 +1,5 @@
 """Agent identity fixtures: Ed25519 keypairs, identity documents, and the small signed
-tokens the identity contract defines (contracts/identity.md).
+tokens the identity contract defines.
 
 Everything here signs with a key the TEST holds. ``bad=True`` variants sign with a key
 that is NOT in the document, which is the forgery every verifier must refuse.

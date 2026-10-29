@@ -66,7 +66,7 @@ SESSION_HEADER = "x-agentic-session"
 
 @dataclass(frozen=True)
 class EdgeAttribution:
-    """What this call was, for edge recording (contracts/phase-2-deltas.md §5.2).
+    """What this call was, for edge recording.
 
     ``outcome`` is one of ``allow``, ``deny`` (policy refused), ``observed`` (policy
     refused, observe mode forwarded), ``blocked_infra`` (a dependency failed), or
@@ -84,7 +84,7 @@ class EdgeAttribution:
 class Allow:
     """The only success. Holding one means the PDP allowed this hop and a narrowed token
     was issued for it — and, for a privileged target, a transaction token bound to the
-    buffered body (Phase 4)."""
+    buffered body."""
 
     token: str
     upstream: Upstream
@@ -240,20 +240,20 @@ async def enforce(
     *inputs*, which the conformance suite exists to catch. Any change here must keep both
     callers working.
 
-    ``body_reader`` is only ever called for a privileged target (research.md R8), so ordinary
+    ``body_reader`` is only ever called for a privileged target, so ordinary
     calls keep streaming. ``identity`` is an :class:`app.sidecar.identity.SidecarIdentity`
     or ``None``; typed loosely to keep this module free of the key-handling imports.
 
-    ``actor_token`` is the gateway's path to proof-of-possession: it holds no signing key
-    (research.md R2), so instead of minting an actor token it relays the one the agent
+    ``actor_token`` is the gateway's path to proof-of-possession: it holds no signing key,
+    so instead of minting an actor token it relays the one the agent
     supplied. Used only when ``identity`` is ``None``, so a sidecar with a key always
     signs its own rather than trusting a header.
 
     ``resolved`` lets a caller supply an already-matched route. The sidecar omits it and
     resolves from its own single-agent ``upstream_map``; the gateway passes the result of
-    its shared, agent-keyed table (research.md R4).
+    its shared, agent-keyed table.
 
-    ``timer`` records per-stage latency (spec 007 FR-006). It defaults to a timer with no
+    ``timer`` records per-stage latency. It defaults to a timer with no
     metrics attached, so every call site works unchanged and no branch is needed below.
     """
     timer = timer if timer is not None else StageTimer(None)
@@ -289,7 +289,7 @@ async def enforce(
         with timer.stage("decide"):
             decision_response = await client.post(
                 f"{config.pdp_url}/v1/authorize",
-                # FR-012: every leg the SDK controls carries trace context, so the control
+                # Every leg the SDK controls carries trace context, so the control
                 # plane's decision span lands in the same trace as this proxied call.
                 headers=observability.inject({"Authorization": f"Bearer {presented}"}),
                 json={
@@ -303,7 +303,7 @@ async def enforce(
                     # Phase 5. Same contract as `enforced`: self-reported by the enforcement
                     # point, recorded, never an input to the decision. Mandatory with no
                     # default on the request, so omitting it is a 422 rather than a silent
-                    # claim of full guarantee (FR-018).
+                    # claim of full guarantee.
                     "guarantee": config.guarantee_level,
                     **({"taint": taint} if taint else {}),
                 },
@@ -381,7 +381,7 @@ async def enforce(
                 attribution=EdgeAttribution(acting_agent, target, "observed", reason.value),
             )
         # Observe mode predicts what POLICY would block. It never forwards an infrastructure
-        # failure — that would pass an outage off as a prediction (research.md R3).
+        # failure — that would pass an outage off as a prediction.
         response = deny.policy_denied(
             reason,
             decision.get("message") or "denied by policy",

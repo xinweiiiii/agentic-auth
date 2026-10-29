@@ -1,4 +1,4 @@
-"""GitHub rendering: the step summary and one annotation per undeclared edge (T061, US5)."""
+"""GitHub rendering: the step summary and one annotation per undeclared edge."""
 
 from __future__ import annotations
 

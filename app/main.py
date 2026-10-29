@@ -41,14 +41,14 @@ logger = logging.getLogger(__name__)
 @contextlib.asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Rebuild the revoked-agents set from the database, so a flushed Redis can never make
-    the control plane more permissive than the table (Phase 4, research.md R12)."""
+    the control plane more permissive than the table."""
     try:
         async with get_sessionmaker()() as session:
             await RevocationService(AnchorCache(get_redis())).rebuild(session, get_redis())
     except Exception:  # pragma: no cover - startup without a database (docs builds, tests)
         logger.warning("could not rebuild the revoked-agents set at startup")
 
-    # Telemetry (Phase 6, spec 007). Off by default; `setup` never raises, so a missing
+    # Telemetry. Off by default; `setup` never raises, so a missing
     # collector, a missing OTel extra or a missing telemetry key cannot stop the control plane
     # from serving. Deliberately the opposite posture to the audit log above.
     logs.configure()
@@ -60,7 +60,7 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
         yield
     finally:
         # force_flush happens here and nowhere else: it is the one call that can block, so it
-        # never touches a request path (research.md R9).
+        # never touches a request path.
         observability.shutdown()
 
 
@@ -98,7 +98,7 @@ def create_app() -> FastAPI:
         @app.get("/metrics", tags=["ops"], include_in_schema=False)
         async def metrics() -> Response:
             """Prometheus text exposition. Internal network only — labels carry no agent,
-            user, session or target identities (contracts/metrics.md). The registry is
+            user, session or target identities. The registry is
             resolved per request, so a multi-process collector sees every worker."""
             return Response(generate_latest(exposition_registry()), media_type=CONTENT_TYPE_LATEST)
 

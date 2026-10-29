@@ -45,7 +45,7 @@ class Agent(UUIDPrimaryKey, TimestampCreated, Base):
     status: Mapped[str] = mapped_column(
         String(16), nullable=False, default="registered", server_default="registered"
     )
-    # "<idp issuer>#<sub>" once an accountable principal is bound (Phase 4).
+    # "<idp issuer>#<sub>" once an accountable principal is bound.
     principal_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # The current trust anchor's version; NULL unless enrolled or revoked.
     trust_anchor_version: Mapped[int | None] = mapped_column(Integer, nullable=True)

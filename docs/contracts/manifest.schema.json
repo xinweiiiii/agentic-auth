@@ -110,7 +110,7 @@
     },
     "TaintPolicyDecl": {
       "additionalProperties": false,
-      "description": "Phase 4 provenance policy for THIS agent (contracts/taint.md \u00a72).\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
+      "description": "Phase 4 provenance policy for THIS agent.\n\n``trusted_sources``: globs over target refs whose results are trusted_internal for this\nagent. ``None`` means \"my declared downstream agents, nothing else\" \u2014 materialized by the\ncompiler so the runtime never has to know the default. ``block_tainted_into``: targets a\ntainted context may not call; ``\"privileged\"`` means every privileged tool, a glob matches\nthe target ref or the call's data class.",
       "properties": {
         "trusted_sources": {
           "anyOf": [

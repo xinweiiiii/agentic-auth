@@ -6,7 +6,7 @@ A hop token is bound to one target (``aud``), one data class (``scope``) and one
 delegation token for as many calls as the PDP records allows for, and each recorded allow
 still mints exactly one token.
 The theft case the per-token guard partly covered is closed properly by proof of
-possession at the exchange (R7).
+possession at the exchange.
 
 If the guard cannot be written the exchange fails closed. The other bindings and a
 60-second lifetime still hold, but a guarantee that quietly degrades is worse than one

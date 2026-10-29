@@ -1,4 +1,4 @@
-"""``agentic-auth audit export`` — read-only archival (T031, FR-009)."""
+"""``agentic-auth audit export`` — read-only archival."""
 
 from __future__ import annotations
 

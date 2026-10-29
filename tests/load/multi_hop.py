@@ -1,4 +1,4 @@
-"""Sustained multi-hop load, reporting p50/p95/p99 **per hop** (T064).
+"""Sustained multi-hop load, reporting p50/p95/p99 **per hop**.
 
 Per hop, not per chain: a regression needs to be attributable to a specific hop, and a
 chain-level average hides the one hop that got slow.
@@ -6,7 +6,7 @@ chain-level average hides the one hop that got slow.
     locust -f tests/load/multi_hop.py --headless -u 50 -r 10 -t 2m \\
         --host http://localhost:8000
 
-Target: p95 added latency per hop < 15 ms with a warm decision cache (SC-008). The first
+Target: p95 added latency per hop < 15 ms with a warm decision cache. The first
 iteration of each user warms the cache; the reported numbers include it, so run long
 enough for it to wash out.
 """
@@ -82,7 +82,7 @@ class MultiHopUser(HttpUser):
                     "caller": caller,
                     "target": target,
                     "data_class": data_class,
-                    # Phase 5: mandatory on the request (FR-018). The SDK path is in the
+                    # Phase 5: mandatory on the request. The SDK path is in the
                     # call path and decides every hop, so `full`.
                     "guarantee": GUARANTEE,
                 },
@@ -95,7 +95,7 @@ class MultiHopUser(HttpUser):
                 if r.json()["outcome"] != "allow":
                     r.failure(f"unexpected deny at hop {index}: {r.json().get('reason')}")
                     return
-                # The exchange spends exactly this recorded decision (Phase 3).
+                # The exchange spends exactly this recorded decision.
                 action_id = r.json()["action_id"]
 
             with self.client.post(
@@ -165,7 +165,7 @@ class MultiHopUser(HttpUser):
                     r.failure(f"transaction mint failed: {r.status_code} {r.text[:120]}")
                     return
 
-        # One query, full chain (SC-003): the deepest action's delegation path, back to the
+        # One query, full chain: the deepest action's delegation path, back to the
         # consenting human. Named on its own so locust reports it as its own percentile row.
         with self.client.get(
             f"/v1/audit/actions/{action_id}/chain",

@@ -1,4 +1,4 @@
-"""The enrollment outcome table, as a pure decision (US4, T048; contracts/identity.md §3)."""
+"""The enrollment outcome table, as a pure decision."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The pure taint rules (US2, T039)."""
+"""The pure taint rules."""
 
 from __future__ import annotations
 

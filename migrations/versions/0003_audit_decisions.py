@@ -102,7 +102,7 @@ def upgrade() -> None:
     # 3. backfill — before the trigger exists. `acting_agent` stays NULL on purpose: a
     #    Phase 2 row never stored the verified token holder (`act_chain` holds only the
     #    PREVIOUS actors, and `caller` is request input also recorded on caller-mismatch
-    #    denies), so any value here would be a guess (FR-008).
+    #    denies), so any value here would be a guess.
     op.execute(
         """
         UPDATE audit_decisions AS d SET

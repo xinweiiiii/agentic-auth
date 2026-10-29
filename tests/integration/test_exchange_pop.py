@@ -1,4 +1,4 @@
-"""Proof of possession at the exchange (US3, T062; research.md R7, contracts/identity.md §5)."""
+"""Proof of possession at the exchange."""
 
 from __future__ import annotations
 

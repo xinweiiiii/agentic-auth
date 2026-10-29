@@ -1,4 +1,4 @@
-"""Enrollment end to end (US4, T049; quickstart §5)."""
+"""Enrollment end to end."""
 
 from __future__ import annotations
 

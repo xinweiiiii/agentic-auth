@@ -1,8 +1,8 @@
-"""Telemetry can never make the guardrail worse (spec 007 FR-017, FR-018, SC-004).
+"""Telemetry can never make the guardrail worse.
 
-This file *is* SC-004: "zero authorization outcomes change as a result of any telemetry
-failure, measured across a fault-injection suite covering an unreachable sink, a slow sink, a
-rejecting sink, and a sink that recovers mid-run."
+This file *is* the fail-open guarantee: "zero authorization outcomes change as a result of
+any telemetry failure, measured across a fault-injection suite covering an unreachable sink, a
+slow sink, a rejecting sink, and a sink that recovers mid-run."
 
 The posture under test is deliberately the **opposite** of the audit log's. An uncommitted audit
 row blocks the call (`test_audit_before_dispatch.py`); a dead telemetry sink changes nothing.
@@ -153,7 +153,7 @@ def _install(metrics_registry, exporter, *, synchronous: bool = True) -> None:
     ``synchronous=True`` (SimpleSpanProcessor) makes a test deterministic: the export happens
     before the assertion, so "was the broken sink actually exercised?" is answerable. Pass
     ``synchronous=False`` to exercise the production BatchSpanProcessor path, which is the one
-    whose bounded queue and background thread FR-018 relies on.
+    whose bounded queue and background thread the loss bound relies on.
     """
     from app import observability
     from app.observability.config import ObservabilityConfig
@@ -174,7 +174,7 @@ def _install(metrics_registry, exporter, *, synchronous: bool = True) -> None:
     )
 
 
-# -- SC-004: zero outcome changes, across all four faults -----------------------------------
+# -- zero outcome changes, across all four faults -----------------------------------
 
 
 @pytest.mark.parametrize("fault", sorted(FAULTS), ids=sorted(FAULTS))
@@ -219,7 +219,7 @@ async def test_the_broken_sink_was_actually_exercised(
     assert exporter.attempts > 0, f"the {fault} exporter was never called"
 
 
-# -- FR-017: a failure cannot make the guardrail more permissive ----------------------------
+# -- a failure cannot make the guardrail more permissive ----------------------------
 
 
 async def test_a_broken_sink_cannot_turn_a_deny_into_an_allow(
@@ -284,7 +284,7 @@ async def test_the_audit_record_is_still_written_when_telemetry_is_broken(
     assert rows[0]["outcome"] == "allow"
 
 
-# -- FR-018: bounded, and the loss reports itself -------------------------------------------
+# -- bounded, and the loss reports itself -------------------------------------------
 
 
 async def test_a_slow_sink_does_not_add_unbounded_latency(
@@ -294,7 +294,7 @@ async def test_a_slow_sink_does_not_add_unbounded_latency(
     from app import observability
 
     # Deliberately NOT the synchronous test processor: SimpleSpanProcessor exports inline on
-    # the thread that ended the span, so it would add the delay by design. FR-018's bound comes
+    # the thread that ended the span, so it would add the delay by design. The loss bound comes
     # from BatchSpanProcessor's queue and background export thread, which is what production
     # uses — so that is what this has to measure.
     _install(metrics_registry, _SlowExporter(delay=2.0), synchronous=False)
@@ -377,7 +377,7 @@ async def test_a_recovering_sink_resumes_without_a_restart(
 
 
 async def test_sampling_loss_is_reported(client, register_chain, consent, metrics_registry) -> None:
-    """FR-018: the telemetry loss must itself be reported."""
+    """The telemetry loss must itself be reported."""
     from app import observability
     from app.observability.config import ObservabilityConfig
 

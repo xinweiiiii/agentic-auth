@@ -27,7 +27,7 @@ class ConsentCreate(BaseModel):
     # Phase 2-4 semantics — so every existing caller is unaffected. Supplying a subset is
     # what makes SCOPE_NOT_CONSENTED mean "the human did not approve this" rather than
     # "the manifest never declared it", and therefore what makes step-up able to grant
-    # anything at all (research.md R5).
+    # anything at all.
     #
     # Validated against the pinned policy at consent time, not at first use: a typo
     # should surface to the integrator immediately, not as a refusal three hops into a

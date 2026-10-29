@@ -1,4 +1,4 @@
-"""Identity plane request/response models (contracts/identity-plane.openapi.yaml).
+"""Identity plane request/response models.
 
 Inbound models are ``extra="forbid"``. ``Jwk`` accepts OKP/Ed25519 public keys only and
 rejects a private member outright: an identity document that leaks ``d`` is a bug on the

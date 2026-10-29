@@ -1,7 +1,7 @@
-"""Inbound trace context, treated as untrusted input (spec 007 FR-011).
+"""Inbound trace context, treated as untrusted input.
 
 A caller-supplied ``traceparent`` arrives from an agent process we may not control. Three rules,
-all enforced here so no call site has to remember them (contracts/trace-context.md §1-2, §5):
+all enforced here so no call site has to remember them:
 
 1. **`tracecontext` only.** The SDK default is ``tracecontext,baggage``, and
    ``W3CBaggagePropagator`` would extract arbitrary attacker-controlled key/value data on the way
@@ -51,7 +51,7 @@ CAUSE_BAGGAGE_DROPPED = "baggage_dropped"
 def _propagator() -> Any:
     """Deliberately not the global propagator — see rule 1 above — and deliberately built
     lazily: the OpenTelemetry API is an optional extra, so nothing in this package may import
-    it at module scope. The T016 gate (the suite passing with the extra uninstalled) is what
+    it at module scope. The gate (the suite passing with the extra uninstalled) is what
     enforces that."""
     from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
@@ -112,13 +112,13 @@ def extract_parent(
 
     if session_id and key:
         # One chain, one trace, with no cooperation from the caller and no channel between the
-        # control plane and the PEP (FR-010).
+        # control plane and the PEP.
         return session_parent_context(session_id, key)
     return None
 
 
 def inject(headers: dict[str, str]) -> dict[str, str]:
-    """Add ``traceparent`` for an outbound call the SDK controls (FR-012).
+    """Add ``traceparent`` for an outbound call the SDK controls.
 
     Only trace context goes out — no baggage, no tracestate. The sidecar's **upstream** leg needs
     no help: ``traceparent`` is not a hop-by-hop header and is deliberately absent from

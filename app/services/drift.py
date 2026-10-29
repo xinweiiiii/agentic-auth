@@ -1,7 +1,7 @@
 """The offline drift check — observed edges versus declared manifests.
 
 Runs from files only: manifests from local directories, edges from a recorded trace. There is
-no network code on this path (FR-032) — no discovery, no reconciliation, no control plane —
+no network code on this path — no discovery, no reconciliation, no control plane —
 because the question is only "was every observed edge declared", and CI should be able to
 answer it with no credentials and no services.
 

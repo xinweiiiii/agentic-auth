@@ -1,7 +1,7 @@
-"""Call-bound authority at the resource: mutate, replay, expire (US1, SC-001, SC-002).
+"""Call-bound authority at the resource: mutate, replay, expire.
 
 Drives ``app.verify.transaction.verify_transaction`` directly with tokens the real profile
-minted, so every row of quickstart §2 is a resource-side fact, not a control-plane one.
+minted, so every row of the replay table is a resource-side fact, not a control-plane one.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""The enrollment decision — pure (contracts/identity.md §3).
+"""The enrollment decision — pure.
 
 Given what the service established (did the signature verify, is any presented key on a
 revoked anchor, what did principal binding say, is the manifest reconciled), decide one of

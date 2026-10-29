@@ -1,6 +1,6 @@
-"""US6 — see what would be blocked, before blocking it (T059).
+"""See what would be blocked, before blocking it.
 
-SC-007. The point of the mode is that the report is a *prediction*: the same call, in the
+The point of the mode is that the report is a *prediction*: the same call, in the
 same policy, produces the same decision either way — only the consequence differs.
 """
 

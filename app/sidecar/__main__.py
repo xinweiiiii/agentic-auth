@@ -28,7 +28,7 @@ def main() -> int:
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level.upper())
-    # Structured, machine-parsable records with correlation fields (spec 007 FR-014).
+    # Structured, machine-parsable records with correlation fields.
     # Added after basicConfig so the JSON handler sits alongside the default stream handler
     # rather than replacing it, and a developer watching a terminal still sees plain lines.
     logs.configure()

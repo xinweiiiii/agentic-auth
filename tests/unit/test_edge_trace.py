@@ -1,4 +1,4 @@
-"""Recording edge events and aggregating them into a trace (T040, FR-022–FR-025, SC-012)."""
+"""Recording edge events and aggregating them into a trace."""
 
 from __future__ import annotations
 

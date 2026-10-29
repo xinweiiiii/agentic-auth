@@ -79,4 +79,4 @@ where anchors are shipped as files; it is never stale, and the integrator owns r
 
 `tests/fixtures/resource/server.py` is a Starlette app that guards one privileged and one ordinary
 tool with `admit()` and records every admission and refusal. `tests/integration/test_identity_and_grant.py`
-drives it through the sidecar (SC-007, SC-008, SC-012).
+drives it through the sidecar.

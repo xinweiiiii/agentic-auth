@@ -1,4 +1,4 @@
-"""``POST /v1/token/transaction`` — request and response (contracts/transaction-token.md)."""
+"""``POST /v1/token/transaction`` — request and response."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class TransactionMintRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     params: dict[str, Any] = Field(
-        description="The call's parameters, a JSON object. Bound per contracts/canonicalization.md."
+        description="The call's parameters, a JSON object. Bound per docs/canonicalization.md."
     )
 
 

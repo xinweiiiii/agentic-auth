@@ -1,4 +1,4 @@
-"""Record a real run through the sidecar, then check it with the CLI (T043, SC-007).
+"""Record a real run through the sidecar, then check it with the CLI.
 
 The whole loop, in process: register the bank manifests, drive the PRD §2.3 calls through
 an observe-mode sidecar with recording on, aggregate the events, and run

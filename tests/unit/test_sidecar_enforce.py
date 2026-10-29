@@ -58,7 +58,7 @@ def test_ordinary_paths_still_resolve(path: str) -> None:
 
 
 # ---------------------------------------------------------------------------------------
-# The reserved telemetry namespace (spec 007, contracts/pep-telemetry.md §1)
+# The reserved telemetry namespace
 #
 # `/__agentic/metrics` and `/__agentic/status` are mounted ahead of the catch-all proxy
 # route. `upstream_map` prefixes are integrator-chosen, so a mapping that covered the same

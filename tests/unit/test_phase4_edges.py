@@ -1,4 +1,4 @@
-"""Boundary and negative cases for the Phase 4 pure modules (mutation testing, T083).
+"""Boundary and negative cases for the Phase 4 pure modules (mutation testing).
 
 Each test pins one behaviour a mutant of ``canonical``, ``admit`` or ``taint`` changed and
 the first round of tests did not notice.

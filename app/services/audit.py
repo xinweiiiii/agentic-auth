@@ -46,7 +46,7 @@ class RecordResult:
 
     action_id: uuid.UUID | None
     # The parent row's chain document, when one was loaded. Phase 4's taint propagation
-    # reads ancestor `subject_jti`s off it without a second query (research.md R2).
+    # reads ancestor `subject_jti`s off it without a second query.
     parent_chain: list[dict[str, Any]] | None = None
 
     @property
@@ -164,7 +164,7 @@ class AuditService:
                 chain_complete=chain.complete,
                 chain_break=chain.break_reason.value if chain.break_reason else None,
                 # Phase 5. Reported by the enforcement point; recorded verbatim so the row
-                # says what actually enforced it (FR-017). NULL only on a legacy row.
+                # says what actually enforced it. NULL only on a legacy row.
                 guarantee_level=guarantee_level,
                 step_up_ref=step_up_ref,
             )

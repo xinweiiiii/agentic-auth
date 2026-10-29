@@ -108,7 +108,7 @@ async def list_page(
     ``position`` is ``(before, hwm)`` from a cursor, or ``None`` for the first page, which
     fixes the high-water mark. Ordering by ``seq`` rather than ``ts`` matters: ``ts`` is
     taken before commit, so commit order and ``ts`` order can disagree, and a keyset on
-    ``ts`` can skip a row that commits late (research.md R6).
+    ``ts`` can skip a row that commits late.
     """
     if position is None:
         hwm = await db.scalar(select(func.max(AuditDecision.seq)))

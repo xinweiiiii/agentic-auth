@@ -6,24 +6,24 @@ breakdowns come from the audit history API.
 
 ## Control plane (`/metrics`)
 
-| Name | Type | Labels | Meaning | Spec |
-|---|---|---|---|---|
-| `agentic_auth_denials_total` | counter | `reason` | Existing; now also `TAINTED_INTO_PRIVILEGED`, `AGENT_REVOKED`, `AGENT_NOT_ENROLLED` | FR-044 |
-| `agentic_auth_taint_blocks_total` | counter | `source_class` (`tool`\|`agent`\|`reported`\|`unknown`) | `TAINTED_INTO_PRIVILEGED` refusals by what introduced the taint: a tool target, an agent target, an agent-reported label, or the `*` sentinel | FR-044 |
-| `agentic_auth_taint_marks_total` | counter | `propagation` (`self`\|`ancestor`\|`sentinel`) | Contexts marked tainted, for tuning `trusted_sources` before enforcing | FR-044 |
-| `agentic_auth_transaction_mints_total` | counter | `result` (`minted`\|`not_privileged`\|`already_minted`\|`tainted`\|`invalid_token`\|`too_large`) | `POST /v1/token/transaction` outcomes | FR-044 |
-| `agentic_auth_enrollments_total` | counter | `outcome` (`enrolled`\|`quarantined`\|`rejected`\|`key_revoked`\|`idp_unavailable`\|`reconciliation_rejected`) | `enroll/complete` outcomes | FR-044 |
-| `agentic_auth_revocations_total` | counter | — | Revocations that changed state (idempotent repeats are not counted) | FR-044 |
-| `agentic_auth_revoked_hop_refusals_total` | counter | `where` (`authorize`\|`exchange`) | Hops refused because an agent on the chain is revoked | FR-044 |
-| `agentic_auth_exchange_pop_failures_total` | counter | `cause` (`missing`\|`invalid`\|`wrong_agent`\|`not_enrolled`) | `actor_token` failures at the exchange | — |
+| Name | Type | Labels | Meaning |
+|---|---|---|---|
+| `agentic_auth_denials_total` | counter | `reason` | Existing; now also `TAINTED_INTO_PRIVILEGED`, `AGENT_REVOKED`, `AGENT_NOT_ENROLLED` |
+| `agentic_auth_taint_blocks_total` | counter | `source_class` (`tool`\|`agent`\|`reported`\|`unknown`) | `TAINTED_INTO_PRIVILEGED` refusals by what introduced the taint: a tool target, an agent target, an agent-reported label, or the `*` sentinel |
+| `agentic_auth_taint_marks_total` | counter | `propagation` (`self`\|`ancestor`\|`sentinel`) | Contexts marked tainted, for tuning `trusted_sources` before enforcing |
+| `agentic_auth_transaction_mints_total` | counter | `result` (`minted`\|`not_privileged`\|`already_minted`\|`tainted`\|`invalid_token`\|`too_large`) | `POST /v1/token/transaction` outcomes |
+| `agentic_auth_enrollments_total` | counter | `outcome` (`enrolled`\|`quarantined`\|`rejected`\|`key_revoked`\|`idp_unavailable`\|`reconciliation_rejected`) | `enroll/complete` outcomes |
+| `agentic_auth_revocations_total` | counter | — | Revocations that changed state (idempotent repeats are not counted) |
+| `agentic_auth_revoked_hop_refusals_total` | counter | `where` (`authorize`\|`exchange`) | Hops refused because an agent on the chain is revoked |
+| `agentic_auth_exchange_pop_failures_total` | counter | `cause` (`missing`\|`invalid`\|`wrong_agent`\|`not_enrolled`) | `actor_token` failures at the exchange |
 
 ## Verifier library (integrator's registry, optional)
 
-| Name | Type | Labels | Meaning | Spec |
-|---|---|---|---|---|
-| `agentic_auth_admissions_total` | counter | `result` (`admitted`\|`<refusal reason>`) | `admit()` outcomes | FR-044 |
-| `agentic_auth_transaction_rejections_total` | counter | `cause` (`target_mismatch`\|`params_mismatch`\|`replay`\|`expired`\|`malformed`\|`store_unavailable`) | Transaction-token rejections by cause (transaction-token.md) | FR-005, FR-044 |
-| `agentic_auth_identity_view_age_seconds` | gauge | — | `now - as_of` of the anchor view; alert when it approaches `freshness_seconds` | FR-040 |
+| Name | Type | Labels | Meaning |
+|---|---|---|---|
+| `agentic_auth_admissions_total` | counter | `result` (`admitted`\|`<refusal reason>`) | `admit()` outcomes |
+| `agentic_auth_transaction_rejections_total` | counter | `cause` (`target_mismatch`\|`params_mismatch`\|`replay`\|`expired`\|`malformed`\|`store_unavailable`) | Transaction-token rejections by cause (transaction-token.md) |
+| `agentic_auth_identity_view_age_seconds` | gauge | — | `now - as_of` of the anchor view; alert when it approaches `freshness_seconds` |
 
 ## Dashboard guidance
 

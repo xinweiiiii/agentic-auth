@@ -1,4 +1,4 @@
-"""The sidecar's privileged path: buffer, bind, mint, forward with Txn-Token (US1, T029)."""
+"""The sidecar's privileged path: buffer, bind, mint, forward with Txn-Token."""
 
 from __future__ import annotations
 
@@ -132,7 +132,7 @@ async def test_non_privileged_calls_still_stream_without_extra_headers(
     assert json.loads(received["body"]) == {"q": "hello"}
 
 
-# -- Phase 4 identity through the sidecar (T068) -----------------------------------------
+# -- Phase 4 identity through the sidecar -----------------------------------------
 
 
 async def test_a_configured_key_adds_agent_identity_and_an_actor_token(

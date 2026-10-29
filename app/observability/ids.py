@@ -3,10 +3,10 @@
 Two primitives, one secret (``AGENTIC_AUTH_TELEMETRY_KEY``):
 
 - ``pseudonym()`` replaces an agent name or act chain in a trace or log with a stable,
-  non-reversible reference (FR-023b, contracts/pseudonymisation.md).
+  non-reversible reference.
 - ``session_trace_id()`` / ``session_parent_context()`` give every decision in one session the
   same trace, even when no caller supplies a ``traceparent`` and even across processes that
-  share no context (FR-010, contracts/trace-context.md §3).
+  share no context.
 
 **Why the key, and not a plain hash.** Agent names are a small, enumerable space
 (``agent://router``, ``agent://billing-writer``, ...). An unkeyed SHA-256 of one is recovered by
@@ -14,7 +14,7 @@ brute force in seconds by anyone holding the telemetry and a guess at the naming
 MAC with a secret the telemetry backend does not hold defeats that. The same key makes a trace
 id something other than a plaintext session handle in a third-party backend.
 
-**Why no custom ``IdGenerator``** (a deviation from research.md R4, which specified one):
+**Why no custom ``IdGenerator``**:
 OTel's ``IdGenerator.generate_trace_id(self)`` takes no arguments, so a generator cannot see the
 session id without process-global or contextvar state. Building a synthetic non-recording
 *remote parent* from the derived id is deterministic per request, needs no global state, and
@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from opentelemetry.context import Context
 
-# 128 bits. Long enough that collisions are negligible at the SC-007 scale (1,000 agents x
+# 128 bits. Long enough that collisions are negligible at the design scale (1,000 agents x
 # 100,000 sessions), short enough to keep span attributes readable.
 PSEUDONYM_HEX_LEN = 32
 
@@ -109,7 +109,7 @@ def session_parent_context(session_id: str, key: bytes) -> Context:
     Used as the parent when a caller sends no usable ``traceparent``. The parent itself is never
     exported — it is a correlation handle, and ``is_remote=True`` says honestly that it did not
     originate here. ``TraceFlags.SAMPLED`` is set because a child that inherited an unsampled
-    parent would be dropped, which FR-021 forbids for refusals.
+    parent would be dropped, which must never happen to a refusal.
     """
     from opentelemetry import trace as trace_api
 

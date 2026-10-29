@@ -87,7 +87,7 @@ def build_app(config: SidecarConfig, client: httpx.AsyncClient | None = None) ->
     # forwarded call an Agent-Identity assertion. Loaded once; a bad key fails startup.
     identity = load_identity(config)
 
-    # -- telemetry (Phase 6, spec 007) -------------------------------------------------
+    # -- telemetry -------------------------------------------------
     # One registry per process, served at GET /__agentic/metrics. Before this, nothing here
     # emitted anything: a sidecar that had been silently forwarding every call looked exactly
     # like a healthy one.
@@ -199,7 +199,7 @@ def build_app(config: SidecarConfig, client: httpx.AsyncClient | None = None) ->
         # The narrowed token replaces the presented one. The presented token is never
         # forwarded unchanged on an allowed hop.
         headers["authorization"] = f"Bearer {token}"
-        # FR-012. `traceparent` is not a hop-by-hop header and is deliberately absent from
+        # `traceparent` is not a hop-by-hop header and is deliberately absent from
         # `_SKIP_REQUEST_HEADERS`, so a caller-supplied one already passes through untouched.
         # This adds one when the caller sent none, so the upstream lands in the same trace
         # either way. Do not "tidy" traceparent into the skip list.

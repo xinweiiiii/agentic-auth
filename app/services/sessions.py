@@ -41,7 +41,7 @@ class PinnedSession:
     expires_at: datetime
     # Phase 5. The subset of the pinned policy's data classes this consent covers, or
     # None for "everything the policy declares" — which is exactly Phase 2-4 semantics.
-    # Nothing reads it until the PDP split lands (research.md R5).
+    # Nothing reads it until the PDP split lands.
     consented_data_classes: list[str] | None = None
 
     def as_cache(self) -> str:

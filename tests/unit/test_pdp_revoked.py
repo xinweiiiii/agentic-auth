@@ -1,4 +1,4 @@
-"""AGENT_REVOKED in the pure decision (US5, T069)."""
+"""AGENT_REVOKED in the pure decision."""
 
 from __future__ import annotations
 

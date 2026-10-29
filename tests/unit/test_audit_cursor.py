@@ -1,4 +1,4 @@
-"""Decision-history cursors: opaque, but never trusted (T054)."""
+"""Decision-history cursors: opaque, but never trusted."""
 
 from __future__ import annotations
 

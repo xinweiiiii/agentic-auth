@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict
 from app.schemas.manifest import AgentManifest, AgentName
 
 ManifestStatus = Literal["reconciled", "needs_review", "rejected"]
-# Phase 4 identity state (data-model.md §1).
+# Phase 4 identity state.
 AgentStatus = Literal["registered", "enrolled", "quarantined", "revoked"]
 
 

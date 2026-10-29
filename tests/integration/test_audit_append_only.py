@@ -1,4 +1,4 @@
-"""Audit rows cannot be changed — by anyone (T019, FR-003, SC-004).
+"""Audit rows cannot be changed — by anyone.
 
 Two different mechanisms, tested separately, because each alone has a gap. Grants do not
 bind the table owner; a trigger alone is not defence in depth. Here the owner is stopped by

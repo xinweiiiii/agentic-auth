@@ -3,7 +3,7 @@
 # Shipped as an artifact rather than described in prose, because prose cannot fail a build:
 # tests/unit/test_dashboard_artifacts.py resolves every metric name and every label
 # value here against the live registry, so a renamed signal breaks CI instead of silently
-# disarming an alert (spec 007 FR-026, FR-027a, SC-013).
+# disarming an alert.
 #
 #   rule_files:
 #     - observability/alerts/guardrail.rules.yml

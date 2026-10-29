@@ -1,6 +1,5 @@
-"""With all three Phase 4 controls off, Phase 3 behaviour is unchanged (US6, T079; FR-045,
-SC-011). The rest of the suite proves Phase 1–3 files still pass; this file proves what
-"off" means for each control."""
+"""With all three Phase 4 controls off, Phase 3 behaviour is unchanged. The rest of the
+suite proves Phase 1–3 files still pass; this file proves what "off" means for each control."""
 
 from __future__ import annotations
 

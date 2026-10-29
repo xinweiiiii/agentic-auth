@@ -1,4 +1,4 @@
-"""Verifying a transaction token at a resource (contracts/transaction-token.md).
+"""Verifying a transaction token at a resource.
 
 Seven steps, every one mandatory, in the contract's order. Steps 1–5 read the token; step 6
 recomputes the binding hash from the params the resource actually parsed; step 7 claims the
@@ -27,7 +27,7 @@ from app.verify.replay import ReplayStore, ReplayStoreUnavailable, txn_key
 
 TRANSACTION_TYP = "txn+jwt"
 
-# reason -> metrics cause label (contracts/transaction-token.md "Rejection causes")
+# reason -> metrics cause label
 REJECTION_CAUSE = {
     "TXN_TARGET_MISMATCH": "target_mismatch",
     "TXN_PARAMS_MISMATCH": "params_mismatch",

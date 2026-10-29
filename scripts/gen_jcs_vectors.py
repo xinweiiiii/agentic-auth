@@ -69,7 +69,7 @@ VECTORS: list[dict] = [
             '"string":"\u20ac$\\u000f\\nA\'B\\"\\\\\\\\\\"/"}'
         ),
     },
-    # -- project cases (contracts/canonicalization.md §6) -----------------------------
+    # -- project cases (docs/canonicalization.md §6) -----------------------------
     {"name": "key-order", "input": {"b": 1, "a": 2}, "canonical": '{"a":2,"b":1}'},
     {"name": "integral-float", "input": {"a": 1.0}, "canonical": '{"a":1}'},
     {"name": "exponent-int", "input": {"a": 1e2}, "canonical": '{"a":100}'},

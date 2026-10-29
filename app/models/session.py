@@ -7,7 +7,7 @@ since nothing accumulates across hops and a session read is a pure lookup.
 ``step_up_grants`` row and a Redis set entry that the decision reads alongside the taint
 hash and the revoked set — never by updating this table. Mutating a row here would
 invalidate ``session:{id}`` mid-flight and give the PDP a second source of truth for a
-decision input (research.md R6).
+decision input.
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ class Session(UUIDPrimaryKey, TimestampCreated, Base):
     # typo surfaces to the integrator immediately instead of as a refusal three hops in.
     #
     # Still immutable: step-up appends a `step_up_grants` row, it does not extend this
-    # array (research.md R5, R6).
+    # array.
     consented_data_classes: Mapped[list[str] | None] = mapped_column(
         ARRAY(String(128)), nullable=True
     )

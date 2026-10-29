@@ -1,5 +1,5 @@
 """Identity material and revocation — what offline verifiers bootstrap from, and how an
-operator cuts an agent off (contracts/identity.md §7–§8)."""
+operator cuts an agent off."""
 
 from __future__ import annotations
 

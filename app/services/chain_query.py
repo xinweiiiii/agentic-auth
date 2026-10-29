@@ -2,12 +2,12 @@
 
 One read: the action's own audit row, joined to its (immutable) session for the root
 consent. The chain comes from the row's materialized ``chain`` document, written when the
-decision was made; nothing here correlates other decision rows (FR-011). Completeness was
+decision was made; nothing here correlates other decision rows. Completeness was
 decided at write time too, so the answer cannot depend on what happens to be in the table
 when the question is asked.
 
 A legacy row — written before Phase 3 — is still answered, marked incomplete, with every
-field that was never captured reported as unavailable rather than inferred (FR-008).
+field that was never captured reported as unavailable rather than inferred.
 
 Every query is timed and counted by result, which is how the SLO (p95 < 500 ms, 100% complete)
 is observed in production rather than asserted once in a test.

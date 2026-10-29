@@ -1,4 +1,4 @@
-"""US1 — the enforcement point is no longer dark (spec 007 FR-001..FR-006, SC-003).
+"""The enforcement point is no longer dark.
 
 Before this phase nothing under ``app/sidecar/`` emitted anything, so a sidecar that had been
 silently forwarding every call looked exactly like a healthy one. Everything asserted here is
@@ -45,7 +45,7 @@ async def _rooted(register_chain, consent):
     return await consent()
 
 
-# -- FR-002, FR-003: mode and liveness ------------------------------------------------------
+# -- mode and liveness ------------------------------------------------------
 
 
 async def test_an_enforcing_pep_reports_its_mode_and_liveness(sidecar_stack) -> None:
@@ -59,7 +59,7 @@ async def test_an_enforcing_pep_reports_its_mode_and_liveness(sidecar_stack) -> 
 
 
 async def test_an_observing_pep_is_unmistakable(sidecar_stack) -> None:
-    """FR-002. A PEP nobody meant to leave in observe mode is the failure this surfaces."""
+    """A PEP nobody meant to leave in observe mode is the failure this surfaces."""
     sidecar = await sidecar_stack.client(observe_mode=True)
     text = (await sidecar.get("/__agentic/metrics")).text
 
@@ -90,7 +90,7 @@ async def test_status_never_leaks_the_upstream_map_itself(sidecar_stack) -> None
     assert "mcp://kb.internal/search" not in raw
 
 
-# -- FR-004: allowed, blocked, and would-have-blocked are three different things -------------
+# -- allowed, blocked, and would-have-blocked are three different things -------------
 
 
 async def test_an_allowed_call_is_counted_as_allowed(
@@ -128,7 +128,7 @@ async def test_a_policy_denial_is_counted_as_blocked_by_policy(
 async def test_observe_mode_is_never_counted_as_allowed(
     sidecar_stack, register_chain, consent
 ) -> None:
-    """FR-004. The call was forwarded, but it was refused on the merits. Folding it into
+    """The call was forwarded, but it was refused on the merits. Folding it into
     `allowed` would make observe mode read as a working guardrail."""
     session = await _rooted(register_chain, consent)
     sidecar = await sidecar_stack.client(observe_mode=True)
@@ -149,7 +149,7 @@ async def test_observe_mode_is_never_counted_as_allowed(
     )
 
 
-# -- FR-005: the distinction the whole story turns on ---------------------------------------
+# -- the distinction the whole story turns on ---------------------------------------
 
 
 async def test_a_dead_control_plane_is_distinguishable_from_a_policy_refusal(
@@ -220,7 +220,7 @@ async def test_a_dead_token_exchange_is_its_own_cause(
     assert (await sidecar.get("/__agentic/status")).json()["pdp"]["reachable"] is True
 
 
-# -- FR-006: what the guardrail costs -------------------------------------------------------
+# -- what the guardrail costs -------------------------------------------------------
 
 
 async def test_stage_latency_is_attributed_to_the_parts(

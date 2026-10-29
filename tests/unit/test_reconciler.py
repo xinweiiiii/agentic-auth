@@ -1,4 +1,4 @@
-"""ReconcilerService — the four reconciliation outcomes + actionable-diff guarantee (US2)."""
+"""ReconcilerService — the four reconciliation outcomes + actionable-diff guarantee."""
 
 from __future__ import annotations
 
@@ -127,7 +127,7 @@ async def test_discovery_unavailable_flags_needs_review() -> None:
 
 
 def test_resource_present_but_none_is_treated_as_unavailable() -> None:
-    """Guards the ``or result.resource is None`` branch (US2 edge)."""
+    """Guards the ``or result.resource is None`` branch."""
     from app.schemas.manifest import AgentManifest
     from app.services.discovery import DiscoveryResult
     from tests.fixtures.manifests import base_manifest

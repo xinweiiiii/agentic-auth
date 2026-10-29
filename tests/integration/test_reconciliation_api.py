@@ -1,4 +1,4 @@
-"""US2 — reconciliation over the API: actionable diff, needs-review + override."""
+"""Reconciliation over the API: actionable diff, needs-review + override."""
 
 from __future__ import annotations
 

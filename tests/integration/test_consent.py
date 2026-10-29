@@ -1,4 +1,4 @@
-"""US1 — a human consents, and that consent pins a policy version (T030)."""
+"""A human consents, and that consent pins a policy version."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ async def test_unknown_scope_is_not_found(client, admin_headers) -> None:
 async def test_policy_published_after_consent_does_not_move_the_pin(
     client, admin_headers, register_chain, consent
 ) -> None:
-    """SC-009: a session in flight keeps deciding against the version it pinned."""
+    """A session in flight keeps deciding against the version it pinned."""
     await register_chain()
     body = await consent()
     pinned = body["policy_version"]

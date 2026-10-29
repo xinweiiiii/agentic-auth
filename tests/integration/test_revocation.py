@@ -1,4 +1,4 @@
-"""Revoking an agent cuts off everything built on it (US5, T070; SC-009)."""
+"""Revoking an agent cuts off everything built on it."""
 
 from __future__ import annotations
 

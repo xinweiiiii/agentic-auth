@@ -1,4 +1,4 @@
-"""An agent's identity key and the small tokens it signs (contracts/identity.md).
+"""An agent's identity key and the small tokens it signs.
 
 ``AgentKey`` holds an Ed25519 private key. It signs exactly three things: the enrollment
 challenge, the exchange ``actor_token``, and the resource-side ``Agent-Identity`` assertion.

@@ -1,4 +1,4 @@
-"""US5 — refusals that tell the caller what to do next (T055)."""
+"""Refusals that tell the caller what to do next."""
 
 from __future__ import annotations
 
@@ -114,7 +114,7 @@ async def test_hop_budget_exceeded_is_denied(sdk, register_chain, admin_headers,
 
 
 async def test_hop_depth_tracks_the_token_at_every_hop(sdk, rooted) -> None:
-    """FR-034: no counter to drift. Depth is whatever the signed chain says."""
+    """No counter to drift. Depth is whatever the signed chain says."""
     ctx = rooted.context()
     assert (ctx.hop, ctx.act_chain) == (1, [USER])
 
@@ -204,14 +204,14 @@ async def test_an_unreachable_control_plane_raises_rather_than_proceeding(rooted
 
 
 async def test_every_deny_reason_carries_a_recoverability_flag() -> None:
-    """FR-016: no refusal is opaque."""
+    """No refusal is opaque."""
     for reason in DenyReason:
         denial = PolicyDenied(reason, message="m", target="t", hop=1, session_id="s")
         assert isinstance(denial.recoverable, bool)
         assert reason.value in str(denial)
 
 
-# -- Phase 4 (US1): privileged calls are bound --------------------------------------------
+# -- Phase 4: privileged calls are bound --------------------------------------------
 
 
 async def _notifier_ctx(sdk, rooted) -> HopContext:

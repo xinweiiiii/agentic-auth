@@ -55,7 +55,7 @@
       "id": 2,
       "title": "Enforcement points reporting",
       "type": "stat",
-      "description": "Compare against the number you deployed. Liveness is absent() over agentic_auth_pep_up, so a PEP that is never scraped cannot be seen here (contracts/pep-telemetry.md \u00a74).",
+      "description": "Compare against the number you deployed. Liveness is absent() over agentic_auth_pep_up, so a PEP that is never scraped cannot be seen here.",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"

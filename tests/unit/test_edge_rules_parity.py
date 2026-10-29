@@ -1,4 +1,4 @@
-"""CI and the runtime agree on every edge (T038, FR-027, SC-008).
+"""CI and the runtime agree on every edge.
 
 For every agent reachable from the consented scope and every candidate target, the drift
 check's verdict (a graph index over the manifests) and the PDP's decision (the scope's

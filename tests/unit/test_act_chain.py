@@ -1,7 +1,7 @@
-"""The nested ``act`` claim and the depth derived from it (T021).
+"""The nested ``act`` claim and the depth derived from it.
 
 This module is the single place delegation depth comes from, so these tests are the
-guard on SC-010: an agent that under-reports its depth must gain no additional hops.
+guard: an agent that under-reports its depth must gain no additional hops.
 """
 
 from __future__ import annotations

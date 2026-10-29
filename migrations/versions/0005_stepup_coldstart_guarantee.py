@@ -1,4 +1,4 @@
-"""step-up consent, cold-start proposals and guarantee level (Phase 5)
+"""step-up consent, cold-start proposals and guarantee level
 
 Revision ID: 0005_stepup_coldstart_guarantee
 Revises: 0004_identity_taint_transactions

@@ -1,4 +1,4 @@
-"""``POST /v1/token/transaction`` (US1, T027)."""
+"""``POST /v1/token/transaction``."""
 
 from __future__ import annotations
 

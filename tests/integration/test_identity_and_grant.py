@@ -1,5 +1,4 @@
-"""Identity AND grant at a real resource, offline after bootstrap (US3, T061; SC-007, SC-008,
-SC-012, SC-013).
+"""Identity AND grant at a real resource, offline after bootstrap.
 
 The SDK client (holding support-agent's key) walks the bank chain against the in-process
 control plane, then calls the protected resource fixture, whose verifier bootstrapped from
@@ -45,7 +44,7 @@ async def stack(client, admin_headers, flags, fake_idp, principal_assertion_for,
     resource, recorder, verifier = await resource_stack.build(
         agents=[BANK_ASSISTANT, BALANCE_AGENT, SUPPORT_AGENT]
     )
-    resource_stack.transport.cut = True  # offline from here on (SC-008)
+    resource_stack.transport.cut = True  # offline from here on
 
     from types import SimpleNamespace
 
@@ -91,7 +90,7 @@ async def test_identity_plus_matching_grant_is_admitted_offline(
     assert r.status_code == 200, r.text
     assert r.json()["agent"] == BALANCE_AGENT
     assert stack.recorder.executed == [READ_BALANCE]
-    assert resource_stack.transport.requests == seen  # nothing left the resource (SC-008)
+    assert resource_stack.transport.requests == seen  # nothing left the resource
 
 
 async def test_the_matrix(client, stack) -> None:

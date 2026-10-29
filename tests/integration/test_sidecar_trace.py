@@ -1,4 +1,4 @@
-"""The sidecar and SDK record one attributed edge event per call (T042, US3 AS6/AS8)."""
+"""The sidecar and SDK record one attributed edge event per call."""
 
 from __future__ import annotations
 

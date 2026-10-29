@@ -1,5 +1,5 @@
 """The sidecar's agent identity: an Ed25519 key that signs the two small tokens the identity
-contract defines (contracts/identity.md §5–§6). Present only when the operator configured
+contract defines. Present only when the operator configured
 ``agent_name`` and ``identity_key_path`` together.
 
 The key never leaves this process and never appears in a log or repr.

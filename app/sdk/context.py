@@ -28,7 +28,7 @@ def _claims(token: str) -> dict[str, Any]:
 @dataclass(frozen=True)
 class HopContext:
     """What travels between hops: the session and the current token — plus, within a hop,
-    the taint this context has accumulated (Phase 4). The token's own ``taint`` claim is the
+    the taint this context has accumulated. The token's own ``taint`` claim is the
     floor; ``tainted()`` can only raise it."""
 
     session_id: str

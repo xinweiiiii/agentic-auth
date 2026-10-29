@@ -69,7 +69,7 @@ def _sessionmaker(_engine) -> async_sessionmaker[AsyncSession]:
 
 @pytest_asyncio.fixture(scope="session")
 async def writer_engine(_engine) -> AsyncIterator:
-    """An engine connected as the least-privileged runtime role (research.md R5).
+    """An engine connected as the least-privileged runtime role.
 
     Creates ``agentic_auth_writer`` and a login member ``agentic_auth_app`` if absent, and
     applies the same grants migration 0003 does, so append-only can be tested as the
@@ -250,7 +250,7 @@ def principal_assertion_for(fake_idp):
 @pytest_asyncio.fixture
 async def resource_stack(client, redis_client, flags):
     """A protected resource guarded by ``app.verify``, bootstrapped from the in-process
-    control plane over an httpx transport that can be CUT after bootstrap (SC-008).
+    control plane over an httpx transport that can be CUT after bootstrap.
 
     ``build(agents=[...], identity_required=True)`` returns ``(resource_client, recorder,
     verifier)``. The verifier's anchors poll through the same cuttable transport.
@@ -466,7 +466,7 @@ async def gateway_stack(client, redis_client):
 
     ``instances=2`` builds a second app over the SAME Postgres and Redis, for the
     multi-instance tests. No sticky routing is configured anywhere — if a test only
-    passes with hops pinned to one instance, that is a correctness bug (research.md R3).
+    passes with hops pinned to one instance, that is a correctness bug.
     """
     import httpx
     from app.gateway.app import build_app
@@ -561,7 +561,7 @@ async def gateway_stack(client, redis_client):
 
 
 # ---------------------------------------------------------------------------------------
-# Telemetry capture (spec 007). ASGITransport does not run lifespan, so `observability.setup`
+# Telemetry capture. ASGITransport does not run lifespan, so `observability.setup`
 # is never called by the `client` fixture — these fixtures do it explicitly, with an in-memory
 # exporter in place of OTLP, and reset the module's global state afterwards so one test's
 # provider cannot leak into the next.

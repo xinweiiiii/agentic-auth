@@ -1,4 +1,4 @@
-"""US2 — one blocked call, followed end to end (spec 007 FR-007..FR-016, SC-001, SC-002).
+"""One blocked call, followed end to end.
 
 The workflow this exists for: an agent task fails, and an engineer needs the decision that
 refused it, the reason, and the delegation chain — without correlating timestamps by hand.
@@ -43,7 +43,7 @@ async def _authorize(client, session, token, **overrides):
     return await client.post("/v1/authorize", headers=headers, json=payload)
 
 
-# -- FR-009: a caller's trace context is honoured -------------------------------------------
+# -- a caller's trace context is honoured -------------------------------------------
 
 
 class TestWithInboundContext:
@@ -78,7 +78,7 @@ class TestWithInboundContext:
     async def test_every_hop_of_a_chain_lands_in_one_trace(
         self, client, telemetry, register_chain, consent
     ) -> None:
-        """FR-009's "preserving hop order across the whole chain"."""
+        """The contract's "preserving hop order across the whole chain"."""
         telemetry.enable()
         session = await _rooted(register_chain, consent)
         headers = {
@@ -117,7 +117,7 @@ class TestWithInboundContext:
         )
 
 
-# -- FR-007, FR-008, SC-002: the denying span carries the handle -----------------------------
+# -- the denying span carries the handle -----------------------------
 
 
 class TestADeniedHop:
@@ -148,12 +148,12 @@ class TestADeniedHop:
         assert a[surface.ATTR_ENFORCED] is True
         assert a[surface.ATTR_HOP] >= 1
         assert a[surface.ATTR_POLICY_VERSION] >= 1
-        assert a[surface.ATTR_ACTION_ID], "FR-008: the handle must be present"
+        assert a[surface.ATTR_ACTION_ID], "the handle must be present"
 
     async def test_the_action_id_resolves_the_delegation_chain(
         self, client, telemetry, register_chain, consent, admin_headers
     ) -> None:
-        """SC-001/SC-002 end to end: span -> action id -> the verified chain. This is the step
+        """Span -> action id -> the verified chain. This is the step
         that makes telemetry a pointer into the audit record rather than a second copy of it."""
         telemetry.enable()
         session = await _rooted(register_chain, consent)
@@ -177,14 +177,14 @@ class TestADeniedHop:
         body = chain.json()
         assert str(body["action_id"]) == action_id
         assert body["chain"], "the span's action id did not resolve to a chain"
-        # Back to the consenting human, which is the point of the chain query (FR-019).
+        # Back to the consenting human, which is the point of the chain query.
         assert body["root_consent"]["user_sub"] == USER, body["root_consent"]
         assert str(body["root_consent"]["session_id"]) == str(session["session_id"])
 
     async def test_every_decision_is_discoverable(
         self, client, telemetry, register_chain, consent
     ) -> None:
-        """SC-002: 100% of decisions, allow and deny, carry a chain-resolving identifier."""
+        """100% of decisions, allow and deny, carry a chain-resolving identifier."""
         telemetry.enable()
         session = await _rooted(register_chain, consent)
 
@@ -239,7 +239,7 @@ class TestADeniedHop:
             assert has_reason == is_deny, span.attributes
 
 
-# -- FR-023: pseudonymous by default --------------------------------------------------------
+# -- pseudonymous by default --------------------------------------------------------
 
 
 class TestIdentityDisclosure:
@@ -294,7 +294,7 @@ class TestIdentityDisclosure:
         assert surface.ATTR_AGENT_REF not in span.attributes
 
 
-# -- FR-010: one chain, one trace, with an uncooperative caller -----------------------------
+# -- one chain, one trace, with an uncooperative caller -----------------------------
 
 
 class TestWithoutInboundContext:
@@ -377,7 +377,7 @@ class TestWithoutInboundContext:
         assert len(traces) == 2
 
 
-# -- FR-021: sampling never loses a refusal -------------------------------------------------
+# -- sampling never loses a refusal -------------------------------------------------
 
 
 class TestSampling:
@@ -426,7 +426,7 @@ class TestSampling:
     async def test_a_sampling_drop_is_reported_as_telemetry_loss(
         self, client, telemetry, register_chain, consent
     ) -> None:
-        """FR-018: the layer admits its own gaps."""
+        """The layer admits its own gaps."""
         telemetry.enable(allow_sample_ratio=0.0)
         session = await _rooted(register_chain, consent)
 
@@ -448,7 +448,7 @@ class TestSampling:
         assert 'agentic_auth_telemetry_dropped_total{signal="span"} 1.0' in text
 
 
-# -- FR-014..FR-016: structured, joinable logs ----------------------------------------------
+# -- structured, joinable logs ----------------------------------------------
 
 
 class TestStructuredLogs:
@@ -492,7 +492,7 @@ class TestStructuredLogs:
     async def test_no_log_record_carries_a_stack_trace(
         self, client, telemetry, register_chain, consent, monkeypatch
     ) -> None:
-        """FR-019. A traceback through token verification can carry a token fragment, so the
+        """A traceback through token verification can carry a token fragment, so the
         dispatch path records `error.type` and loses the trace."""
         telemetry.enable()
         session = await _rooted(register_chain, consent)
@@ -527,7 +527,7 @@ class TestStructuredLogs:
     async def test_a_routine_deny_is_not_logged_as_an_error(
         self, client, telemetry, register_chain, consent
     ) -> None:
-        """FR-016. A policy refusal is the guardrail working; paging on it would cry wolf."""
+        """A policy refusal is the guardrail working; paging on it would cry wolf."""
         telemetry.enable()
         session = await _rooted(register_chain, consent)
 

@@ -1,9 +1,9 @@
-"""A proposed manifest governs nothing (FR-036).
+"""A proposed manifest governs nothing.
 
 The failure mode here is silent over-permission — an observation-derived manifest that
 quietly starts authorizing calls before a human ever looked at it. That is exactly what
 this product exists to prevent, so inertness is asserted directly rather than left to
-emerge from three separate filters happening to line up (research.md R12).
+emerge from three separate filters happening to line up.
 
 Three layers, each tested:
 
@@ -73,7 +73,7 @@ async def test_a_proposal_never_reaches_the_compiler(db_session) -> None:
 
 async def test_a_proposal_alongside_a_reconciled_one_does_not_shadow_it(db_session) -> None:
     """A later proposal must not displace the manifest actually in force — that would
-    make ratification implicit, which is the whole thing FR-037 forbids."""
+    make ratification implicit, which is the whole thing ratification exists to prevent."""
     agent = await _agent(db_session, "mixed-agent")
     live = await _manifest(db_session, agent, status="reconciled")
     await _manifest(db_session, agent, status=STATUS_PROPOSED)

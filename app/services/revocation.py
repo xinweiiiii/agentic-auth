@@ -1,4 +1,4 @@
-"""Revocation: cut an agent off, and everything built on it (contracts/identity.md §7).
+"""Revocation: cut an agent off, and everything built on it.
 
 One transaction flips the live anchor's ``revoked_at`` and the agent's status; then the
 anchor cache entry is deleted and the name is added to the ``revoked_agents`` set that

@@ -8,7 +8,7 @@ OpenTelemetry SDK is not installed, and when the collector is unreachable:
     config()      -> the resolved ObservabilityConfig, for attribute builders and /status.
     shutdown()    -> flush and stop. Called at process exit, never on a request path.
 
-**Fail-open, by construction** (FR-017, FR-018). Telemetry is the opposite posture to audit:
+**Fail-open, by construction**. Telemetry is the opposite posture to audit:
 ``api/v1/authorize.py`` refuses to return an allow for a decision it could not record, while a
 dead collector here changes nothing. Any exception during setup disables telemetry and leaves the
 component running — a guardrail that refused to start because a collector was down would be an
@@ -18,7 +18,7 @@ availability regression caused by an observability feature.
 function is process-global and warns-and-ignores on a second call, so a library that calls it
 either hijacks the host's pipeline or silently emits nothing. The control plane and the sidecar
 own their processes and opt in explicitly via ``install_globally=True``; the verifier library
-never does (research.md R12, FR-030).
+never does.
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ def setup(
 
     ``resolved`` lets the sidecar pass its own configuration instead of the control plane's
     settings. ``metrics`` is a registry whose ``telemetry_dropped`` counter the export pipeline
-    feeds, so telemetry loss reports itself (FR-018). ``exporter`` overrides the OTLP exporter —
+    feeds, so telemetry loss reports itself. ``exporter`` overrides the OTLP exporter —
     the tests pass an in-memory one, and the fault-injection suite passes a failing one.
     ``synchronous_export`` swaps the batching processor for a simple one, so a test sees a span
     the moment it ends instead of having to flush.
@@ -149,7 +149,7 @@ def _build_pipeline(
     if exporter is not None:
         # BatchSpanProcessor is the bounded queue and the background export thread. Giving it a
         # meter_provider is what makes its own dropped/queued counts observable, rather than us
-        # counting them by hand (FR-018).
+        # counting them by hand.
         batch = (
             SimpleSpanProcessor(exporter)
             if synchronous_export
@@ -172,7 +172,7 @@ def _build_pipeline(
 def _drop_recorder(metrics: Any) -> Any:
     """Feed ``agentic_auth_telemetry_dropped`` from the sampling filter.
 
-    Sampling drops and queue-overflow drops are both telemetry loss, and FR-018 requires the
+    Sampling drops and queue-overflow drops are both telemetry loss, and the design requires the
     loss to report itself. ``None`` when there is no registry to write to.
     """
     if metrics is None:
@@ -190,7 +190,7 @@ def _span_exporter() -> Any:
 
     Endpoint, headers, timeout and protocol all come from the standard ``OTEL_EXPORTER_OTLP_*``
     variables, read by the exporter itself. We define no names of our own, which is what makes
-    FR-028's "configuration only" true for an integrator who already sets them.
+    the "configuration only" promise true for an integrator who already sets them.
     """
     import os
 
@@ -199,8 +199,7 @@ def _span_exporter() -> Any:
         or os.environ.get("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
     ):
         # No endpoint: traces are recorded in-process but not shipped. The local surfaces
-        # (/metrics, JSON logs on stdout) remain fully functional, and this is not an error
-        # (FR-029).
+        # (/metrics, JSON logs on stdout) remain fully functional, and this is not an error.
         return None
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
@@ -212,7 +211,7 @@ def _meter_provider(metrics: Any) -> Any:
 
     ``None`` means the SDK uses the global meter provider, which is a no-op unless the integrator
     configured one. We do not install an OTel meter provider: metrics stay on
-    ``prometheus-client`` (research.md R1), and ``agentic_auth_telemetry_dropped`` is incremented
+    ``prometheus-client``, and ``agentic_auth_telemetry_dropped`` is incremented
     from the drop path instead.
     """
     return None
@@ -223,7 +222,7 @@ def _install_log_bridge(cfg: ObservabilityConfig) -> Any:
 
     The handler exports every non-reserved ``LogRecord`` attribute, so ``extra=`` arrives as
     structured attributes with no adapter, and it attaches ``trace_id``/``span_id`` from the
-    active context automatically (research.md R8).
+    active context automatically.
     """
     import os
 
@@ -311,7 +310,7 @@ class OtelSink:
     """An OTel-backed :class:`app.verify.TelemetrySink`, constructed by the integrator.
 
     Lives here rather than in ``app/verify/`` because the verifier must stay importable with
-    only ``pyjwt[crypto]`` (research.md R12). The provider is passed in, never discovered and
+    only ``pyjwt[crypto]``. The provider is passed in, never discovered and
     never installed: ``set_tracer_provider`` is process-global, so a library that calls it in a
     host it does not own either hijacks the host's pipeline or silently emits nothing.
 
@@ -346,7 +345,7 @@ def shutdown(timeout_millis: int = 5000) -> None:
     """Flush and stop. Called at process exit only.
 
     ``force_flush`` is the one place telemetry can block, which is why it is never called on a
-    request path (research.md R9).
+    request path.
     """
     global _provider, _logging_handler
     provider, _provider = _provider, None

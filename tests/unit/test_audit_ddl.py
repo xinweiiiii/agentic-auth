@@ -1,4 +1,4 @@
-"""The migrated schema and the test schema enforce the same append-only rule (T007).
+"""The migrated schema and the test schema enforce the same append-only rule.
 
 The trigger and grants exist twice: frozen in migration 0003, and on the model so that
 ``Base.metadata.create_all`` (which the test suite uses) installs them too. If the two

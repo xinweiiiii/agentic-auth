@@ -1,16 +1,16 @@
 """Structured logs: a JSON formatter for stdout, and correlation fields via ``extra=``.
 
 **No new logging library.** Two properties of OTel's ``LoggingHandler`` make the standard
-library sufficient (research.md R8):
+library sufficient:
 
 - It exports every non-reserved attribute of the ``LogRecord``, so ``extra={...}`` arrives at
   the backend as structured attributes with no adapter in between.
 - It builds the exported record with ``context=get_current()``, so ``trace_id`` and ``span_id``
-  are attached from the active span automatically — FR-015's trace linkage needs no code at the
+  are attached from the active span automatically — trace linkage needs no code at the
   call sites.
 
 It also maps Python levels to OTel severities (``WARNING``→``WARN``, ``CRITICAL``→``FATAL``),
-which is what FR-016 needs: an expected policy deny at ``INFO`` and an unreachable control plane
+which is what alerting needs: an expected policy deny at ``INFO`` and an unreachable control plane
 at ``WARNING`` arrive distinguishable, with no custom mapping from us.
 
 **What this module deliberately does not do** is record exceptions. ``logger.exception(...)``
@@ -60,7 +60,7 @@ _RESERVED = frozenset(
 )
 
 # Never exported, even if something sets them. The SDK adds the first three itself when
-# `exc_info` is present (research.md R7).
+# `exc_info` is present.
 FORBIDDEN_LOG_FIELDS = frozenset(
     {"exception.message", "exception.stacktrace", "exception.type", "exc_info", "exc_text"}
 )
@@ -71,7 +71,7 @@ class JsonFormatter(logging.Formatter):
 
     Used for stdout. When an OTLP sink is configured the same records also go through
     ``LoggingHandler``, so a deployment with no collector still gets machine-parsable logs on
-    stdout — FR-029's "the local surfaces remain fully functional".
+    stdout — "the local surfaces remain fully functional".
     """
 
     def format(self, record: logging.LogRecord) -> str:
@@ -141,8 +141,8 @@ def fields(
 
 
 def scrub_exception_fields(record: logging.LogRecord) -> logging.LogRecord:
-    """Drop ``exc_info`` so no stack trace is exported. The backstop for FR-019, not the
-    primary control — the primary control is that dispatch-path sites do not call
+    """Drop ``exc_info`` so no stack trace is exported. The backstop for the no-secrets rule,
+    not the primary control — the primary control is that dispatch-path sites do not call
     ``logger.exception`` at all."""
     record.exc_info = None
     record.exc_text = None

@@ -1,6 +1,6 @@
-"""US3 — a four-hop chain end to end (T043).
+"""A four-hop chain end to end.
 
-SC-001: four hops, four distinct tokens, each naming one target, and the deepest still
+Four hops, four distinct tokens, each naming one target, and the deepest still
 resolving back through every intermediate agent to the consenting human.
 
 Each hop decides and then exchanges against that recorded decision, which since Phase 3 is
@@ -62,7 +62,7 @@ async def test_four_hop_chain_narrows_at_every_hop(client, register_chain, conse
 async def test_the_deepest_token_resolves_back_to_the_consenting_human(
     client, register_chain, consent
 ) -> None:
-    """FR-024: a resource server reads the whole chain off the token alone."""
+    """A resource server reads the whole chain off the token alone."""
     await register_chain()
     session = await consent()
 
@@ -91,7 +91,7 @@ async def test_the_deepest_token_resolves_back_to_the_consenting_human(
 async def test_hop_beyond_the_budget_is_blocked_at_that_hop(
     client, admin_headers, register_chain, consent
 ) -> None:
-    """Allowed *at* the budget, refused after it. SC-006."""
+    """Allowed *at* the budget, refused after it."""
     await register_chain()
 
     # Tighten summarizer's budget so the notifier route caps at 2.

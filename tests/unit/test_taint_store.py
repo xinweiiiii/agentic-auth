@@ -1,4 +1,4 @@
-"""``TaintStore`` against real Redis (US2, T043): one field per (context, action), first
+"""``TaintStore`` against real Redis: one field per (context, action), first
 writer's timestamp wins, TTL bounded, unavailable store raises."""
 
 from __future__ import annotations

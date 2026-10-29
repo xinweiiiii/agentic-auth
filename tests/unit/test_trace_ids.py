@@ -1,10 +1,10 @@
-"""Session-derived trace roots (spec 007 FR-010, contracts/trace-context.md §3).
+"""Session-derived trace roots.
 
 The control plane and the sidecar are separate processes with no shared context. When no caller
 supplies a `traceparent`, both must land their spans in the SAME trace — so the root is derived
 from a value both already hold, the session id, and nothing is passed between them.
 
-**Deviation from research.md R4, which specified a custom `IdGenerator`.** OTel's
+**Why not a custom `IdGenerator`.** OTel's
 `IdGenerator.generate_trace_id(self)` takes no arguments, so a generator cannot see the session
 id without process-global or contextvar state. A synthetic non-recording *remote parent* built
 from the derived id achieves the same determinism per request, with no global state, and makes
@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 # Only the OTel *API* is needed here (SpanContext/NonRecordingSpan), not the SDK — but the API
-# is still part of the optional extra, so skip rather than fail when it is absent (FR-029).
+# is still part of the optional extra, so skip rather than fail when it is absent.
 pytest.importorskip("opentelemetry.trace", reason="requires the 'otel' extra")
 
 from opentelemetry import trace as trace_api  # noqa: E402

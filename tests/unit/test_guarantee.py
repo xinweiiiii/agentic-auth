@@ -1,8 +1,8 @@
 """The guarantee vocabulary.
 
-Small module, but it carries FR-016 through FR-021, so the tests are about the properties
-rather than the plumbing: every level is ordered, the ordering is the one the contract
-states, and nothing defaults.
+Small module, but it carries the whole guarantee-level contract, so the tests are about
+the properties rather than the plumbing: every level is ordered, the ordering is the one the
+contract states, and nothing defaults.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from app.boundary.guarantee import (
 
 
 def test_exactly_four_levels() -> None:
-    """FR-016. A fifth level is a contract change, not an implementation detail."""
+    """A fifth level is a contract change, not an implementation detail."""
     assert {g.value for g in Guarantee} == {"full", "connector", "network", "consent_only"}
 
 
@@ -32,7 +32,7 @@ def test_every_level_has_a_strength() -> None:
 
 
 def test_ordering_matches_the_contract() -> None:
-    """contracts/guarantee-level.md §1: full > connector > network > consent_only."""
+    """Full > connector > network > consent_only."""
     assert (
         STRENGTH[Guarantee.FULL]
         > STRENGTH[Guarantee.CONNECTOR]
@@ -62,13 +62,12 @@ def test_strongest_of_one_is_itself() -> None:
 
 def test_the_worked_example_from_the_contract() -> None:
     """A connector proxy in front of a tool that also has a resource guard: the recorded
-    level is `full`, because the guard genuinely did verify identity, grant and binding
-    (FR-020)."""
+    level is `full`, because the guard genuinely did verify identity, grant and binding."""
     assert strongest(Guarantee.CONNECTOR, Guarantee.FULL) is Guarantee.FULL
 
 
 def test_strongest_of_nothing_raises() -> None:
-    """A decision with no guarantee level must not be emitted (FR-018). Returning a
+    """A decision with no guarantee level must not be emitted. Returning a
     default here would be exactly the silent claim the field exists to prevent."""
     with pytest.raises(ValueError, match="at least one level"):
         strongest()

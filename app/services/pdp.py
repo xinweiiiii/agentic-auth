@@ -60,7 +60,7 @@ class Decision:
     # mint a transaction token before calling it (privileged AND the feature is on).
     privileged: bool = False
     transaction_required: bool = False
-    # Phase 4. The effective taint this decision was made under (contracts/taint.md §3).
+    # Phase 4. The effective taint this decision was made under.
     taint: Taint | None = None
 
     @property
@@ -122,14 +122,14 @@ def decide(
     """Decide one hop against the session's pinned policy.
 
     ``taint`` is the EFFECTIVE taint the caller computed (token claim, agent label, session
-    marks — contracts/taint.md §3); this function only judges it. ``taint_enforced=False``
+    marks); this function only judges it. ``taint_enforced=False``
     records it without ever refusing on it.
 
     ``consented_data_classes`` is the subset of the pinned policy this session consented to,
     or ``None`` for "everything the policy declares" — which is exactly Phase 2-4 behaviour
     and the default. ``step_up`` is what a human has since approved for this session. Both
     are inputs computed by the caller, like ``taint`` and ``revoked``, so this function
-    stays pure (research.md R5, R6).
+    stays pure.
     """
     # Derived, never accepted: a caller-supplied count is attacker-controlled.
     hop = token.next_hop
@@ -176,7 +176,7 @@ def decide(
         path_so_far.append(name)
     path_so_far.append(holder)
 
-    # -- revocation (Phase 4): nothing built on a revoked agent survives ----------
+    # -- revocation: nothing built on a revoked agent survives ----------
     # Checked as soon as the chain is known and before anything else about it, so a
     # refusal names the revocation, not a downstream symptom of it.
     # Delegating TO a revoked agent extends authority to it, so the target counts too.
@@ -235,12 +235,12 @@ def decide(
 
     # -- was this data class DECLARED, and was it CONSENTED? -------------------
     #
-    # Two different questions, and Phase 5 stops conflating them (research.md R5).
+    # Two different questions, and Phase 5 stops conflating them.
     #
     # "Declared" is a fact about the pinned manifest: the policy either lists this data
     # class for the agent that will act on it, or it does not. Nothing a human approves
-    # can change that, because consent may only widen WITHIN the pinned manifest
-    # (FR-028). So an undeclared class is OUT_OF_SCOPE — which is where "not in the
+    # can change that, because consent may only widen WITHIN the pinned manifest.
+    # So an undeclared class is OUT_OF_SCOPE — which is where "not in the
     # pinned policy" already lives, alongside its sibling "agent does not declare tool".
     #
     # "Consented" is a fact about this session: the human approved a subset of what the
@@ -287,7 +287,7 @@ def decide(
 
     privileged = target_agent is None and policy.is_privileged(caller_agent, request.target)
 
-    # -- provenance (Phase 4) ----------------------------------------------------
+    # -- provenance ----------------------------------------------------
     # After every Phase 2 check, before the allow: injected content that steers the agent
     # toward a protected target is refused here, and a consent prompt cannot launder it.
     if (

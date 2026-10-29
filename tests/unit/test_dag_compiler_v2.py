@@ -1,4 +1,4 @@
-"""DagCompiler v2 — per-agent ``nodes`` and explicit ``edges`` (T007).
+"""DagCompiler v2 — per-agent ``nodes`` and explicit ``edges``.
 
 v1 flattened ``tools`` across the whole closure, so it could say that *some* agent may
 call a tool but not *which*. The PDP needs per-caller capability and a direct edge set;

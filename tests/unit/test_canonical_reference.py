@@ -1,5 +1,5 @@
-"""An independent canonicalizer, written ONLY from contracts/canonicalization.md, must agree
-with ``app.verify.canonical`` on every vector (SC-003).
+"""An independent canonicalizer, written ONLY from docs/canonicalization.md, must agree
+with ``app.verify.canonical`` on every vector.
 
 Deliberately naive and separate: it shares no code with the implementation. Where the two
 disagree, one of them misreads the RFC — and the vectors say which.

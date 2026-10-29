@@ -99,7 +99,7 @@ def expired(key: IssuerKey, *, target: str, delegates: tuple[str, ...] = ()) -> 
 
 
 def understating_hop(p: JwtTokenProfile, *, target: str, delegates: tuple[str, ...]) -> str:
-    """Deep act chain, small `hop` claim — the SC-010 attack, minted directly."""
+    """Deep act chain, small `hop` claim — the depth under-reporting attack, minted directly."""
     return p.mint_hop_token(
         sub=USER,
         target=target,

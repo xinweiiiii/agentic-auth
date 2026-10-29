@@ -142,7 +142,7 @@ async def exchange_token(
     except ReplayGuardUnavailable as exc:
         # The stack trace is deliberately NOT recorded: once a sink is attached the SDK exports
         # `exception.stacktrace` verbatim, and a traceback through token verification can carry
-        # a token fragment (research.md R7, contracts/phase-3-4-deltas.md §6).
+        # a token fragment.
         logger.error(
             "replay guard unavailable; refusing to issue",
             extra={

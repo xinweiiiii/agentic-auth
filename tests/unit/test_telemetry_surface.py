@@ -1,4 +1,4 @@
-"""The telemetry surface is a contract, not guidance (spec 007 FR-025, SC-006).
+"""The telemetry surface is a contract, not guidance.
 
 Phases 3 and 4 shipped dashboard guidance as prose tables. Prose cannot fail a build. This file
 holds ``app/observability/surface.py`` and the published telemetry surface
@@ -18,7 +18,7 @@ from tests.fixtures.contracts import contract_path
 CONTRACT = contract_path("telemetry-surface.md")
 
 # Reserved by the OpenTelemetry specification. We may only use one of these if we mean exactly
-# what the convention means (research.md R2).
+# what the convention means.
 RESERVED_NAMES = frozenset(
     {
         "error.type",
@@ -97,7 +97,7 @@ def test_reused_semconv_attributes_are_declared_as_such() -> None:
 
 
 def test_every_attribute_is_authz_prefixed_or_a_declared_convention() -> None:
-    """Domain-first, never company-first: `authz.*`, not `agentic_auth.*` (research.md R2)."""
+    """Domain-first, never company-first: `authz.*`, not `agentic_auth.*`."""
     for key in surface.ATTR_KEYS:
         assert key.startswith("authz.") or key in surface.SEMCONV_ATTRS, key
         assert not key.startswith("agentic_auth."), f"{key} is company-first, not domain-first"
@@ -105,7 +105,7 @@ def test_every_attribute_is_authz_prefixed_or_a_declared_convention() -> None:
 
 def test_metric_names_keep_the_published_prefix() -> None:
     """Metrics keep `agentic_auth_*` because they are already published. The asymmetry with
-    `authz.*` attributes is deliberate (research.md R2)."""
+    `authz.*` attributes is deliberate."""
     for name in surface.NEW_METRIC_NAMES:
         assert name.startswith("agentic_auth_"), name
 
@@ -127,7 +127,7 @@ def test_metric_names_keep_the_published_prefix() -> None:
     ],
 )
 def test_secret_shaped_keys_are_refused(key: str) -> None:
-    """FR-019. These are the plausible future additions, not hypotheticals: each one is a field
+    """These are the plausible future additions, not hypotheticals: each one is a field
     that exists elsewhere in the codebase and would be natural to pass through."""
     assert surface.forbidden_reason(key) is not None
 
@@ -143,7 +143,7 @@ def test_unknown_keys_are_refused_even_when_innocuous() -> None:
     assert surface.forbidden_reason("authz.something_new") is not None
 
 
-# -- closed value sets bound cardinality (FR-020) ------------------------------------------
+# -- closed value sets bound cardinality ------------------------------------------
 
 
 def test_label_value_sets_are_small_and_closed() -> None:
@@ -165,8 +165,8 @@ def test_no_label_value_looks_like_an_identity() -> None:
 
 
 def test_infra_block_causes_are_a_subset_of_block_causes() -> None:
-    """The FR-005 split: 'the guardrail could not reach policy' must be expressible as a strict
-    subset of the block causes, never overlapping 'policy' itself."""
+    """The policy/infrastructure split: 'the guardrail could not reach policy' must be
+    expressible as a strict subset of the block causes, never overlapping 'policy' itself."""
     assert surface.PEP_INFRA_BLOCK_CAUSES < surface.PEP_BLOCK_CAUSES
     assert "policy" not in surface.PEP_INFRA_BLOCK_CAUSES
 

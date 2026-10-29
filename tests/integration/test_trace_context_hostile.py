@@ -1,4 +1,4 @@
-"""Inbound trace context is untrusted input (spec 007 FR-011).
+"""Inbound trace context is untrusted input.
 
 A caller-supplied ``traceparent`` arrives from an agent process the integrator may not control.
 The conclusion this file is built around:

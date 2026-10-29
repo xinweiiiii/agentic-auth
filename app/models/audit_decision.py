@@ -113,7 +113,7 @@ class AuditDecision(UUIDPrimaryKey, Base):
     # ever attempted on an async session.
     __mapper_args__ = {"eager_defaults": True}
 
-    # Monotonic insertion order — the pagination key (research.md R6).
+    # Monotonic insertion order — the pagination key.
     seq: Mapped[int] = mapped_column(BigInteger, Identity(always=True), nullable=False)
     session_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("sessions.id"), nullable=False
@@ -171,7 +171,7 @@ class AuditDecision(UUIDPrimaryKey, Base):
     # There is deliberately no NOT NULL constraint — adding one would require rewriting
     # legacy rows, which the append-only trigger forbids. The not-null property is
     # enforced at the write path instead, where the value comes off a StrEnum with no
-    # default, so a PEP that omits it gets a 422 (FR-018).
+    # default, so a PEP that omits it gets a 422.
     guarantee_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
     # Set on the audit event that records a step-up widening, pointing at the grant that
     # authorized it. NULL on every ordinary decision.

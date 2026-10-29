@@ -117,7 +117,7 @@ class AuthorizeRequest(BaseModel):
         default=None,
         description=(
             "Agent-reported label. ADDITIVE ONLY: it can raise the effective taint the "
-            "decision uses, never lower it (Phase 4). The control plane derives the rest."
+            "decision uses, never lower it. The control plane derives the rest."
         ),
     )
     guarantee: Guarantee = Field(
@@ -125,7 +125,7 @@ class AuthorizeRequest(BaseModel):
             "How strong the enforcement at this point actually is. Reported by the "
             "enforcement point, exactly like `enforced`, and NEVER an input to the "
             "decision. **Deliberately no default**: a PEP that omits it gets a 422, "
-            "which is how FR-018 ('refuse to emit a decision whose guarantee level "
+            "which is how the rule ('refuse to emit a decision whose guarantee level "
             "cannot be determined') is enforced by the schema rather than by a runtime "
             "branch some path could miss."
         ),
@@ -196,8 +196,7 @@ class AuthorizeDecision(BaseModel):
         description=(
             "Present only on a RECOVERABLE deny with step-up enabled: the challenge to "
             "put to the consenting human. A non-recoverable deny never carries one, so a "
-            "client cannot offer a prompt for something that can never be granted "
-            "(FR-024)."
+            "client cannot offer a prompt for something that can never be granted."
         ),
     )
 

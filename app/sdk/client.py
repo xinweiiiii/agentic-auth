@@ -38,7 +38,7 @@ from app.services.edge_trace import EdgeRecorder, recorder_from_env
 class Grant:
     """Narrowed authority for exactly one call — plus, for a privileged target, the
     transaction token bound to its parameters, and the identity assertion when the client
-    holds an agent key (Phase 4)."""
+    holds an agent key."""
 
     access_token: str
     scope: str
@@ -72,7 +72,7 @@ class CompletedHop:
 
 @dataclass(frozen=True)
 class PartialOutcome:
-    """What a chain that cannot resume gives back (FR-030).
+    """What a chain that cannot resume gives back.
 
     The hops in ``completed`` already ran, and some of them had side effects that no
     refusal further along can undo. A bare exception would leave the caller guessing how
@@ -179,7 +179,7 @@ class AgenticAuthClient:
     def wrap_result(
         self, value: Any, source_ref: str, *, trusted_sources: list[str] | None = None
     ) -> LabeledResult[Any]:
-        """Label a value the agent obtained on its own (contracts/taint.md §6). Unmatched
+        """Label a value the agent obtained on its own. Unmatched
         sources are untrusted_external — the label can only raise taint."""
         classifier = (
             SourceClassifier(trusted_sources) if trusted_sources is not None else self._classifier
@@ -255,7 +255,7 @@ class AgenticAuthClient:
         principal_assertion: str | None = None,
         enroll_token: str | None = None,
     ) -> dict[str, Any]:
-        """Begin + sign + complete enrollment (contracts/identity.md §2–§3). Returns the
+        """Begin + sign + complete enrollment. Returns the
         outcome body: ``enrolled`` or ``quarantined``. Grants nothing."""
         headers = {"Authorization": f"Bearer {enroll_token or self._admin_token}"}
         doc = key.identity_document(
@@ -313,7 +313,7 @@ class AgenticAuthClient:
         Both, never one: there is no legitimate reason to take a decision without acting
         on it, and an exchange without a decision would issue authority nobody approved.
         ``params`` is the call's JSON body; required when the decision says
-        ``transaction_required`` (Phase 4), ignored otherwise.
+        ``transaction_required``, ignored otherwise.
         """
         acting_agent: str | None = None
         effective_taint = _max_taint(ctx.taint, taint)
@@ -390,7 +390,7 @@ class AgenticAuthClient:
             "data_class": data_class,
             # Phase 5. The in-process client is in the call path and decides every hop,
             # so it reports `full`. Mandatory on the request with no default, so this
-            # cannot be forgotten silently (FR-018).
+            # cannot be forgotten silently.
             "guarantee": self._guarantee.value,
         }
         if taint is not None:
@@ -440,7 +440,7 @@ class AgenticAuthClient:
         if taint is not None:
             form["taint"] = taint.value if isinstance(taint, Taint) else str(taint)
         if self._identity_key is not None and self._agent_name is not None:
-            # Proof of possession (Phase 4, contracts/identity.md §5).
+            # Proof of possession.
             form["actor_token"] = self._identity_key.actor_token(self._agent_name, ctx.token)
             form["actor_token_type"] = JWT_TOKEN_TYPE
 
@@ -485,7 +485,7 @@ class AgenticAuthClient:
         )
 
     async def _mint_transaction(self, grant: Grant, params: dict[str, Any]) -> Grant:
-        """``POST /v1/token/transaction`` with the narrowed token (Phase 4)."""
+        """``POST /v1/token/transaction`` with the narrowed token."""
         try:
             response = await self._client.post(
                 f"{self._base_url}/v1/token/transaction",
@@ -546,7 +546,7 @@ class AgenticAuthClient:
 
         Returns the grants that succeeded and, when something was refused, a
         :class:`PartialOutcome` naming what completed and where it stopped — rather than
-        raising and discarding the history (FR-030).
+        raising and discarding the history.
 
         The caller decides what to do next. If the outcome is recoverable it carries a
         challenge; if it is not, the task is over and the caller still knows exactly
@@ -565,7 +565,7 @@ class AgenticAuthClient:
             current = current.advanced(grant.access_token)
         return grants, None
 
-    # -- step-up consent (Phase 5) ---------------------------------------------
+    # -- step-up consent ---------------------------------------------
 
     async def step_up(self, denied: PolicyDenied) -> dict[str, Any]:
         """Raise a challenge for a refusal that carries one.
@@ -599,7 +599,7 @@ class AgenticAuthClient:
 
         ``credential`` is the **human's**, not the agent's: the control plane refuses the
         session's own grant here, because an agent that could approve its own widening
-        would make the whole flow decorative (research.md R6). The SDK does not hold this
+        would make the whole flow decorative. The SDK does not hold this
         credential and does not try to — it is passed in by whatever channel the
         integrator uses to reach the person.
         """
@@ -624,7 +624,7 @@ class AgenticAuthClient:
         exchange**, so the presented token was never spent: Phase 4 moved the single-use
         guard to ``spent:{action_id}``, and a refusal has no allow decision to spend.
         The delegation record is therefore the original one and the hop budget continues
-        from where it was, which is what FR-026 requires.
+        from where it was, which is the point.
         """
         if denied.data_class is None:
             raise ValueError("that refusal did not record a data class to resume with")
@@ -644,7 +644,7 @@ def _deny_reason(raw: object) -> DenyReason:
 
 
 def _max_taint(*labels: Taint | str | None) -> Taint | None:
-    """The highest label present; ``None`` when none is. Additive only (contracts/taint.md)."""
+    """The highest label present; ``None`` when none is. Additive only."""
     present = [Taint(label) if isinstance(label, str) else label for label in labels if label]
     if not present:
         return None

@@ -48,10 +48,10 @@ class ControlPlaneMetrics:
     revoked_hop_refusals: Counter
     # cause=missing|invalid|wrong_agent|not_enrolled
     exchange_pop_failures: Counter
-    # -- Phase 5 (006/contracts/metrics.md §1) -----------------------------------
-    # FR-021's operator view: how much traffic runs below full guarantee.
+    # -- guarantee levels --------------------------------------------------------
+    # The operator view: how much traffic runs below full guarantee.
     decisions_by_guarantee: Counter
-    # Non-zero deserves an alert: FR-019 says a degrade is never silent, and this is
+    # Non-zero deserves an alert: a degrade is never silent, and this is
     # the signal that it happened.
     guarantee_degrades: Counter
     step_up_challenges: Counter
@@ -311,7 +311,7 @@ def build_verifier_metrics(registry: CollectorRegistry | None = None) -> Verifie
 
 
 # ---------------------------------------------------------------------------------------
-# Enforcement point (Phase 6)
+# Enforcement point
 #
 # Before this, nothing under app/sidecar/ emitted anything: a sidecar that had been silently
 # forwarding every call looked exactly like a healthy one. These are the series that tell the

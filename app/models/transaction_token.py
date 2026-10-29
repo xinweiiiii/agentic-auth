@@ -7,7 +7,7 @@ Two facts this table makes true in the database, not in code:
 - **Nothing rewrites history.** The same trigger shape as ``audit_decisions``; the runtime
   role holds ``SELECT, INSERT`` only.
 
-The token itself is never stored. ``params_hash`` is the FR-042 fingerprint the audit read
+The token itself is never stored. ``params_hash`` is the fingerprint the audit read
 models join on.
 """
 
@@ -62,7 +62,7 @@ class TransactionToken(Base):
         Uuid(as_uuid=True), ForeignKey("sessions.id"), nullable=False, index=True
     )
     target: Mapped[str] = mapped_column(String(512), nullable=False)
-    # base64url SHA-256 of the canonical binding document (contracts/canonicalization.md).
+    # base64url SHA-256 of the canonical binding document (docs/canonicalization.md).
     params_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     # The RFC 6901 pointers applied, or NULL for the whole body.
     binding: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)

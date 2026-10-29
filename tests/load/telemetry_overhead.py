@@ -1,8 +1,8 @@
-"""What the telemetry layer costs (spec 007 SC-005).
+"""What the telemetry layer costs.
 
     python -m tests.load.telemetry_overhead --iterations 400
 
-SC-005 bounds the **telemetry layer's own share** of per-hop decision latency at 5% of p95. It
+The budget bounds the **telemetry layer's own share** of per-hop decision latency at 5% of p95. It
 is measured as an A/B delta — the same workload with ``AGENTIC_AUTH_TELEMETRY_ENABLED`` false
 then true — because a single absolute number says nothing: a p95 of 4 ms could be a fast
 guardrail with slow telemetry or the reverse.
@@ -12,7 +12,7 @@ Two measurements, because one alone is not honest:
 **A. The synchronous cost of emitting a decision span**, in isolation and at high iteration
 count — resolving the parent context, building and validating the attributes, starting and
 ending the span. This is the only part of the layer that runs on a request thread; export is
-asynchronous and separately bounded (research.md R9, and
+asynchronous and separately bounded (see
 ``test_telemetry_fail_open.py::test_a_slow_sink_does_not_add_unbounded_latency``).
 
 **B. The end-to-end delta** across ``POST /v1/authorize`` with telemetry off then on.
@@ -266,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
             f"mean={statistics.mean(s) * 1000:8.4f}ms"
         )
 
-    # ---- A: the synchronous cost, which is what SC-005 bounds -------------------------
+    # ---- A: the synchronous cost, which is what the budget bounds -------------------------
     print(f"A. span emission, {args.emissions:,} iterations\n")
     emission = _measure_span_emission(args.emissions)
     row("span emission", emission)
@@ -288,8 +288,8 @@ def main(argv: list[str] | None = None) -> int:
     print()
     print(f"  per-hop p95 (telemetry off):  {p95_off * 1000:8.4f}ms")
     print(f"  span emission p95:            {emit_p95 * 1000:8.4f}ms")
-    print(f"  telemetry share of per-hop:   {share:8.4f}%   <- the SC-005 verdict")
-    print(f"  SC-005 budget:                {args.budget:8.1f}%")
+    print(f"  telemetry share of per-hop:   {share:8.4f}%   <- the verdict")
+    print(f"  budget:                       {args.budget:8.1f}%")
     print()
     print(f"  end-to-end p95 delta:         {delta * 1000:+8.4f}ms ({e2e_pct:+.2f}%)")
     if delta < 0:

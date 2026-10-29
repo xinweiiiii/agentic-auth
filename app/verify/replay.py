@@ -2,7 +2,7 @@
 
 ``claim(key, ttl)`` is atomic: the first caller gets ``True``, everyone after ``False``. A
 store that cannot answer raises, and the verifier refuses — a replay guard that quietly
-degrades is worse than one that says so (spec FR-009).
+degrades is worse than one that says so.
 """
 
 from __future__ import annotations

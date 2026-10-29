@@ -1,4 +1,4 @@
-"""US5 — immutable, server-assigned, monotonic versioning."""
+"""Immutable, server-assigned, monotonic versioning."""
 
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 """PyJWT + Ed25519 implementation of :class:`TokenProfile`.
 
 The verification order in :meth:`JwtTokenProfile.verify` is the one specified in
-``contracts/hop-token.md``. Every step is mandatory and every failure is a rejection —
+the hop-token profile. Every step is mandatory and every failure is a rejection —
 there is no partial acceptance, and no claim may be read before all steps pass.
 """
 
@@ -125,7 +125,7 @@ class JwtTokenProfile(TokenProfile):
                 f"unexpected alg {header.get('alg')!r}; only {ALGORITHM} is accepted"
             )
         # A transaction token (`typ: txn+jwt`) is signed by the same key and carries most of
-        # the same claims; it must never pass as a hop token (security audit, Phase 4).
+        # the same claims; it must never pass as a hop token (security audit).
         if header.get("typ") not in (None, "JWT"):
             raise TokenVerificationError(
                 f"unexpected typ {header.get('typ')!r}; a hop token has typ JWT"
@@ -212,7 +212,7 @@ class JwtTokenProfile(TokenProfile):
             taint=taint,
         )
 
-    # -- transaction tokens (Phase 4) ------------------------------------------------
+    # -- transaction tokens ------------------------------------------------
 
     def mint_transaction_token(
         self, *, hop: VerifiedToken, params_hash: str, binding: list[str] | None
@@ -313,7 +313,7 @@ class JwtTokenProfile(TokenProfile):
             expires_at=datetime.fromtimestamp(claims["exp"], tz=UTC),
         )
 
-    # -- proof of possession at the exchange (Phase 4) -------------------------------
+    # -- proof of possession at the exchange -------------------------------
 
     def verify_actor_token(
         self, token: str, *, anchor_jwks: dict[str, Any], subject_token: str, expected_agent: str

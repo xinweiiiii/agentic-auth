@@ -1,4 +1,4 @@
-"""The decision cache (T063).
+"""The decision cache.
 
 One property matters above the rest: a cached decision can never leak across policy
 versions, and no cache path can turn a deny into an allow.
@@ -120,7 +120,7 @@ async def test_a_decision_round_trips(redis_client) -> None:
 async def test_a_version_pinned_session_cannot_read_another_versions_entry(
     redis_client,
 ) -> None:
-    """FR-036, as a structural fact rather than an invalidation routine."""
+    """Inertness of proposed manifests, as a structural fact rather than an invalidation routine."""
     await decision_cache.put(
         redis_client, decision_cache.key(_req(), policy_version=42, hop=2, act_chain=CHAIN), ALLOW
     )

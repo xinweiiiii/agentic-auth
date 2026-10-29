@@ -23,7 +23,7 @@ def _agent_name(uri: str) -> str:
 # v1 flattened `tools` across the whole closure, so it cannot answer "may THIS agent
 # call THIS target" or "is B->C a declared edge". v1 policies must be recompiled.
 #
-# v3 (Phase 4) is additive: each node carries `taint_policy` (with `trusted_sources`
+# v3 is additive: each node carries `taint_policy` (with `trusted_sources`
 # materialized to the declared downstream agents when the manifest omits it) and each tool
 # entry carries `binding_params`. A v2 policy still loads, with the documented defaults.
 DAG_SCHEMA_VERSION = 3
@@ -148,7 +148,7 @@ class DagCompiler:
                     "ref": t.ref,
                     "data_classes": sorted(t.data_classes),
                     "privileged": t.privileged,
-                    # v3: None = whole body binds (Phase 4, contracts/canonicalization.md §2)
+                    # v3: None = whole body binds (docs/canonicalization.md §2)
                     "binding_params": list(t.binding_params) if t.binding_params else None,
                 }
                 for t in sorted(m.spec.tools, key=lambda t: t.ref)

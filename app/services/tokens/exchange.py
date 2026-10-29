@@ -120,7 +120,7 @@ class TokenExchangeService:
         policy = await policy_loader.load(db, redis, session.scope, session.policy_version)
         settings = get_settings()
 
-        # Phase 4 (research.md R7): with identity on, a bearer grant alone buys nothing.
+        # Phase 4: with identity on, a bearer grant alone buys nothing.
         # The holder must prove possession of its enrolled key over THIS subject token.
         not_enrolled = False
         if settings.identity_required:
@@ -148,7 +148,7 @@ class TokenExchangeService:
 
         # This is an internal re-decision, not a report from an enforcement point: the
         # exchange re-checks the hop it is about to narrow for. `guarantee` is required on
-        # the schema so no PEP can omit it (FR-018), but nothing here is recorded under
+        # the schema so no PEP can omit it, but nothing here is recorded under
         # it — this request never reaches `_record()`. FULL is the honest value for a
         # check the control plane performs on itself.
         request = AuthorizeRequest(
@@ -184,7 +184,7 @@ class TokenExchangeService:
             )
             get_metrics().exchange_pop_failures.labels(cause="not_enrolled").inc()
         if not decision.allowed:
-            # FR-023: a refused hop yields no token, ever.
+            # A refused hop yields no token, ever.
             raise ExchangeDenied(
                 decision=decision,
                 target=body.resource,
@@ -203,7 +203,7 @@ class TokenExchangeService:
                 f"audience {body.audience!r} does not match resource {body.resource!r}",
             )
 
-        # Spend the DECISION (Phase 4, research.md R1). After this point the same recorded
+        # Spend the DECISION. After this point the same recorded
         # allow cannot buy a second token; the same subject token can still be exchanged
         # for OTHER recorded allows until it expires, which is what lets an agent make more
         # than one call at a hop. Deliberately the last check before minting.

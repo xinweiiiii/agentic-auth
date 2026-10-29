@@ -1,10 +1,10 @@
-"""The PRD §2.3 scenario, as fixtures (Phase 3, extended in Phase 4).
+"""The PRD §2.3 scenario, as fixtures (extended in Phase 4).
 
     user:alice consents to bank-assistant
       └─ bank-assistant ─> balance-agent ─> support-agent ─> terminate_account
 
 ``terminate_account`` is declared only in the *widened* manifests, as a **privileged** tool
-bound on ``/account_id`` (Phase 4). support-agent's ``taint_policy`` leaves the knowledge
+bound on ``/account_id``. support-agent's ``taint_policy`` leaves the knowledge
 base OUT of ``trusted_sources`` unless ``trust_kb=True``, so a KB read taints its context —
 the PRD injection scenario. Everything here reuses ``manifest_doc`` from the Phase 2 chain
 fixtures, and every tool ref points at a host the fake discovery source advertises, so all

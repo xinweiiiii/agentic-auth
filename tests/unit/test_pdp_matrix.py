@@ -1,4 +1,4 @@
-"""The PDP decision matrix (T035).
+"""The PDP decision matrix.
 
 The decision function is pure, so this is the cross-product of the four checks with no
 fixtures and no database: in/out of scope x depth within/over budget x edge declared or

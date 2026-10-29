@@ -1,6 +1,6 @@
-"""US2 — removing a declared edge denies the hop, with no change to caller code (T037).
+"""Removing a declared edge denies the hop, with no change to caller code.
 
-SC-003. This is the runtime twin of Phase 3's CI drift check: the manifest moved, the
+This is the runtime twin of Phase 3's CI drift check: the manifest moved, the
 agent did not, and the next hop along the removed edge stops working.
 """
 
@@ -12,7 +12,7 @@ USER = "user:alice"
 
 
 async def _authorize(client, token, **body):
-    body.setdefault("guarantee", "full")  # mandatory since Phase 5 (FR-018)
+    body.setdefault("guarantee", "full")  # mandatory since Phase 5
     return await client.post(
         "/v1/authorize", headers={"Authorization": f"Bearer {token}"}, json=body
     )
@@ -60,7 +60,7 @@ async def test_removing_a_declared_edge_denies_that_hop(
 async def test_a_session_pinned_before_the_drift_keeps_working(
     client, admin_headers, register_chain, consent
 ) -> None:
-    """SC-009 from the other side: the pin protects work already in flight."""
+    """Session pinning from the other side: the pin protects work already in flight."""
     await register_chain()
     before = await consent()
 

@@ -1,8 +1,8 @@
-"""Edge recording and drift reporting — see contracts/edge-trace.schema.json and data-model.md §5.
+"""Edge recording and drift reporting — see contracts/edge-trace.schema.json.
 
 Every model is closed (``extra="forbid"``). There is no field anywhere in this module that
 could carry a token, a header, a credential, a query string, or a payload — the absence is
-the guarantee (SC-012), and a line or file with an unknown field is rejected rather than
+the guarantee, and a line or file with an unknown field is rejected rather than
 partially trusted.
 """
 

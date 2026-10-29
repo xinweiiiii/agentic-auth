@@ -63,7 +63,7 @@ def _emit_mint_span(
 
     Records *that* a binding was computed and nothing about what was bound: no ``params``, no
     ``params_hash``, no binding, no part of the request body. ``app/observability/surface.py``
-    refuses those keys by substring, so this is enforced rather than merely intended (FR-019).
+    refuses those keys by substring, so this is enforced rather than merely intended.
     """
     config = observability.config()
     if not config.enabled:

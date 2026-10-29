@@ -1,7 +1,7 @@
 """Configuration and the no-op fallback for the observability layer.
 
 Three independent reasons the layer stays silent, and all three must be checked before anything
-is exported (spec 007 FR-029, research.md R15):
+is exported:
 
 1. ``telemetry_enabled`` is false — the default, so a Phase 1-5 deployment is unchanged.
 2. The OpenTelemetry SDK is not installed. It is an optional extra (``pip install '.[otel]'``),

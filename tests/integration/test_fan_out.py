@@ -1,4 +1,4 @@
-"""One delegation token, several recorded calls (Phase 4, research.md R1).
+"""One delegation token, several recorded calls.
 
 Phase 2 spent the subject token's ``jti`` on every exchange, so an agent could make exactly
 one call per hop and the PRD injection scenario (read a KB article, THEN call

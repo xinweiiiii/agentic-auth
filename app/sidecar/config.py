@@ -1,4 +1,4 @@
-"""Sidecar configuration — see ``contracts/sidecar.md``.
+"""Sidecar configuration.
 
 Startup is deliberately strict. A sidecar that comes up but cannot enforce is worse than
 one that refuses to start, because the first looks healthy while forwarding everything.
@@ -20,7 +20,7 @@ ENV_PREFIX = "AGENTIC_AUTH_SIDECAR_"
 # `upstream_map` prefixes are integrator-chosen and could legitimately be `/metrics`, so the
 # telemetry routes live under a namespace no sensible upstream mapping would claim — and
 # `validate()` refuses a mapping that would shadow it rather than silently losing either the
-# proxy route or the metrics route (specs/007 contracts/pep-telemetry.md §1).
+# proxy route or the metrics route.
 RESERVED_PATH_PREFIX = "/__agentic"
 
 
@@ -75,17 +75,17 @@ class SidecarConfig:
     # it never changes what is forwarded or blocked.
     trace_path: str | None = None
     # Phase 4. Largest body the sidecar buffers to bind a privileged call; over the cap is
-    # blocked, never forwarded unbound (research.md R8).
+    # blocked, never forwarded unbound.
     max_privileged_body_bytes: int = 1_048_576
     # Phase 4 identity: both or neither. With a key the sidecar signs an actor_token at every
-    # exchange and adds Agent-Identity on every forwarded call (contracts/identity.md §5-6).
+    # exchange and adds Agent-Identity on every forwarded call.
     agent_name: str | None = None
     identity_key_path: str | None = None
     # Phase 5. What this enforcement point reports on every decision. A sidecar is in the
     # call path and decides every hop, so `full` is accurate. It is configurable only so a
-    # deployment that knows it is weaker can say so (contracts/guarantee-level.md §2).
+    # deployment that knows it is weaker can say so.
     guarantee_level: str = "full"
-    # Phase 6 (spec 007). Per enforcement point, mirroring the control plane's settings —
+    # Phase 6. Per enforcement point, mirroring the control plane's settings —
     # there is deliberately no fleet-wide telemetry switch, for the same reason there is no
     # fleet-wide observe mode.
     telemetry_enabled: bool = False

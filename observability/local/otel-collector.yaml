@@ -1,6 +1,6 @@
 # Local OpenTelemetry Collector for `docker compose --profile observability up -d`.
 #
-# Two inputs, because this project uses two transports on purpose (research.md R1):
+# Two inputs, because this project uses two transports on purpose:
 #   - OTLP/HTTP for traces and logs, from AGENTIC_AUTH_TELEMETRY_ENABLED=true
 #   - the prometheus receiver scraping /metrics and /__agentic/metrics, because metrics stay
 #     on prometheus-client so the published Phase 3/4 names and labels keep working

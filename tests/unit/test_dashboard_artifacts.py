@@ -1,4 +1,4 @@
-"""The shipped dashboards and alerts still resolve (spec 007 FR-027a, SC-013).
+"""The shipped dashboards and alerts still resolve.
 
 Phases 3 and 4 shipped dashboard *guidance* as prose tables. Prose cannot fail a build, so a
 renamed metric left the guidance quietly wrong. These artifacts are checked instead.
@@ -216,7 +216,7 @@ def test_every_label_matcher_uses_a_declared_value(source: str, expr: str) -> No
 
 
 def test_a_typod_label_value_is_caught(tmp_path: Path) -> None:
-    """T042. Without this, the resolver could be silently vacuous — a parser that extracts
+    """Without this, the resolver could be silently vacuous — a parser that extracts
     nothing passes every assertion above."""
     bad = 'increase(agentic_auth_pep_blocks_total{cause="pdp_unavailable"}[5m]) > 0'
     matchers = _label_matchers(bad)
@@ -262,7 +262,7 @@ def test_promtool_accepts_the_rules(path: Path) -> None:
 
 
 def test_the_four_must_page_alerts_are_present() -> None:
-    """FR-026. These ship armed rather than left for an integrator to discover."""
+    """These ship armed rather than left for an integrator to discover."""
     import yaml
 
     names = {

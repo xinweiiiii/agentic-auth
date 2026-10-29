@@ -28,8 +28,7 @@ if TYPE_CHECKING:
 MANIFEST_STATUSES = ("reconciled", "needs_review", "rejected", "proposed")
 
 # Phase 5. A proposal is inert: it is never compiled, so no session can pin it and no
-# decision can resolve against it. Every read path that feeds a decision filters it out
-# (research.md R12).
+# decision can resolve against it. Every read path that feeds a decision filters it out.
 STATUS_PROPOSED = "proposed"
 RESOLVABLE_STATUSES = ("reconciled", "needs_review", "rejected")
 
@@ -42,7 +41,7 @@ class Manifest(UUIDPrimaryKey, TimestampCreated, Base):
         CheckConstraint(
             # Phase 5 adds 'proposed': an observation-derived candidate that governs
             # nothing. Inertness is a read-path property, not a constraint — a proposed
-            # row is never compiled, so no session can pin it (research.md R12).
+            # row is never compiled, so no session can pin it.
             "status IN ('reconciled', 'needs_review', 'rejected', 'proposed')",
             name="ck_manifests_status",
         ),
@@ -63,7 +62,7 @@ class Manifest(UUIDPrimaryKey, TimestampCreated, Base):
             "proposed_from_run_id IS NULL OR ratified_at IS NOT NULL OR status = 'proposed'",
             name="ck_manifests_proposal_pending_or_ratified",
         ),
-        # One proposal per run, and therefore one ratification (FR-040).
+        # One proposal per run, and therefore one ratification.
         Index(
             "uq_manifests_proposed_from_run",
             "proposed_from_run_id",
@@ -81,7 +80,7 @@ class Manifest(UUIDPrimaryKey, TimestampCreated, Base):
     # Phase 5. The sandbox run this manifest was proposed from, or NULL for a
     # hand-written one. Ratification is recorded here rather than in a second table, so
     # "what the administrator approved" and "what got pinned" are one row that cannot
-    # differ (research.md R12).
+    # differ.
     proposed_from_run_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("sandbox_runs.id", name="fk_manifests_proposed_from_run"),

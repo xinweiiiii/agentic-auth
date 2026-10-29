@@ -78,7 +78,7 @@ async def authorize(
         # NOT logger.exception: with a sink attached the SDK exports `exception.message` and
         # the full `exception.stacktrace`, and a traceback through policy loading can carry
         # connection-string or token fragments. We keep the type and lose the trace — a
-        # deliberate reduction, documented in contracts/phase-3-4-deltas.md §6. Do not revert.
+        # deliberate reduction. Do not revert.
         logger.warning(
             "policy load failed",
             extra=logs.fields(
@@ -105,7 +105,7 @@ async def authorize(
 
     settings = get_settings()
 
-    # -- provenance (Phase 4, contracts/taint.md §3) ---------------------------------
+    # -- provenance ---------------------------------
     # What the session already knows about this context, from the calls it decided.
     caller_agent = token.holder
     protected = caller_agent is not None and policy.is_protected(
@@ -342,7 +342,7 @@ async def _record(
         policy_version=policy_version,
         token=token,
         privileged=decision.privileged,
-        # Phase 5. What the enforcement point said it is; recorded on every row (FR-017).
+        # Phase 5. What the enforcement point said it is; recorded on every row.
         guarantee_level=body.guarantee.value,
         step_up_ref=step_up_ref,
     )
@@ -396,11 +396,11 @@ def _emit_decision_span(
     Deliberately **after** the audit record has committed, so ``authz.action_id`` is the
     recorded id and never a guess. When the record failed there is no action id — and the
     decision has already been rewritten to a deny with ``AUDIT_UNAVAILABLE``, so the pair
-    "no action id, no AUDIT_UNAVAILABLE" cannot occur (data-model.md §1).
+    "no action id, no AUDIT_UNAVAILABLE" cannot occur.
 
     ``record_exception`` is off: the SDK would attach ``exception.message`` and a full
     ``exception.stacktrace``, and a traceback through token verification can carry a token
-    fragment (research.md R7).
+    fragment.
     """
     config = observability.config()
     if not config.enabled:

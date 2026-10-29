@@ -16,7 +16,7 @@ from app.config import Settings
 def test_step_up_without_consent_granularity_is_refused() -> None:
     """The only recoverable reason is SCOPE_NOT_CONSENTED, and without granularity it
     fires only for a data class the pinned policy never declared — which step-up may never
-    grant (FR-028). The endpoints would refuse every request correctly, forever."""
+    grant. The endpoints would refuse every request correctly, forever."""
     with pytest.raises(ValueError, match="requires consent_granularity_enabled"):
         Settings(step_up_enabled=True, consent_granularity_enabled=False)
 
@@ -37,7 +37,7 @@ def test_consent_granularity_alone_is_accepted() -> None:
 
 def test_defaults_reproduce_phase_4() -> None:
     """Every Phase 5 control is off by default, so a deployment that upgrades and changes
-    nothing behaves exactly as it did (SC-016)."""
+    nothing behaves exactly as it did."""
     settings = Settings()
     assert settings.consent_granularity_enabled is False
     assert settings.step_up_enabled is False
@@ -50,5 +50,5 @@ def test_phase_5_numeric_defaults() -> None:
     assert settings.step_up_challenge_ttl_seconds == 300
     assert settings.sandbox_run_deadline_seconds == 300
     # Matches the sidecar's control_plane_timeout_seconds (2.0s), so the gateway is not
-    # less available than a sidecar against the same control plane (research.md R13).
+    # less available than a sidecar against the same control plane.
     assert settings.gateway_decision_deadline_ms == 2000

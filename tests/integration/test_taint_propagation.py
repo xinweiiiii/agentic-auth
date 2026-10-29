@@ -1,4 +1,4 @@
-"""Taint derivation and propagation across hops (US2, T041; SC-004, SC-005)."""
+"""Taint derivation and propagation across hops."""
 
 from __future__ import annotations
 

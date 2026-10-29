@@ -1,4 +1,4 @@
-"""Traces for the drift-check-fixture workflow (T063, US5).
+"""Traces for the drift-check-fixture workflow.
 
 ``test_writes_fixture_traces`` records a real drifted run through the in-process stack and
 writes it into ``examples/drift-fixture/`` so the GitHub Action can be exercised

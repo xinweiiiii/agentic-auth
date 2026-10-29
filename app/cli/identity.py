@@ -10,7 +10,7 @@ from rich import print as rprint
 
 from app.sdk.identity import AgentKey
 
-app = typer.Typer(help="Agent identity: keys, challenges, revocation (Phase 4).")
+app = typer.Typer(help="Agent identity: keys, challenges, revocation.")
 
 
 @app.command()

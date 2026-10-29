@@ -60,7 +60,7 @@ sidecar](https://authzai.dev/how-to/deploy-the-sidecar-pep).
 | `GATEWAY_ROUTE_TABLE` | — | JSON, keyed `"<agent>\|<prefix>"` or `"\|<prefix>"` for any agent. |
 | `GATEWAY_DECISION_DEADLINE_MS` | `2000` | Past it the call is refused, never retried. |
 
-## Identity, taint, transaction tokens (Phase 4)
+## Identity, taint, transaction tokens
 
 Three independent controls. With all three off, Phase 1–3 behaviour is unchanged.
 
@@ -75,7 +75,7 @@ Three independent controls. With all three off, Phase 1–3 behaviour is unchang
 | `PRINCIPAL_IDP_ISSUER` / `_JWKS_URL` / `_AUDIENCE` | *(empty)* | The human IdP for principal binding. **Leave these empty and every enrollment completes as `quarantined`** rather than enrolling an agent nobody is accountable for. |
 | `REVOCATION_FRESHNESS_SECONDS` | `30` | How long an offline verifier may run without refreshing revocation state. |
 
-## Step-up and cold start (Phase 5)
+## Step-up and cold start
 
 All off by default.
 
@@ -85,7 +85,7 @@ All off by default.
 | `STEP_UP_ENABLED` | `false` | Return a challenge on a recoverable deny. **Requires consent granularity** — without it, step-up could never grant anything, and the process refuses to start. |
 | `SANDBOX_ENABLED` | `false` | Sandboxed observation and manifest proposal. Off → 404. |
 
-## Observability (Phase 6)
+## Observability
 
 Off by default, and the OpenTelemetry SDK is never imported when off. Install with
 `pip install -e '.[otel]'`.

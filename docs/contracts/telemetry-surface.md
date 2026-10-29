@@ -3,7 +3,7 @@
 **The** enumerated surface. Every metric name, span name, attribute key and structured log field this
 feature may emit is listed here. `app/observability/surface.py` holds the same set as code, and
 `tests/unit/test_telemetry_surface.py` fails if the two disagree or if the integration suite emits a
-key that is not here (FR-025, SC-006).
+key that is not here.
 
 Same precedent as Phase 3's `services/edge_rules.py`: one rule module, runtime and tests held to it
 by a parity test. Prose guidance was what Phases 3 and 4 shipped; prose cannot fail a build.
@@ -13,7 +13,7 @@ by a parity test. Prose guidance was what Phases 3 and 4 shipped; prose cannot f
 1. **Metric labels never carry identities.** Verbatim from `services/metrics.py`: no agent name, user
    sub, session id, action id or target in any label value. Every label below has a closed,
    enumerable value set, which is what keeps the aggregate surface bounded no matter how many
-   agents, sessions or targets exist (FR-020, SC-007). Per-agent breakdowns come from
+   agents, sessions or targets exist. Per-agent breakdowns come from
    `GET /v1/audit/decisions`, behind the audit-reader check.
 2. **Traces and logs are pseudonymous by default.** Opaque UUIDs (`session_id`, `action_id`) pass
    through; agent names and the act chain are keyed HMACs, and are absent entirely unless
@@ -23,7 +23,7 @@ by a parity test. Prose guidance was what Phases 3 and 4 shipped; prose cannot f
    binding, or query string. No `exception.stacktrace` from a dispatch-path signal. See §5.
 4. **Attribute namespace is `authz.*`.** Domain-first, never company-first, per OTel's naming
    guidance. Metric names keep the existing `agentic_auth_*` prefix because they are already
-   published — the asymmetry is deliberate (research.md R2).
+   published — the asymmetry is deliberate.
 5. **Nothing here is read back.** Telemetry is write-only output. No authorization path branches on a
    span, a log field, or inbound trace context.
 
@@ -37,8 +37,8 @@ Every name and label in `docs/contracts/metrics/phase3.md` and
 `_drift_*` family, and the verifier's `_admissions`, `_transaction_rejections`,
 `_identity_view_age_seconds`.
 
-`tests/unit/test_metric_compatibility.py` asserts each one still exists with the same label set
-(FR-024, SC-010). **Adding a label to any of these is a breaking change** — it silently changes the
+`tests/unit/test_metric_compatibility.py` asserts each one still exists with the same label set.
+**Adding a label to any of these is a breaking change** — it silently changes the
 meaning of every `sum by (...)` an integrator wrote.
 
 ## 2. Metrics — new families
@@ -48,10 +48,10 @@ Served on the control plane at the existing `GET /metrics`, and on each PEP at
 
 ### Enforcement point
 
-| Name | Type | Labels | Meaning | Spec |
-|---|---|---|---|---|
-| `agentic_auth_pep_calls_total` | counter | `outcome` (`allowed`\|`blocked`\|`observed_would_block`) | Proxied calls by what the PEP did. `observed_would_block` is forwarded but refused on the merits — never counted as `allowed` | FR-004 |
-| `agentic_auth_pep_blocks_total` | counter | `cause` (see below) | **The most important series here.** Separates "policy said no" from "the guardrail could not reach policy" | FR-005 |
+| Name | Type | Labels | Meaning |
+|---|---|---|---|
+| `agentic_auth_pep_calls_total` | counter | `outcome` (`allowed`\|`blocked`\|`observed_would_block`) | Proxied calls by what the PEP did. `observed_would_block` is forwarded but refused on the merits — never counted as `allowed` |
+| `agentic_auth_pep_blocks_total` | counter | `cause` (see below) | **The most important series here.** Separates "policy said no" from "the guardrail could not reach policy" |
 
 `cause` values, derived by enumerating every return path in `app/sidecar/enforce.py`:
 
@@ -70,18 +70,21 @@ Served on the control plane at the existing `GET /metrics`, and on each PEP at
 
 Only the four marked **yes** are in `PEP_INFRA_BLOCK_CAUSES` and only those page. Alerting on
 the caller's mistakes would cry wolf.
-| `agentic_auth_pep_stage_duration_seconds` | histogram | `stage` (`decide`\|`exchange`\|`mint`\|`upstream`) | Where per-hop time went. Buckets as `CHAIN_QUERY_BUCKETS` | FR-006 |
-| `agentic_auth_pep_overhead_seconds` | histogram | — | Guardrail-added time = total − `upstream`. Cross-checkable against the sum of the other stages | FR-006, SC-005 |
-| `agentic_auth_pep_up` | gauge | — | Always `1` while serving. Liveness is `absent()` on this, not a value | FR-003, SC-003 |
-| `agentic_auth_pep_info` | gauge | `mode` (`enforcing`\|`observing`), `version` | Always `1`. `mode` is the unambiguous answer to "is this thing actually enforcing" | FR-002 |
+
+| Name | Type | Labels | Meaning |
+|---|---|---|---|
+| `agentic_auth_pep_stage_duration_seconds` | histogram | `stage` (`decide`\|`exchange`\|`mint`\|`upstream`) | Where per-hop time went. Buckets as `CHAIN_QUERY_BUCKETS` |
+| `agentic_auth_pep_overhead_seconds` | histogram | — | Guardrail-added time = total − `upstream`. Cross-checkable against the sum of the other stages |
+| `agentic_auth_pep_up` | gauge | — | Always `1` while serving. Liveness is `absent()` on this, not a value |
+| `agentic_auth_pep_info` | gauge | `mode` (`enforcing`\|`observing`), `version` | Always `1`. `mode` is the unambiguous answer to "is this thing actually enforcing" |
 
 ### Telemetry self-observation
 
-| Name | Type | Labels | Meaning | Spec |
-|---|---|---|---|---|
-| `agentic_auth_trace_context_rejected_total` | counter | `cause` (`malformed`\|`absent`\|`baggage_dropped`) | Inbound context not used. `absent` is normal for agents the integrator does not control; `malformed` rising is a caller bug or an attempt | FR-011 |
-| `agentic_auth_telemetry_dropped_total` | counter | `signal` (`span`\|`log`) | Signals lost to queue overflow or a failing sink. **Telemetry loss reporting itself** | FR-018 |
-| `agentic_auth_telemetry_identity_disclosure` | gauge | — | `1` when full identities are being exported, `0` otherwise. A deployment can alert on `1` | FR-023a |
+| Name | Type | Labels | Meaning |
+|---|---|---|---|
+| `agentic_auth_trace_context_rejected_total` | counter | `cause` (`malformed`\|`absent`\|`baggage_dropped`) | Inbound context not used. `absent` is normal for agents the integrator does not control; `malformed` rising is a caller bug or an attempt |
+| `agentic_auth_telemetry_dropped_total` | counter | `signal` (`span`\|`log`) | Signals lost to queue overflow or a failing sink. **Telemetry loss reporting itself** |
+| `agentic_auth_telemetry_identity_disclosure` | gauge | — | `1` when full identities are being exported, `0` otherwise. A deployment can alert on `1` |
 
 `agentic_auth_telemetry_dropped_total` is fed by `BatchSpanProcessor`'s own instrumentation (it takes
 a `meter_provider`), not counted by hand.
@@ -114,7 +117,7 @@ a `meter_provider`), not counted by hand.
 | `authz.privileged` | bool | | `authz.decide` |
 | `authz.taint` | string | `trusted_internal`\|`untrusted_external` | `authz.decide`, when known |
 | `authz.policy_version` | int | | all control-plane spans |
-| `authz.guarantee_level` | string | `full`\|`connector`\|`network`\|`consent_only` | `authz.decide` (Phase 5) |
+| `authz.guarantee_level` | string | `full`\|`connector`\|`network`\|`consent_only` | `authz.decide` |
 | `authz.result` | string | per-endpoint result vocabulary | `authz.exchange`, `authz.transaction.mint` |
 | `authz.pop_failure_cause` | string | `missing`\|`invalid`\|`wrong_agent`\|`not_enrolled` | `authz.exchange`, when applicable |
 | `authz.pep.mode` | string | `enforcing`\|`observing` | `pep.forward` |
@@ -134,7 +137,7 @@ a `meter_provider`), not counted by hand.
 disagree about whether a reason exists.
 
 A pseudonym and its plaintext counterpart are **never emitted together** — a backend must never
-receive two spellings of one identity (contracts/pseudonymisation.md §1).
+receive two spellings of one identity.
 
 **Never an attribute, on any span, at any disclosure setting:** `target` (the full tool/agent
 URI), `caller`, `subject_jti`, any `jti`, `params_hash`, `binding`, request/response bodies, and
@@ -146,7 +149,7 @@ test rather than shipping.
 
 Passed via stdlib `logging`'s `extra=`. `LoggingHandler._get_attributes` exports every non-reserved
 `LogRecord` attribute, so `extra=` needs no adapter; `_translate` attaches `trace_id`/`span_id` from
-the active context automatically (research.md R8).
+the active context automatically.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -156,7 +159,7 @@ the active context automatically (research.md R8).
 | `authz.hop` | int | when applicable |
 | `error.type` | string | exception class name — **not** the message, **not** the trace |
 
-**Severity (FR-016).** An ordinary policy deny is `INFO`. A guardrail failure needing a human is
+**Severity.** An ordinary policy deny is `INFO`. A guardrail failure needing a human is
 `WARNING` or above. A deny is never logged as an error. Python levels map to OTel severity in the
 SDK (`WARNING`→`WARN`, `CRITICAL`→`FATAL`); we add no custom mapping.
 
@@ -180,16 +183,16 @@ so this is live, not hypothetical.
 **Therefore:** no dispatch-path signal carries `exception.*`. Those call sites record `error.type`
 and a bounded, static message. Spans set `record_exception=False`.
 
-**Verification (SC-006).** `tests/integration/test_no_secrets_in_telemetry.py` runs the existing
+**Verification.** `tests/integration/test_no_secrets_in_telemetry.py` runs the existing
 integration suite with an `InMemorySpanExporter` and an in-memory log exporter, then asserts over
 everything captured: every attribute key ∈ this contract; no value matches a JWT-shaped or
 high-entropy-blob pattern; no `exception.stacktrace` key present anywhere.
 
 ## 6. Metrics for integrators without Prometheus
 
-Metrics stay `prometheus-client` (research.md R1 — `PrometheusMetricReader` adds `otel_scope_*`
+Metrics stay `prometheus-client` (`PrometheusMetricReader` adds `otel_scope_*`
 labels and a `target_info` series, registers a second writer into one registry, and has no
-`PROMETHEUS_MULTIPROC_DIR` equivalent; any of those breaks FR-024).
+`PROMETHEUS_MULTIPROC_DIR` equivalent; any of those breaks multi-process exposition).
 
 An OTLP-only pipeline reaches these metrics through the Collector's `prometheus` receiver:
 
@@ -206,11 +209,11 @@ receivers:
 ```
 
 Traces and logs go to `OTEL_EXPORTER_OTLP_ENDPOINT` directly. Two transports, one Collector, no
-code change (FR-028).
+code change.
 
 ## 7. Multi-process deployments
 
 Unchanged from Phase 3: with more than one uvicorn/gunicorn worker, set `PROMETHEUS_MULTIPROC_DIR`
 to an empty writable directory and the control plane builds its `/metrics` registry with
 `multiprocess.MultiProcessCollector`. Traces and logs need no equivalent — each worker exports
-independently and the backend reassembles by trace id (FR-022).
+independently and the backend reassembles by trace id.

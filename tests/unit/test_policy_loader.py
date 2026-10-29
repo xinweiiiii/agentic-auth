@@ -1,4 +1,4 @@
-"""Loading and indexing a pinned compiled policy (T025)."""
+"""Loading and indexing a pinned compiled policy."""
 
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ def test_index_lists_the_closure(index) -> None:
 
 
 def test_the_graph_index_spans_every_scope_for_the_drift_check() -> None:
-    """Every agent in the supplied manifests, not just what one scope can reach (T045)."""
+    """Every agent in the supplied manifests, not just what one scope can reach."""
     manifests = {
         "orchestrator": _manifest(
             "orchestrator", hop_budget=4, downstream=[{"ref": "agent://a", "max_hop_depth": 3}]

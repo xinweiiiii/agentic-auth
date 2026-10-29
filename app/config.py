@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     admin_token: str = "dev-admin-token"
     discovery_timeout_seconds: float = 5.0
 
-    # -- runtime plane (Phase 2) -------------------------------------------
+    # -- runtime plane -------------------------------------------
     issuer: str = "agentic-auth"
     # Ed25519 private key, PEM. Empty in dev -> an ephemeral key is generated at
     # startup and logged as ephemeral. Never leave this empty in production.
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 1800
     decision_cache_ttl_seconds: int = 30
 
-    # -- audit plane (Phase 3) ---------------------------------------------
+    # -- audit plane ---------------------------------------------
     # A read-only bearer for the audit endpoints, so an auditor never needs the admin
     # token that can register manifests or record consent. Empty disables it; the admin
     # token is always accepted.
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     audit_write_timeout_seconds: float = 1.0
     metrics_enabled: bool = True
 
-    # -- Phase 4: three independent controls (research.md R10) ---------------
+    # -- Phase 4: three independent controls ---------------
     # Each is gated so an integrator adopts the sidecar + token-exchange core first and
     # layers the rest on. With all three off, Phase 1-3 behaviour is unchanged.
     #
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     # Bearer that may begin/complete enrollment. Empty disables it; admin always works.
     enroll_token: str = ""
     enroll_challenge_ttl_seconds: int = 120
-    # The organization's human IdP, for principal binding (contracts/identity.md §4). All
+    # The organization's human IdP, for principal binding. All
     # three empty -> every completion is quarantined with PRINCIPAL_IDP_NOT_CONFIGURED.
     principal_idp_issuer: str = ""
     principal_idp_jwks_url: str = ""
@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     # refuses every identity as stale.
     revocation_freshness_seconds: int = 30
 
-    # -- Phase 5: four independent workstreams (research.md R15) ---------------
+    # -- Phase 5: four independent workstreams ---------------
     # Same discipline as Phase 4: each control is gated, every default reproduces Phase 4
     # behaviour, and an integrator adopts the gateway, a boundary mode, step-up and cold
     # start in any order. With all of these off, Phase 1-4 behaviour is unchanged.
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     #   exactly Phase 2-4 semantics, and ConsentCreate.data_classes is rejected.
     #   This is what makes SCOPE_NOT_CONSENTED mean what its name says: with it off, that
     #   reason fires only for a data class the pinned policy never declared, which step-up
-    #   must never grant (research.md R5).
+    #   must never grant.
     # step_up_enabled: a recoverable deny returns a challenge instead of a hard failure, and
     #   /v1/consent/step-up* are routed. Off -> those routes answer 404 and no decision
     #   carries a challenge.
@@ -99,20 +99,20 @@ class Settings(BaseSettings):
     # answer fails even inside the window.
     step_up_challenge_ttl_seconds: int = 300
     # A sandbox observation run ends here whether or not the agent stopped, and the
-    # proposal covers what was observed up to that point (FR-033).
+    # proposal covers what was observed up to that point.
     sandbox_run_deadline_seconds: int = 300
     # Bound on the gateway's decision. Past it the call is REFUSED, never retried: a slow
-    # decision is no decision (FR-003). Matches the sidecar's control_plane_timeout_seconds
+    # decision is no decision. Matches the sidecar's control_plane_timeout_seconds
     # so the gateway is not less available than a sidecar against the same control plane.
     gateway_decision_deadline_ms: int = 2000
     # What the control plane records when an enforcement point predates the guarantee
     # field. Every such caller was per-hop, so `full` is accurate rather than a guess.
     default_guarantee_level: str = "full"
 
-    # -- Phase 6 (spec 007): observability ------------------------------------
+    # -- Phase 6: observability ------------------------------------
     # Off by default, so a Phase 1-5 deployment sees no change at all. When off, nothing is
     # exported, `app.observability` never imports the OpenTelemetry SDK, and the existing
-    # `/metrics` surface behaves exactly as before (research.md R15, FR-029).
+    # `/metrics` surface behaves exactly as before.
     #
     # telemetry_key is REQUIRED when telemetry is enabled. It keys both the identity
     # pseudonyms and the session-derived trace ids. Missing -> the exporter refuses to start
@@ -126,8 +126,7 @@ class Settings(BaseSettings):
     # carry identities" is absolute and has no opt-in.
     #
     # telemetry_allow_sample_ratio: the fraction of ALLOW spans kept. Refusals ignore it
-    # entirely -- a denied, fail-closed, taint-blocked or unrecorded decision is always kept
-    # (FR-021).
+    # entirely -- a denied, fail-closed, taint-blocked or unrecorded decision is always kept.
     telemetry_enabled: bool = False
     telemetry_key: str = ""
     telemetry_identity_disclosure: bool = False
@@ -139,9 +138,9 @@ class Settings(BaseSettings):
         Step-up without consent granularity is the one combination that is not merely
         unusual but incoherent: the only recoverable deny reason is SCOPE_NOT_CONSENTED,
         and without granularity that reason fires only for a data class the pinned policy
-        never declared — which a consent prompt must never grant (FR-028). The endpoints
+        never declared — which a consent prompt must never grant. The endpoints
         would answer every request correctly and grant nothing, forever. Refusing at
-        startup is cheaper than discovering that in production (research.md R5, R15).
+        startup is cheaper than discovering that in production.
         """
         if self.step_up_enabled and not self.consent_granularity_enabled:
             raise ValueError(

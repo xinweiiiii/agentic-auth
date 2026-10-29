@@ -1,4 +1,4 @@
-"""The audit and drift promises are measurable (T066, US6, FR-038–FR-043).
+"""The audit and drift promises are measurable.
 
 A known mix of decisions, a forced audit-write failure, chain queries and a drift run must
 produce exactly the expected counts — and no label value anywhere may be an identity.
@@ -42,7 +42,7 @@ ALLOWED_LABEL_VALUES = (
         "incomplete",
         "not_found",
         "none",
-        # -- Phase 4 (contracts/metrics.md) --
+        # -- Phase 4 --
         "self",
         "ancestor",
         "sentinel",
@@ -252,7 +252,7 @@ def test_the_metrics_textfile_must_be_a_prom_file(tmp_path, name) -> None:
     assert result.exit_code == 2
 
 
-# -- Phase 4 (US6, T078): the new counters match a known mix ------------------------------
+# -- Phase 4: the new counters match a known mix ------------------------------
 
 
 async def test_phase_4_counters_match_a_known_mix(
@@ -369,7 +369,7 @@ async def test_phase_4_counters_match_a_known_mix(
 
 
 # ---------------------------------------------------------------------------------------
-# Phase 6 (spec 007 FR-022): multi-process aggregation.
+# Phase 6: multi-process aggregation.
 #
 # Appended, not edited: the cases above are the Phase 3/4 metric contract and stay exactly as
 # they were (see the no-regression gate in tests/conftest.py).

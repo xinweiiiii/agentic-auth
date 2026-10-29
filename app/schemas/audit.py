@@ -46,7 +46,7 @@ class ChainBreakRead(BaseModel):
 
 
 class TransactionFingerprint(BaseModel):
-    """The FR-042 fingerprint of a privileged call's transaction token: the binding digest
+    """The fingerprint of a privileged call's transaction token: the binding digest
     and lifetime, never the token. Joined from ``transaction_tokens`` on ``action_id``."""
 
     model_config = ConfigDict(extra="forbid", from_attributes=True)
@@ -133,8 +133,8 @@ class AuditDecisionFilter(BaseModel):
     taint: Literal["trusted_internal", "untrusted_external"] | None = None
     privileged: bool | None = None
     # Phase 5. "Show me everything that ran below full guarantee" is the operator question
-    # FR-021 exists to answer, and it needs to be answerable over history, not only as a
-    # live counter.
+    # the guarantee level exists to answer, and it needs to be answerable over history, not
+    # only as a live counter.
     guarantee_level: Guarantee | None = None
     step_up_ref: uuid.UUID | None = None
 

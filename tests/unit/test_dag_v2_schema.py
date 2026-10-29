@@ -1,5 +1,4 @@
-"""Drift guard: compiler output must satisfy the checked-in DAG v3 contract (Phase 2 T008,
-Phase 4 T013).
+"""Drift guard: compiler output must satisfy the checked-in DAG v3 contract.
 
 Mirrors Phase 1's manifest-schema drift test. If the compiler starts emitting a shape the
 contract does not describe — or stops emitting one it promises — this fails rather than

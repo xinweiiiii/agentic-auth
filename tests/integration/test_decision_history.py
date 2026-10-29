@@ -1,4 +1,4 @@
-"""An operator can search the decision history (T055, US4, FR-016–FR-019, SC-011).
+"""An operator can search the decision history.
 
 Seeds 60 decisions across 3 sessions, 4 agents, both outcomes, both target kinds and two
 hours, then checks every filter alone and every pairwise combination against a Python-side

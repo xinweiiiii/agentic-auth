@@ -1,4 +1,4 @@
-"""``agentic-auth drift record|check`` — exit codes, every could-not-run cause, formats (T041)."""
+"""``agentic-auth drift record|check`` — exit codes, every could-not-run cause, formats."""
 
 from __future__ import annotations
 
@@ -484,7 +484,7 @@ def test_record_without_a_command_needs_an_events_file(tmp_path) -> None:
 
 
 def test_the_check_logic_imports_no_http_client() -> None:
-    """FR-032: judging a trace needs manifests and a file, nothing on the network.
+    """Judging a trace needs manifests and a file, nothing on the network.
 
     The probe targets ``app.services.drift`` — where loading, compiling and diffing live.
     The ``app.cli`` package itself imports ``httpx`` because the manifest commands run

@@ -1,5 +1,5 @@
-"""Downscoping, single-hop binding and replay (T042) — and, from Phase 3, binding every
-exchange to the recorded allow decision it spends (T022).
+"""Downscoping, single-hop binding and replay — and, from Phase 3, binding every
+exchange to the recorded allow decision it spends.
 
 Exercised through the HTTP endpoint because that is where the RFC 8693 grammar lives,
 but each test pins one property of the *issued token*, not of the transport.
@@ -131,7 +131,7 @@ async def test_a_token_minted_for_a_tool_call_cannot_be_exchanged_again(client, 
 
 
 async def test_a_subject_token_can_only_be_spent_once(client, rooted) -> None:
-    """Per recorded decision (Phase 4, research.md R1): the same allow cannot be exchanged
+    """Per recorded decision: the same allow cannot be exchanged
     twice. Exchanging the same token for a SECOND decision is fine — see the next test."""
     decision = (
         await authorize(
@@ -272,7 +272,7 @@ async def test_a_recorded_allow_that_no_longer_holds_is_re_decided_and_refused(
     assert rows[1]["target"] == f"agent://{SUMMARIZER}"
 
 
-# -- binding to a recorded decision (Phase 3) ---------------------------------
+# -- binding to a recorded decision ---------------------------------
 
 
 async def test_the_issued_token_names_the_decision_that_authorized_it(client, rooted) -> None:

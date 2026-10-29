@@ -1,4 +1,4 @@
-"""Published metric names and labels survive this phase unchanged (spec 007 FR-024, SC-010).
+"""Published metric names and labels survive this phase unchanged.
 
 The Phase 3 and Phase 4 metric surfaces are documented contracts that integrators have already
 built dashboards and alerts against. This file pins every name **and its exact label set**.
@@ -53,7 +53,7 @@ PHASE_4_CONTROL_PLANE: dict[str, tuple[str, ...]] = {
     "agentic_auth_exchange_pop_failures": ("cause",),
 }
 
-# Phase 5 (spec 006). Frozen here for the same reason as the others: once published, a label
+# Phase 5. Frozen here for the same reason as the others: once published, a label
 # change on any of these silently breaks an exact-match query.
 PHASE_5_CONTROL_PLANE: dict[str, tuple[str, ...]] = {
     "agentic_auth_decisions_by_guarantee": ("level", "outcome"),

@@ -1,8 +1,8 @@
 """Principal binding: is this agent acting for an accountable human or organization?
 
 The agent presents an OIDC ID token from the organization's human IdP. The control plane
-verifies it against the IdP's JWKS and requires the binding claim to name this agent
-(contracts/identity.md §4). Three outcomes are distinct on purpose:
+verifies it against the IdP's JWKS and requires the binding claim to name this agent.
+Three outcomes are distinct on purpose:
 
 - ``Bound``: the assertion verifies and names this agent.
 - ``Unbindable``: no assertion, or one that does not verify or names another agent. This

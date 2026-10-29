@@ -1,6 +1,6 @@
 """The tracer provider, the sampler, and the refusal-preserving filter.
 
-**Why sampling takes two mechanisms instead of one.** FR-021 requires every refusal to survive
+**Why sampling takes two mechanisms instead of one.** Every refusal must survive
 the most aggressive sampling the layer permits, but ``Sampler.should_sample`` runs when a span
 *starts* — before the outcome exists. So the work is split:
 
@@ -17,7 +17,7 @@ verified delegation chain on its own. Losing the refusal would not be fine.
 
 Everything here is best-effort. ``on_end`` runs synchronously on the thread that ended the span,
 which on the control plane is a request-handling thread, so it does an attribute lookup and a
-comparison and swallows any downstream failure (FR-017).
+comparison and swallows any downstream failure.
 """
 
 from __future__ import annotations
@@ -146,12 +146,12 @@ class RefusalPreservingFilter(SpanProcessor):
             if self._keep(span):
                 self._downstream.on_end(span)
             elif self._on_drop is not None:
-                # A sampling drop is telemetry loss and is counted as such (FR-018).
+                # A sampling drop is telemetry loss and is counted as such.
                 self._on_drop()
         except Exception:  # pragma: no cover - defensive; telemetry is never fatal
             # Swallowed on purpose. This runs on the thread that ended the span, which is a
             # request-handling thread: a raise here would turn a telemetry fault into a failed
-            # authorization, which FR-017 forbids.
+            # authorization, which telemetry must never do.
             logger.debug("span processor on_end failed", exc_info=False)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:

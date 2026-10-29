@@ -9,7 +9,7 @@ The mapping in :func:`classify` is the heart of it. ``enforce()`` has around twe
 paths, but every one of them already produces an :class:`~app.sidecar.enforce.EdgeAttribution`
 with an outcome and a reason — so one mapping covers them all, rather than twenty call sites
 each remembering to increment the right counter. The classification reuses the codebase's own
-``POLICY_REASONS`` / ``INFRASTRUCTURE_REASONS`` split, which is already exactly the FR-005
+``POLICY_REASONS`` / ``INFRASTRUCTURE_REASONS`` split, which is already exactly the
 distinction, instead of inventing a parallel one that could disagree with it.
 """
 
@@ -66,7 +66,7 @@ class Classification:
     @property
     def is_infra_failure(self) -> bool:
         """The guardrail refused because it could not do its job, not because policy said no.
-        This is the distinction FR-005 exists for."""
+        This is the distinction the cause label exists for."""
         return self.block_cause in surface.PEP_INFRA_BLOCK_CAUSES
 
 

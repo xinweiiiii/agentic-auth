@@ -9,7 +9,7 @@ follows ``AuthorizeRequest.enforced`` exactly: the PEP self-reports, the control
 records, and the PDP never sees it. The control plane genuinely cannot tell a sidecar from
 a gateway from a connector proxy — they all present a hop token over HTTP — so inferring
 the level would mean inventing a per-PEP credential for a field whose whole job is honesty
-about a deployment choice (research.md R7).
+about a deployment choice.
 
 A PEP could report the wrong level. That is not the threat this field addresses: an
 attacker who controls the enforcement point has already won by a shorter route. The field
@@ -56,7 +56,7 @@ assert set(Guarantee) == set(STRENGTH), "every guarantee level needs a strength"
 
 
 def strongest(*levels: Guarantee) -> Guarantee:
-    """The strongest of the modes that **actually decided** this call (FR-020).
+    """The strongest of the modes that **actually decided** this call.
 
     Two modes deciding one call is ordinary: a connector proxy in front of a tool that
     also carries a resource-side guard. The outcome is the stricter of the two — a refusal
@@ -69,7 +69,7 @@ def strongest(*levels: Guarantee) -> Guarantee:
     if not levels:
         raise ValueError(
             "strongest() needs at least one level: a decision with no guarantee level "
-            "must not be emitted (FR-018)"
+            "must not be emitted"
         )
     return max(levels, key=lambda level: STRENGTH[level])
 
@@ -85,7 +85,7 @@ def weakest(*levels: Guarantee) -> Guarantee:
 def is_degrade(previous: Guarantee, current: Guarantee) -> bool:
     """True when the level in force has become weaker.
 
-    A degrade is written as its own audit event (FR-019), so it lands in the same timeline
+    A degrade is written as its own audit event, so it lands in the same timeline
     as the decisions around it rather than in a separate log an operator has to correlate.
     Starting weak is a configuration, not a degrade, so this is only ever asked when a
     previous level exists.

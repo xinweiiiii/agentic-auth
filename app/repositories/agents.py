@@ -82,7 +82,7 @@ async def set_status(
     trust_anchor_version: int | None = None,
     pending_identity: dict[str, Any] | None = None,
 ) -> Agent:
-    """The one place agent identity state changes (Phase 4). Callers commit."""
+    """The one place agent identity state changes. Callers commit."""
     agent.status = status
     agent.principal_ref = principal_ref
     agent.trust_anchor_version = trust_anchor_version

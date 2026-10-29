@@ -4,7 +4,7 @@
 
 There is no path here that admits on identity alone, and no path that admits a privileged
 call without its transaction token. Each refusal names exactly the step that failed, so a
-resource can answer precisely without leaking anything else (contracts/verifier-library.md).
+resource can answer precisely without leaking anything else (docs/verifier-library.md).
 """
 
 from __future__ import annotations

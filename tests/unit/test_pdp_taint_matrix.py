@@ -1,4 +1,4 @@
-"""TAINTED_INTO_PRIVILEGED in the pure decision (US2, T040)."""
+"""TAINTED_INTO_PRIVILEGED in the pure decision."""
 
 from __future__ import annotations
 

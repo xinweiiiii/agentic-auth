@@ -1,4 +1,4 @@
-"""The composite action's shell, executed (T064, US5).
+"""The composite action's shell, executed.
 
 `action.yml` is the one deliverable whose behaviour normally cannot be observed without
 opening a pull request: the workflow in `.github/workflows/drift-check-fixture.yml` proves it

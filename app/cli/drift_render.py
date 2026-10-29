@@ -1,6 +1,6 @@
 """Rendering a drift report — text for humans, JSON for machines, and GitHub for pull requests.
 
-Output is deterministic for identical inputs (FR-034): undeclared edges are already sorted
+Output is deterministic for identical inputs: undeclared edges are already sorted
 by the check, JSON keys are sorted, and the one wall-clock field is dropped under
 ``--deterministic``.
 

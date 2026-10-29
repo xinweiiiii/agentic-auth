@@ -1,4 +1,4 @@
-"""Sampling must never lose a refusal (spec 007 FR-021, SC-009).
+"""Sampling must never lose a refusal.
 
 The reason this needs two mechanisms rather than one: ``Sampler.should_sample`` runs when a span
 *starts*, and the outcome is not known until it ends. So the sampler keeps everything, and a
@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 # The sampler and the filter are OTel SDK types, so this file needs the optional `otel` extra.
-# It skips without it rather than failing, because FR-029 requires the suite to pass with the
+# It skips without it rather than failing, because the suite must to pass with the
 # extra uninstalled — that run is what proves the no-op fallback.
 pytest.importorskip("opentelemetry.sdk.trace", reason="requires the 'otel' extra")
 
@@ -90,7 +90,7 @@ def downstream() -> _RecordingProcessor:
 def test_every_refusal_survives_every_ratio(
     attrs: dict, ratio: float, downstream: _RecordingProcessor
 ) -> None:
-    """FR-021. This is the test the feature is built around."""
+    """This is the test the feature is built around."""
     f = RefusalPreservingFilter(downstream, allow_sample_ratio=ratio)
     f.on_end(_FakeSpan(attrs))
     assert len(downstream.ended) == 1, f"a refusal was dropped at ratio {ratio}: {attrs}"
@@ -194,7 +194,7 @@ def test_sampler_has_a_description() -> None:
 
 
 def test_a_failing_downstream_processor_does_not_propagate(downstream: _RecordingProcessor) -> None:
-    """FR-017: telemetry is fail-open. `on_end` runs synchronously on the thread that ended the
+    """Telemetry is fail-open. `on_end` runs synchronously on the thread that ended the
     span, which on the control plane is a request-handling thread."""
 
     class _Broken(_RecordingProcessor):

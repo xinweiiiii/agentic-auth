@@ -1,4 +1,4 @@
-"""``extend_chain`` — every row of data-model.md §2.2, and the §2.1 invariants (T018)."""
+"""``extend_chain`` — every transition, and the chain invariants."""
 
 from __future__ import annotations
 

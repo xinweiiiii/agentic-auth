@@ -53,7 +53,7 @@ class PolicyIndex:
     # a delegation path of agent names -> its effective (running-minimum) hop budget
     path_budgets: dict[tuple[str, ...], int] = field(default_factory=dict)
     agents: frozenset[str] = frozenset()
-    # -- Phase 4 (data-model.md §5.3) ---------------------------------------------
+    # -- Phase 4 ---------------------------------------------
     # agent -> the tool refs it declared privileged
     privileged_tools_by_agent: dict[str, set[str]] = field(default_factory=dict)
     # (agent, tool ref) -> RFC 6901 pointers, or None for "whole body binds"
@@ -192,7 +192,7 @@ def build_graph_index(compiled: Mapping[str, CompiledScope]) -> PolicyIndex:
     it. The drift check asks a wider question — is this edge declared *anywhere* in the
     supplied manifests — so it unions every scope's per-agent ``nodes`` and ``edges``. The
     predicates on :class:`PolicyIndex` are unchanged, which is what keeps the CI verdict and
-    the runtime verdict the same function (research.md R7). Path budgets are not merged:
+    the runtime verdict the same function. Path budgets are not merged:
     budgets are a runtime property of a route, not an edge, and the drift check does not
     report them.
     """

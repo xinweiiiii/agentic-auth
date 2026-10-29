@@ -1,4 +1,4 @@
-"""Metric cardinality stays bounded at scale (spec 007 FR-020, SC-007).
+"""Metric cardinality stays bounded at scale.
 
     python -m tests.load.cardinality --agents 1000 --sessions 100000
 

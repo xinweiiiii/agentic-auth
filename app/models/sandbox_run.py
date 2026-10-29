@@ -78,7 +78,7 @@ class SandboxRun(UUIDPrimaryKey, Base):
     scope: Mapped[str] = mapped_column(String(255), nullable=False)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     # started_at + sandbox_run_deadline_seconds. The run ends here whether or not the
-    # agent stopped (FR-033).
+    # agent stopped.
     deadline_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # The folded EdgeTrace. NULL while running.

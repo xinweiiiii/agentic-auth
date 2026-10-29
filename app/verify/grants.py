@@ -1,6 +1,6 @@
 """Verifying a hop token at a resource, against the control plane's JWKS.
 
-The verification order is the one in ``contracts/hop-token.md``, re-implemented here so a
+The verification order is the control plane's, re-implemented here so a
 resource server needs only ``pyjwt[crypto]`` and a JWKS dict — never the control plane's
 own modules. Every step is mandatory; any failure is a :class:`VerificationFailed` naming
 its cause.

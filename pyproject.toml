@@ -37,7 +37,7 @@ dependencies = [
     "pyjwt[crypto]>=2.9",
     # RFC 8693 token exchange is form-encoded; FastAPI needs this to parse Form().
     "python-multipart>=0.0.9",
-    # Decision, audit and drift metrics (contracts/metrics.md, Phase 3).
+    # Decision, audit and drift metrics.
     "prometheus-client>=0.21",
 ]
 
@@ -78,9 +78,9 @@ dev = [
 # Metrics are NOT here. They stay on prometheus-client, which is a base dependency, because
 # PrometheusMetricReader adds otel_scope_* labels and a target_info series, registers a second
 # writer into one CollectorRegistry, and has no PROMETHEUS_MULTIPROC_DIR equivalent — any of
-# which breaks the published Phase 3/4 metric names (research.md R1). structlog is not here
+# which breaks the published Phase 3/4 metric names. structlog is not here
 # either: stdlib logging's `extra=` already exports as structured attributes through
-# OTel's LoggingHandler (research.md R8).
+# OTel's LoggingHandler.
 otel = [
     "opentelemetry-api>=1.30",
     "opentelemetry-sdk>=1.30",
@@ -146,7 +146,7 @@ source_paths = [
     "app/services/stepup_rules.py",
     "app/coldstart/propose.py",
     "app/boundary/guarantee.py",
-    # Phase 6 (spec 007) pure modules: a silent mutation here is invisible in the output.
+    # Phase 6 pure modules: a silent mutation here is invisible in the output.
     "app/observability/ids.py",
     "app/observability/surface.py",
     "app/observability/tracing.py",
@@ -183,7 +183,7 @@ pytest_add_cli_args_test_selection = [
     "tests/unit/test_propose.py",
     "tests/unit/test_guarantee.py",
     "tests/unit/test_pdp_consent_subset.py",
-    # Phase 6 (spec 007).
+    # Phase 6.
     "tests/unit/test_pseudonymisation.py",
     "tests/unit/test_trace_ids.py",
     "tests/unit/test_sampling_filter.py",

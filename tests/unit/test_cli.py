@@ -1,4 +1,4 @@
-"""US6 — agentic-auth manifest validate|lint|diff + server parity."""
+"""Agentic-auth manifest validate|lint|diff + server parity."""
 
 from __future__ import annotations
 
@@ -111,7 +111,7 @@ async def test_cli_diff_matches_api(client, admin_headers, tmp_path):
     assert cli_diff == api_diff
 
 
-# -- register-dir (T052) --------------------------------------------------------
+# -- register-dir --------------------------------------------------------
 
 
 def _bank_dir(tmp_path):

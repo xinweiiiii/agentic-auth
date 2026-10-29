@@ -1,4 +1,4 @@
-"""Audit read access: reader token or admin token, nothing else (T013, FR-020)."""
+"""Audit read access: reader token or admin token, nothing else."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ def test_both_bearer_checks_compare_in_constant_time() -> None:
         assert "compare_digest" in ast.dump(func), f"{func.name} does not use compare_digest"
 
 
-# -- Phase 4: enroller and identity-reader bearers (T055) --------------------------------
+# -- Phase 4: enroller and identity-reader bearers --------------------------------
 
 
 async def test_enroller_accepts_the_enroller_token_and_admin(monkeypatch) -> None:

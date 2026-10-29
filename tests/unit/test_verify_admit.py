@@ -1,5 +1,4 @@
-"""``admit()`` is a conjunction: identity AND grant AND, when privileged, transaction
-(US3, T058; spec FR-033..FR-037, SC-007)."""
+"""``admit()`` is a conjunction: identity AND grant AND, when privileged, transaction."""
 
 from __future__ import annotations
 
@@ -283,7 +282,7 @@ def test_agent_key_repr_never_shows_the_key(support_key) -> None:
     assert "PRIVATE" not in repr(key) and "-----" not in repr(key)
 
 
-# -- mutation-testing gaps (T083) -----------------------------------------------------------------
+# -- mutation-testing gaps -----------------------------------------------------------------
 
 
 def _foreign_issuer(issuer) -> JwtTokenProfile:

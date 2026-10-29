@@ -48,7 +48,7 @@ class DataClassDecl(_Strict):
 
 
 class TaintPolicyDecl(_Strict):
-    """Phase 4 provenance policy for THIS agent (contracts/taint.md §2).
+    """Phase 4 provenance policy for THIS agent.
 
     ``trusted_sources``: globs over target refs whose results are trusted_internal for this
     agent. ``None`` means "my declared downstream agents, nothing else" — materialized by the

@@ -1,6 +1,6 @@
-"""One query answers "who authorized this, and through which agents?" (T032).
+"""One query answers "who authorized this, and through which agents?".
 
-US1 · FR-010–FR-015 · SC-001, SC-002. Every successful response is also validated against
+Every successful response is also validated against
 the published contract, so the API and ``contracts/audit-plane.openapi.yaml`` cannot drift.
 """
 

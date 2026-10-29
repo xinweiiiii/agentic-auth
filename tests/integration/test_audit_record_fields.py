@@ -1,4 +1,4 @@
-"""Every decision lands as a complete audit row (T021, FR-001, FR-002, FR-007).
+"""Every decision lands as a complete audit row.
 
 Driven through the PRD §2.3 bank scenario: two allowed delegations, then support-agent tries
 the undeclared ``terminate_account`` and is refused.
@@ -111,7 +111,7 @@ async def test_a_policy_load_failure_is_recorded_as_a_deny(
     assert str(rows[0].id) == body["action_id"]
 
 
-# -- Phase 4 (US6, T077): taint, source, privileged, and the transaction fingerprint ----------
+# -- Phase 4: taint, source, privileged, and the transaction fingerprint ----------
 
 
 async def test_phase_4_fields_are_recorded_and_read_back(
@@ -234,7 +234,7 @@ async def test_no_phase_4_secret_lands_in_any_table(
     client, admin_headers, db_session, flags, fake_idp, principal_assertion_for
 ) -> None:
     """Transaction tokens, challenge nonces, actor tokens, identity assertions and private
-    keys never appear in a stored row (FR-047, SC-013)."""
+    keys never appear in a stored row."""
     from sqlalchemy import text
 
     from app.sdk import AgenticAuthClient, AgentKey

@@ -7,7 +7,7 @@ info:
     decision history.
 
     What changes elsewhere in Phase 3: the Phase 2 runtime endpoints (`/v1/authorize`,
-    `/v1/token/exchange`) gain fields. See `contracts/phase-2-deltas.md`.
+    `/v1/token/exchange`) gain fields.
 
     Audit data is never written through this API. Every endpoint here requires an audit-reader
     bearer, which is either `AGENTIC_AUTH_AUDIT_READ_TOKEN` or the admin token.
@@ -15,7 +15,7 @@ info:
     AMENDED BY PHASE 5: decision rows and chain hops carry `guarantee_level` and
     `step_up_ref`; `/v1/audit/decisions` filters on both. `guarantee_level` is reported by
     the enforcement point and recorded verbatim, so a weaker deployment can never read as a
-    stronger one (FR-016..FR-021). A row written before Phase 5 reads as `full`.
+    stronger one. A row written before Phase 5 reads as `full`.
     See the guarantee-level notes in the explanation docs at https://authzai.dev.
 
     AMENDED BY PHASE 4: decision rows and chain hops carry `taint`, `taint_source`,
@@ -175,7 +175,7 @@ paths:
     get:
       tags: [audit]
       summary: Prometheus text exposition (internal network only)
-      description: See contracts/metrics.md. Labels carry no agent, user, session, or target identities.
+      description: See docs/contracts/metrics/. Labels carry no agent, user, session, or target identities.
       security: []
       responses:
         '200':
@@ -210,7 +210,7 @@ components:
         Stored deny reasons. `AUDIT_UNAVAILABLE` exists in the runtime vocabulary but is never
         stored, because it is returned precisely when a record could not be written.
         `TAINTED_INTO_PRIVILEGED`, `AGENT_REVOKED` and `AGENT_NOT_ENROLLED` were added by Phase 4
-        (Phase 4, additive).
+        (additive).
 
     ChainBreakReason:
       type: string
@@ -300,7 +300,7 @@ components:
         taint_source: { type: [string, 'null'], description: The target that introduced the taint into this context. }
         privileged: { type: boolean, description: The target was privileged in the pinned policy. }
         transaction: { oneOf: [ { $ref: '#/components/schemas/TransactionFingerprint' }, { type: 'null' } ], description: Phase 4 fingerprint of the call-bound authority, never the token. }
-        # -- added by Phase 5 (006/contracts/phase-2-4-deltas.md §6) --
+        # -- added by Phase 5 --
         guarantee_level: { $ref: '#/components/schemas/GuaranteeLevel' }
         step_up_ref: { type: [string, 'null'], format: uuid, description: 'Phase 5. The step-up grant this row records, if any. Null on every ordinary decision.' }
 

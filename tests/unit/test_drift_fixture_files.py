@@ -1,4 +1,4 @@
-"""The example drift fixture on disk is exactly the bank fixture the suite uses (T053)."""
+"""The example drift fixture on disk is exactly the bank fixture the suite uses."""
 
 from __future__ import annotations
 

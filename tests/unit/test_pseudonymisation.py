@@ -1,6 +1,6 @@
-"""Identity pseudonyms in traces and logs (spec 007 FR-023, FR-023b).
+"""Identity pseudonyms in traces and logs.
 
-contracts/pseudonymisation.md §5. The property that matters is the second one: a plain digest of
+The property that matters is the second one: a plain digest of
 an agent name is recovered by brute force in seconds, because the name space is small and
 enumerable. Only a keyed MAC — with a secret the telemetry backend does not hold — makes the
 pseudonym non-reversible.
@@ -47,7 +47,7 @@ def test_known_answer_vectors(kind: str, value: str) -> None:
     assert pseudonym(kind, value, KEY) == expected
 
 
-# -- stability (FR-023b: "stable within a deployment") --------------------------------------
+# -- stability: "stable within a deployment" ------------------------------------------------
 
 
 def test_stable_for_same_key_and_input() -> None:
@@ -66,7 +66,7 @@ def test_stable_across_fresh_module_imports() -> None:
     assert ids.pseudonym("agent", "agent://router", KEY) == first
 
 
-# -- non-reversibility (FR-023b) ------------------------------------------------------------
+# -- non-reversibility ------------------------------------------------------------
 
 
 def test_different_keys_give_different_pseudonyms() -> None:
@@ -94,7 +94,7 @@ def test_kind_prefix_cannot_be_forged_by_value() -> None:
     assert pseudonym("agent", "x:y", KEY) != pseudonym("agent:x", "y", KEY)
 
 
-# -- collisions at the SC-007 scale ---------------------------------------------------------
+# -- collisions at the design scale ---------------------------------------------------------
 
 
 def test_no_collisions_across_many_agents_and_sessions() -> None:

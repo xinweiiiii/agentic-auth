@@ -7,7 +7,7 @@ background. Every verification is a dictionary lookup: no I/O on the request pat
 
 Freshness is a property the verifier refuses on. ``as_of()`` is the last successful
 refresh; past ``freshness_seconds`` every identity is ``IDENTITY_STALE`` until a refresh
-succeeds (spec FR-040). A store that never bootstrapped refuses everything.
+succeeds. A store that never bootstrapped refuses everything.
 """
 
 from __future__ import annotations

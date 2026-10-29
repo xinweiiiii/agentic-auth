@@ -1,4 +1,4 @@
-"""identity, taint and transaction tokens (Phase 4)
+"""identity, taint and transaction tokens
 
 Revision ID: 0004_identity_taint_transactions
 Revises: 0003_audit_decisions

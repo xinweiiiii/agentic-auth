@@ -1,4 +1,4 @@
-"""US3 — DAG compilation over the API: chain compiles, cycle rejected."""
+"""DAG compilation over the API: chain compiles, cycle rejected."""
 
 from __future__ import annotations
 

@@ -1,13 +1,13 @@
 """Typed attribute builders — the one place the allowlist and the disclosure rule are applied.
 
 Every span attribute this layer emits is produced here. Nothing else constructs attribute dicts,
-so there is exactly one place to audit for FR-019 (no secrets) and FR-023 (pseudonymous by
+so there is exactly one place to audit for two rules: no secrets, and pseudonymous by
 default), and exactly one place a test has to sweep.
 
 Two behaviours that look inconsistent but are not:
 
 - **In tests, an attribute outside the contract raises.** In production it is dropped and the
-  span is emitted without it. Telemetry must never be the reason a request fails (FR-017), but a
+  span is emitted without it. Telemetry must never be the reason a request fails, but a
   key that escaped review must never ship quietly either. ``_STRICT`` is on under pytest.
 - **A pseudonym and its plaintext counterpart are never both present.** A backend that received
   both would hold two spellings of one identity, which defeats the point of the default.
@@ -61,7 +61,7 @@ def _identity(
     act_chain: str | None,
     taint_source: str | None,
 ) -> None:
-    """Apply FR-023: pseudonymous by default, plaintext only with the explicit opt-in, never both.
+    """Pseudonymous by default, plaintext only with the explicit opt-in, never both.
 
     The chain is pseudonymised as one value rather than per actor. A per-actor list would let an
     observer count the hops and correlate repeated actors across sessions, which is most of what
@@ -118,9 +118,9 @@ def decision_attributes(
     act_chain: list[Any] | None = None,
     taint_source: str | None = None,
 ) -> Attributes:
-    """``authz.decide``. See data-model.md §1.
+    """``authz.decide``.
 
-    ``action_id`` is the pointer the whole feature turns on (FR-008): it resolves through
+    ``action_id`` is the pointer the whole feature turns on: it resolves through
     ``GET /v1/audit/actions/{action_id}/chain`` to the verified delegation chain. It is ``None``
     only when the audit write itself failed, in which case the outcome is a deny with
     ``AUDIT_UNAVAILABLE`` — a span with neither is a bug, asserted in the integration tests.
@@ -183,7 +183,7 @@ def mint_attributes(
     acting_agent: str | None = None,
 ) -> Attributes:
     """``authz.transaction.mint``. Records *that* a binding was computed, never the binding, the
-    ``params_hash``, or any part of the request body (FR-019)."""
+    ``params_hash``, or any part of the request body."""
     attrs: Attributes = {}
     _put(attrs, surface.ATTR_ACTION_ID, action_id)
     _put(attrs, surface.ATTR_SESSION_ID, session_id)

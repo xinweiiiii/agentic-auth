@@ -1,12 +1,12 @@
-"""No secrets and no identities leave the deployment (spec 007 FR-019, FR-023, SC-006, SC-012).
+"""No secrets and no identities leave the deployment.
 
-This file *is* SC-006 and SC-012. Rather than inspect a synthetic span, it drives real
+This file *is* the no-secrets guarantee. Rather than inspect a synthetic span, it drives real
 authorization flows — allow, deny, taint, privileged mint, exchange, enrollment — with in-memory
 exporters attached, then sweeps **everything captured**.
 
 The patterns matter more than the key names. An allowlist catches a key someone added on purpose;
 only a value sweep catches a token that arrived inside a field nobody suspected. Both run here,
-because research.md R7 found the leak path is the SDK's, not ours: ``LoggingHandler`` exports
+because the leak path is the SDK's, not ours: ``LoggingHandler`` exports
 ``exception.message`` and a full ``exception.stacktrace`` whenever ``exc_info`` is set, and a
 traceback through token verification can carry a token fragment.
 """
@@ -102,7 +102,7 @@ async def _drive_everything(client, register_chain, consent, admin_headers) -> d
     return seen
 
 
-# -- SC-006: nothing secret, anywhere ------------------------------------------------------
+# -- nothing secret, anywhere ------------------------------------------------------
 
 
 class TestSecrets:
@@ -146,7 +146,7 @@ class TestSecrets:
     async def test_no_signal_anywhere_carries_a_stack_trace(
         self, client, telemetry, register_chain, consent, admin_headers
     ) -> None:
-        """The leak path research.md R7 identified. ``exception.stacktrace`` is exported verbatim
+        """The SDK's leak path. ``exception.stacktrace`` is exported verbatim
         by the SDK once a sink is attached, so the dispatch path must never set ``exc_info``."""
         telemetry.enable()
         await _drive_everything(client, register_chain, consent, admin_headers)
@@ -178,7 +178,7 @@ class TestSecrets:
             assert not re.fullmatch(r"[0-9a-f-]{32,}", value), f"a label carries an id: {value}"
 
 
-# -- SC-012: no identities with disclosure off ----------------------------------------------
+# -- no identities with disclosure off ----------------------------------------------
 
 
 class TestDisclosureOff:
@@ -228,7 +228,7 @@ class TestDisclosureOff:
             assert USER not in rendered, rendered
 
 
-# -- FR-023a: the opt-in works, announces itself, and never doubles up ----------------------
+# -- the opt-in works, announces itself, and never doubles up ----------------------
 
 
 class TestDisclosureOn:

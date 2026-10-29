@@ -1,6 +1,6 @@
-"""US4 — fail closed on every failure class (T049).
+"""Fail closed on every failure class.
 
-SC-004. Each test breaks one thing and asserts the same two facts: the agent got a
+Each test breaks one thing and asserts the same two facts: the agent got a
 refusal, and the upstream received **zero** requests. Not a timeout that eventually
 forwards, not a degraded pass-through.
 """

@@ -70,7 +70,7 @@ async def authorize(
             "target": target,
             "data_class": data_class,
             "enforced": enforced,
-            # Phase 5. Mandatory with no default on the request (FR-018), so a test that
+            # Phase 5. Mandatory with no default on the request, so a test that
             # omitted it would get a 422 rather than a silent claim of full guarantee.
             # These helpers stand in for an in-path enforcement point, which is `full`.
             "guarantee": guarantee,

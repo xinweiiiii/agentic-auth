@@ -55,7 +55,7 @@ class OAuthError(BaseModel):
 
 
 class HopTokenClaims(BaseModel):
-    """The claim set of an issued hop token — see contracts/hop-token.md."""
+    """The claim set of an issued hop token."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -76,7 +76,7 @@ class HopTokenClaims(BaseModel):
 
 
 class AzdClaim(BaseModel):
-    """The binding a transaction token carries (contracts/canonicalization.md §4)."""
+    """The binding a transaction token carries (docs/canonicalization.md §4)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -88,7 +88,7 @@ class AzdClaim(BaseModel):
 
 
 class TransactionTokenClaims(BaseModel):
-    """The claim set of a transaction token — see contracts/transaction-token.md."""
+    """The claim set of a transaction token."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -109,7 +109,7 @@ class TransactionTokenClaims(BaseModel):
 
 class ActorTokenClaims(BaseModel):
     """RFC 8693 ``actor_token`` as this project uses it: proof of possession of the enrolled
-    key, bound to the exact subject token (contracts/identity.md §5)."""
+    key, bound to the exact subject token."""
 
     model_config = ConfigDict(extra="allow")
 

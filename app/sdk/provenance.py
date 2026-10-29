@@ -1,6 +1,6 @@
-"""Agent-side provenance: label a value by where it came from (contracts/taint.md §6).
+"""Agent-side provenance: label a value by where it came from.
 
-The control plane derives most taint itself from the calls it decides (research.md R2).
+The control plane derives most taint itself from the calls it decides.
 This module covers what it cannot see — content the agent obtained outside the system —
 and mirrors the same glob rules so an agent that holds its own manifest classifies the way
 the PDP would. A label can only RAISE the effective taint at the next decision.
