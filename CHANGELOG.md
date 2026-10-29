@@ -14,6 +14,9 @@ versioning](https://semver.org/spec/v2.0.0.html).
   drift-check action's default install) shipped only the top-level `app` package, so the
   `agentic-auth` command failed with `ModuleNotFoundError: No module named 'app.cli'`.
   Every subpackage is now included, and CI installs the built package to keep it so.
+- The secret scan failed on every pull request: `gitleaks-action` now requires
+  `GITHUB_TOKEN` there, and no check here may need a secret. CI runs a pinned,
+  checksum-verified gitleaks binary instead.
 
 ## [0.1.0] - 2026-10-29
 
