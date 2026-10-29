@@ -42,6 +42,18 @@ jobs:
       - name: mypy
         run: mypy || true
 
+      # The editable install above hides packaging mistakes. This is what a consumer, and
+      # the drift-check action's default install string, actually get.
+      - name: wheel install
+        run: |
+          python -m venv /tmp/wheel-venv
+          /tmp/wheel-venv/bin/pip install --quiet .
+          /tmp/wheel-venv/bin/agentic-auth --help
+          /tmp/wheel-venv/bin/agentic-auth drift check \
+            --manifest examples/drift-fixture/manifests-widened \
+            --trace examples/drift-fixture/drifted.edge-trace.json \
+            --report /tmp/drift-report.json
+
   test:
     name: Tests
     runs-on: ubuntu-latest

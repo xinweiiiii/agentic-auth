@@ -6,6 +6,15 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-29
+
+### Fixed
+
+- A non-editable install (`pip install "agentic-auth @ git+https://..."`, and the
+  drift-check action's default install) shipped only the top-level `app` package, so the
+  `agentic-auth` command failed with `ModuleNotFoundError: No module named 'app.cli'`.
+  Every subpackage is now included, and CI installs the built package to keep it so.
+
 ## [0.1.0] - 2026-10-29
 
 First public release.
@@ -35,5 +44,6 @@ First public release.
   calls include an edge its manifests never declared.
 - **Offline verifier library** (`app.verify`) — installable with `pyjwt[crypto]` alone.
 
-[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/xinweiiiii/agentic-auth/releases/tag/v0.1.0
