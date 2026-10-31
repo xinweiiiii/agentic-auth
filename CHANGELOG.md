@@ -20,9 +20,10 @@ reached this repository, so those commands could not start.
   - It supports observe mode, and runs as several stateless instances.
 - **Boundary adapters** (`agentic-auth-boundary`, `agentic_auth.boundary`), for agents you
   cannot modify:
-  - **Resource-server guard:** the tool admits only a grant plus identity.
-  - **MCP connector proxy:** filters `tools/list` to what the manifest declares.
-  - **Egress proxy.**
+  - **Resource-server guard** (`RequireAgenticAuth` middleware): the tool admits only a
+    grant plus identity.
+  - **MCP connector proxy** (`agentic-auth-boundary mcp-proxy`): filters `tools/list` to
+    what the manifest declares, and decides every `tools/call`.
   - Each labels its decisions with the guarantee level it can actually give.
 - **Step-up consent.** A recoverable refusal (`SCOPE_NOT_CONSENTED`) carries a challenge.
   - The consenting human approves it at `/v1/consent/step-up/complete` with their own
@@ -43,6 +44,13 @@ reached this repository, so those commands could not start.
   to the same decisions.
 - The embedded control plane serves step-up and sandbox too. The embedded/remote conformance
   suite now runs the full step-up flow: refused, approved by the human, resumed.
+
+### Not yet included
+
+- **The egress proxy (network mode).** `agentic-auth-boundary egress-ca` generates the
+  certificate authority, and the connection-inspection logic is in place and tested.
+  `egress-proxy` itself does not run yet: it needs a CONNECT-capable listener, and it says
+  so and exits rather than starting a proxy that cannot enforce.
 
 ### Fixed
 

@@ -3,7 +3,7 @@
 Three subcommands, one per FR-14 rung that needs a process:
 
     agentic-auth-boundary mcp-proxy [config.yaml]   # connector mode
-    agentic-auth-boundary egress-proxy [config.yaml]  # network mode
+    agentic-auth-boundary egress-proxy [config.yaml]  # network mode (not available yet)
     agentic-auth-boundary egress-ca [--out DIR]     # the operator's trust material
 
 The resource-side guard has no subcommand: it is middleware the integrator adds to their
@@ -73,8 +73,9 @@ def main(argv: list[str] | None = None) -> int:
             from agentic_auth.boundary.mcp import build_app
         else:  # pragma: no cover - the transport needs a real socket
             print(
-                "egress-proxy needs a CONNECT-capable listener and a CA; see "
-                "docs/phases/phase-5-architecture.md",
+                "egress-proxy is not available yet: it needs a CONNECT-capable listener. "
+                "`egress-ca` generates the CA it will use. Until then, use mcp-proxy, or "
+                "the resource-side guard where you own the tool.",
                 file=sys.stderr,
             )
             return 2
