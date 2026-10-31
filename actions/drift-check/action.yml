@@ -17,8 +17,10 @@ inputs:
     required: true
   package:
     description: >-
-      pip requirement to install agentic-auth from. Empty installs this action's own
-      repository and ref, so the CLI and the action never diverge.
+      pip requirement to install the drift check from. Empty installs the release matching
+      this action's own ref, so the CLI and the action never diverge: `authzai[drift]==X.Y.Z`
+      from PyPI when the action is pinned to a release tag (vX.Y.Z), otherwise this action's
+      repository at its ref.
     required: false
     default: ""
   python-version:
@@ -67,7 +69,12 @@ runs:
             echo "::error title=agentic-auth drift check::set the 'package' input when using this action from a local path"
             exit 2
           fi
-          PACKAGE="agentic-auth @ git+https://github.com/${GITHUB_ACTION_REPOSITORY}@${GITHUB_ACTION_REF}"
+          if [[ "${GITHUB_ACTION_REF:-}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([a-z0-9.]*)$ ]]; then
+            # A release tag: the published wheel, verified by PyPI, no build step.
+            PACKAGE="authzai[drift]==${GITHUB_ACTION_REF#v}"
+          else
+            PACKAGE="authzai[drift] @ git+https://github.com/${GITHUB_ACTION_REPOSITORY}@${GITHUB_ACTION_REF}"
+          fi
         fi
         python -m pip install --quiet "$PACKAGE"
 

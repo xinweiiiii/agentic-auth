@@ -6,7 +6,7 @@ name: drift-check-fixture
 on:
   pull_request:
     paths:
-      - "app/**"
+      - "agentic_auth/**"
       - "tests/**"
       - "examples/drift-fixture/**"
       - "actions/**"
@@ -58,7 +58,7 @@ jobs:
         with:
           manifests: examples/drift-fixture/manifests
           trace: examples/drift-fixture/drifted.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: drifted-report.json
 
       - name: Expect drift, naming exactly one edge
@@ -76,7 +76,7 @@ jobs:
         with:
           manifests: examples/drift-fixture/manifests-widened
           trace: examples/drift-fixture/drifted.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: widened-report.json
 
       - name: Expect pass
@@ -91,7 +91,7 @@ jobs:
         with:
           manifests: examples/drift-fixture/manifests
           trace: examples/drift-fixture/malformed.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: malformed-report.json
 
       - name: Expect error, never pass
