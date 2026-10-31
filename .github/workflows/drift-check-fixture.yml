@@ -51,9 +51,8 @@ jobs:
           AGENTIC_AUTH_WRITE_FIXTURE_TRACES: "1"
         run: python -m pytest -q tests/integration/test_drift_fixture_traces.py
 
-      # A composite action that fails does not hand its outputs back to the caller, so the
-      # report is read from a run with fail-on-drift off, and failing the job is checked on
-      # its own below.
+      # The report is read from a run with fail-on-drift off, and failing the job is checked
+      # on its own below, so each assertion depends on one behaviour only.
       - name: Drifted manifests
         id: drifted
         uses: ./actions/drift-check
@@ -112,8 +111,7 @@ jobs:
           package: ".[drift]"
           report-path: malformed-report.json
 
-      # An error always fails the step (fail-on-drift does not apply), so its outputs are
-      # not available here; what matters is that it can never pass.
+      # An error always fails the step, whatever fail-on-drift says: it can never pass.
       - name: Expect error, never pass
         env:
           OUTCOME: ${{ steps.malformed.outcome }}

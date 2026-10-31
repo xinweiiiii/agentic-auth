@@ -38,8 +38,6 @@ inputs:
     required: false
     default: "true"
 
-# Outputs are set only when the step succeeds: GitHub does not pass a failed composite
-# action's outputs to the caller. Read them with fail-on-drift "false", or read report-path.
 outputs:
   result:
     description: pass | drift | error
@@ -99,8 +97,10 @@ runs:
         done <<< "$MANIFESTS"
 
         rm -f "$REPORT_PATH"
-        agentic-auth drift check "${args[@]}" --trace "$TRACE" --format github --report "$REPORT_PATH"
-        rc=$?
+        # GitHub runs `shell: bash` with -e, so a drift result (exit 1) would end the script
+        # here — before the outputs are written and before fail-on-drift is honoured.
+        rc=0
+        agentic-auth drift check "${args[@]}" --trace "$TRACE" --format github --report "$REPORT_PATH" || rc=$?
 
         if [ -f "$REPORT_PATH" ]; then
           python - "$REPORT_PATH" >> "$GITHUB_OUTPUT" <<'PY'
