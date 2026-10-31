@@ -6,6 +6,8 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0rc1] - 2026-11-01
+
 ### Added
 
 - **Published to PyPI as `authzai`.** Releases are built and published by a tag-triggered
