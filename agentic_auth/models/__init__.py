@@ -45,6 +45,7 @@ def _sqlite_timestamps(_mapper: Any, connection: Any, target: Any) -> None:
 from agentic_auth.models.agent import Agent  # noqa: E402,F401
 from agentic_auth.models.audit_decision import AuditDecision  # noqa: E402,F401
 from agentic_auth.models.compiled_policy import CompiledPolicy  # noqa: E402,F401
+from agentic_auth.models.imported_audit import ImportedAudit  # noqa: E402,F401
 from agentic_auth.models.manifest import Manifest  # noqa: E402,F401
 from agentic_auth.models.reconciliation_report import ReconciliationReport  # noqa: E402,F401
 from agentic_auth.models.sandbox_run import SandboxRun  # noqa: E402,F401

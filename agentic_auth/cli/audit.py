@@ -128,3 +128,48 @@ def export(
         raise typer.Exit(EXIT_ERROR) from exc
 
     rprint(f"exported {count} audit rows older than {cutoff.isoformat()} to {out}")
+
+
+@audit_app.command("import")
+def import_(
+    bundle: Path = typer.Argument(..., help="Export bundle from EmbeddedControlPlane.export"),
+    database_url: str | None = typer.Option(
+        None, "--database-url", help="Defaults to AGENTIC_AUTH_DATABASE_URL"
+    ),
+) -> None:
+    """Append an embedded instance's decisions to imported_audit, apart from this
+    deployment's own log. Re-running the same import adds nothing."""
+    from agentic_auth.services.bundle_import import BundleError, read_bundle
+
+    try:
+        parsed = read_bundle(bundle)
+    except (OSError, BundleError) as exc:
+        rprint(f"[red]{exc}[/red]")
+        raise typer.Exit(EXIT_ERROR) from exc
+
+    require_extra("agentic-auth audit import", "server", "sqlalchemy", "asyncpg")
+    from agentic_auth.config import get_settings
+
+    try:
+        result = asyncio.run(import_bundle(database_url or get_settings().database_url, parsed))
+    except Exception as exc:
+        rprint(f"[red]import failed: {type(exc).__name__}[/red]")
+        raise typer.Exit(EXIT_ERROR) from exc
+    rprint(
+        f"imported {result.imported} decision(s) from a {parsed.header['source_deployment']} "
+        f"deployment; {result.already_present} already present"
+    )
+
+
+async def import_bundle(database_url: str, bundle: Any) -> Any:
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from sqlalchemy.pool import NullPool
+
+    from agentic_auth.services.bundle_import import import_audit
+
+    engine = create_async_engine(database_url, poolclass=NullPool)
+    try:
+        async with async_sessionmaker(engine, expire_on_commit=False)() as db, db.begin():
+            return await import_audit(db, bundle)
+    finally:
+        await engine.dispose()

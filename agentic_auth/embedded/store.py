@@ -35,7 +35,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 import agentic_auth
-from agentic_auth.embedded._schema import SCHEMA_REVISION
+from agentic_auth.embedded._schema import ADDITIVE_FROM, SCHEMA_REVISION
 from agentic_auth.models import Base
 
 MEMORY = ":memory:"
@@ -161,10 +161,17 @@ async def open_store(target: str | os.PathLike[str] = MEMORY) -> StoreHandle:
                 key = None
             else:
                 row = (await conn.execute(select(embedded_meta))).one()
-                if row.schema_revision != SCHEMA_REVISION:
+                if row.schema_revision in ADDITIVE_FROM:
+                    # Only new tables since: create them, leave every existing row alone.
+                    await conn.run_sync(Base.metadata.create_all)
+                elif row.schema_revision != SCHEMA_REVISION:
                     raise StoreVersionMismatch(row.schema_revision, SCHEMA_REVISION)
                 await conn.execute(
-                    embedded_meta.update().values(opened_at=now.replace(tzinfo=None))
+                    embedded_meta.update().values(
+                        opened_at=now.replace(tzinfo=None),
+                        schema_revision=SCHEMA_REVISION,
+                        package_version=agentic_auth.__version__,
+                    )
                 )
                 key = row.issuer_private_key
     except BaseException:
