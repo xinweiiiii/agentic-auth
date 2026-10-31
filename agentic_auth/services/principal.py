@@ -105,6 +105,44 @@ class PrincipalBinder:
             )
         return Bound(f"{claims['iss']}#{claims['sub']}")
 
+    async def verify_human(self, assertion: str) -> str:
+        """Verify a HUMAN's ID token and return its subject (Phase 5, FR-025).
+
+        Deliberately not ``bind()``. That one answers "is this agent accountable to
+        someone?" and therefore insists on the ``agent`` claim naming a specific agent. A
+        human approving a step-up is the accountable party themselves — there is no agent
+        claim to check, and requiring one would make the flow impossible.
+
+        Raises rather than returning a result type, because unlike enrollment there is no
+        useful middle outcome here: either we know who approved, or nothing is approved.
+        """
+        if not self.configured:
+            raise ValueError("no human identity provider is configured")
+
+        try:
+            header = jwt.get_unverified_header(assertion)
+        except jwt.PyJWTError as exc:
+            raise ValueError(f"credential is not a JWT: {exc}") from exc
+
+        jwks = await self._fetch_jwks()
+        key = _key_for(jwks, header.get("kid"))
+        if key is None:
+            raise ValueError(f"kid {header.get('kid')!r} is not in the provider's JWKS")
+
+        s = self._settings
+        try:
+            claims: dict[str, Any] = jwt.decode(
+                assertion,
+                key,
+                algorithms=[header.get("alg", "EdDSA")],
+                issuer=s.principal_idp_issuer,
+                audience=s.principal_idp_audience,
+                options={"require": ["exp", "iat", "sub", "iss", "aud"]},
+            )
+        except jwt.PyJWTError as exc:
+            raise ValueError(f"credential did not verify: {exc}") from exc
+        return f"{claims['iss']}#{claims['sub']}"
+
     async def _fetch_jwks(self) -> dict[str, Any]:
         # An embedded instance reaches its own identity provider through its own transport,
         # whatever this module's hook has been pointed at for the rest of the process.

@@ -34,8 +34,10 @@ from agentic_auth.observability import logs, surface
 from agentic_auth.schemas.authorize import AuthorizeDecision, AuthorizeRequest, DenyReason, Taint
 from agentic_auth.services import decision_cache, policy_loader
 from agentic_auth.services.audit import AuditService, RecordResult
+from agentic_auth.services.guarantee import note_level
 from agentic_auth.services.metrics import get_metrics
 from agentic_auth.services.pdp import Decision, decide
+from agentic_auth.services.stepup import StepUpService, granted_classes
 from agentic_auth.services.taint import (
     Marked,
     TaintStore,
@@ -156,6 +158,24 @@ async def authorize(
         chain_agents.add(body.target.removeprefix("agent://"))  # delegating TO a revoked agent
     revoked_on_chain = frozenset(revoked & chain_agents)
 
+    # -- step-up (Phase 5) -------------------------------------------------------
+    # The third decision input of this shape, after taint and the revoked set: loaded
+    # here, handed to the pure `decide()` as a parameter. A session is never mutated to
+    # record a widening (research.md R6).
+    consented = (
+        frozenset(session.consented_data_classes)
+        if session.consented_data_classes is not None
+        else None
+    )
+    step_up: frozenset[str] = frozenset()
+    if consented is not None and settings.step_up_enabled:
+        step_up = await granted_classes(
+            db,
+            redis,
+            body.session_id,
+            ttl_seconds=int((session.expires_at - _now()).total_seconds()),
+        )
+
     cache_key = decision_cache.key(
         body,
         policy_version=session.policy_version,
@@ -165,6 +185,8 @@ async def authorize(
         act_chain=token.act_chain,
         taint=taint,
         revoked=revoked_on_chain,
+        consented_data_classes=consented,
+        step_up=step_up,
     )
     decision = await decision_cache.get(redis, cache_key)
     if decision is None:
@@ -177,6 +199,8 @@ async def authorize(
             taint=taint,
             taint_enforced=settings.taint_enforcement_enabled,
             revoked=revoked_on_chain,
+            consented_data_classes=consented,
+            step_up=step_up,
         )
         await decision_cache.put(redis, cache_key, decision)
 
@@ -196,9 +220,48 @@ async def authorize(
         headers=request.headers,
     )
 
+    # -- the guarantee level: count it, and never let a degrade pass quietly --------
     get_metrics().decisions_by_guarantee.labels(
         level=body.guarantee.value, outcome=rendered.outcome
     ).inc()
+    await note_level(
+        db,
+        redis,
+        session_id=body.session_id,
+        level=body.guarantee,
+        caller=body.caller,
+        target=body.target,
+        policy_version=session.policy_version,
+        act_chain=token.act_chain,
+        ttl_seconds=int((session.expires_at - _now()).total_seconds()),
+    )
+
+    # -- offer a challenge, but only where one could actually be granted -------------
+    # A non-recoverable refusal never carries a challenge, so a client cannot put a
+    # prompt in front of a human for something that can never be approved (FR-024).
+    if (
+        settings.step_up_enabled
+        and rendered.recoverable
+        and rendered.action_id is not None
+        and consented is not None
+    ):
+        try:
+            rendered = rendered.model_copy(
+                update={
+                    "step_up": await StepUpService().challenge(
+                        db,
+                        redis,
+                        session_id=uuid.UUID(body.session_id),
+                        blocked_action_id=rendered.action_id,
+                        policy=policy,
+                    )
+                }
+            )
+        except DomainError:
+            # The refusal stands on its own. A challenge that cannot be raised — the
+            # class is outside the manifest ceiling, say — must not turn a clean deny
+            # into an error the caller cannot act on.
+            logger.info("no step-up challenge offered for %s", rendered.reason)
 
     # -- mark: this call reaches for a source the caller does not trust ---------------
     # On an allow (or an observe-mode forwarded policy deny) the result will be consumed

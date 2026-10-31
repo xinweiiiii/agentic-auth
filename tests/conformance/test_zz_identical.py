@@ -19,7 +19,7 @@ SCENARIOS = [
     "test_s03_hop_budget_exceeded",
     "test_s04_edge_not_in_dag",
     "test_s05_tainted_into_privileged",
-    "test_s06_scope_not_consented_is_recoverable",
+    "test_s06_step_up_lets_the_blocked_hop_finish",
     "test_s07_transaction_token_is_bound_to_its_params",
     "test_s08_revocation_mid_chain",
     "test_s09_identity_without_a_grant_is_not_admitted",

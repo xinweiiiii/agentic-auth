@@ -24,6 +24,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy import text
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+import agentic_auth
 from agentic_auth import observability
 from agentic_auth.api.errors import register_error_handlers
 from agentic_auth.api.v1 import (
@@ -36,7 +37,9 @@ from agentic_auth.api.v1 import (
     identity,
     jwks,
     manifests,
+    sandbox,
     scopes,
+    stepup,
     token,
     transaction,
 )
@@ -96,7 +99,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
     serves that instance and skips the server's startup, which the instance runs itself."""
     app = FastAPI(
         title="Agentic Authorization SDK — Control Plane",
-        version="0.1.0",
+        version=agentic_auth.__version__,
         lifespan=_lifespan if runtime is None else None,
     )
     if runtime is not None:
@@ -111,6 +114,8 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
     app.include_router(transaction.router)
     app.include_router(enrollment.router)
     app.include_router(identity.router)
+    app.include_router(stepup.router)
+    app.include_router(sandbox.router)
     app.include_router(decisions.router)
     app.include_router(audit.router)
     app.include_router(jwks.router)
