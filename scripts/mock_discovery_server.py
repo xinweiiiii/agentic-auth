@@ -1,7 +1,7 @@
 """Standalone RFC 9728 capability source for local end-to-end testing.
 
 Not part of the shipped control plane — a throwaway server you run alongside
-`app.main:app` so `POST /v1/agents` does a genuine network round trip to a capability
+`agentic_auth.main:app` so `POST /v1/agents` does a genuine network round trip to a capability
 source instead of the in-process fake used by the test suite
 (`tests/fixtures/discovery/server.py`).
 

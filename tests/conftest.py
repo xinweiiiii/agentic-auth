@@ -41,8 +41,8 @@ os.environ.setdefault(
 os.environ["AGENTIC_AUTH_ADMIN_TOKEN"] = "test-admin-token"
 os.environ["AGENTIC_AUTH_REDIS_URL"] = "redis://localhost:6379/15"
 
-from app.config import get_settings  # noqa: E402
-from app.models import Base  # noqa: E402
+from agentic_auth.config import get_settings  # noqa: E402
+from agentic_auth.models import Base  # noqa: E402
 
 get_settings.cache_clear()
 
@@ -77,9 +77,9 @@ async def writer_engine(_engine) -> AsyncIterator:
     """
     from sqlalchemy.engine import make_url
 
-    from app.models.audit_decision import WRITER_GRANTS_SQL, WRITER_ROLE_SQL
-    from app.models.step_up_grant import WRITER_GRANTS_SQL_0005
-    from app.models.transaction_token import WRITER_GRANTS_SQL_0004
+    from agentic_auth.models.audit_decision import WRITER_GRANTS_SQL, WRITER_ROLE_SQL
+    from agentic_auth.models.step_up_grant import WRITER_GRANTS_SQL_0005
+    from agentic_auth.models.transaction_token import WRITER_GRANTS_SQL_0004
 
     async with _engine.begin() as conn:
         await conn.execute(text(WRITER_ROLE_SQL))
@@ -123,7 +123,7 @@ def metrics_registry(monkeypatch):
     """A fresh, isolated metrics set for one test."""
     from prometheus_client import CollectorRegistry
 
-    from app.services import metrics
+    from agentic_auth.services import metrics
 
     current = metrics.build_control_plane_metrics(CollectorRegistry())
     monkeypatch.setattr(metrics, "_current", current)
@@ -164,7 +164,7 @@ def fake_discovery_app():
 
 @pytest_asyncio.fixture
 async def discovery_client(fake_discovery_app) -> AsyncIterator:
-    from app.services.discovery import DiscoveryClient
+    from agentic_auth.services.discovery import DiscoveryClient
 
     http = httpx.AsyncClient(transport=ASGITransport(app=fake_discovery_app))
     try:
@@ -175,12 +175,12 @@ async def discovery_client(fake_discovery_app) -> AsyncIterator:
 
 @pytest_asyncio.fixture
 async def client(_sessionmaker, redis_client, discovery_client) -> AsyncIterator[httpx.AsyncClient]:
-    from app.api import service_deps
-    from app.db import get_session
-    from app.main import create_app
-    from app.services.dag_compiler import DagCompiler
-    from app.services.manifest_service import ManifestService
-    from app.services.reconciler import ReconcilerService
+    from agentic_auth.api import service_deps
+    from agentic_auth.db import get_session
+    from agentic_auth.main import create_app
+    from agentic_auth.services.dag_compiler import DagCompiler
+    from agentic_auth.services.manifest_service import ManifestService
+    from agentic_auth.services.reconciler import ReconcilerService
 
     app = create_app()
 
@@ -216,7 +216,7 @@ async def fake_idp(flags) -> AsyncIterator:
     app, so no port is opened. Yields the ``FakeIdp`` so a test can mint assertions or take
     the provider down.
     """
-    from app.services import principal as principal_module
+    from agentic_auth.services import principal as principal_module
     from tests.fixtures.idp.server import AUDIENCE, ISSUER, JWKS_URL, build_idp
 
     app, state = build_idp()
@@ -249,13 +249,13 @@ def principal_assertion_for(fake_idp):
 
 @pytest_asyncio.fixture
 async def resource_stack(client, redis_client, flags):
-    """A protected resource guarded by ``app.verify``, bootstrapped from the in-process
+    """A protected resource guarded by ``agentic_auth.verify``, bootstrapped from the in-process
     control plane over an httpx transport that can be CUT after bootstrap.
 
     ``build(agents=[...], identity_required=True)`` returns ``(resource_client, recorder,
     verifier)``. The verifier's anchors poll through the same cuttable transport.
     """
-    from app.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
+    from agentic_auth.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
     from tests.fixtures.resource.server import build_resource
 
     class _Cuttable(httpx.AsyncBaseTransport):
@@ -386,8 +386,8 @@ async def sidecar_stack(client, redis_client):
     import httpx
     from httpx import ASGITransport
 
-    from app.sidecar.app import build_app
-    from app.sidecar.config import SidecarConfig, Upstream
+    from agentic_auth.sidecar.app import build_app
+    from agentic_auth.sidecar.config import SidecarConfig, Upstream
     from tests.fixtures.upstream.server import build_upstream
 
     upstream_app, recorder = build_upstream()
@@ -469,13 +469,13 @@ async def gateway_stack(client, redis_client):
     passes with hops pinned to one instance, that is a correctness bug.
     """
     import httpx
-    from app.gateway.app import build_app
-    from app.gateway.config import GatewayConfig
-    from app.gateway.metrics import build_gateway_metrics
+    from agentic_auth.gateway.app import build_app
+    from agentic_auth.gateway.config import GatewayConfig
+    from agentic_auth.gateway.metrics import build_gateway_metrics
     from httpx import ASGITransport
     from prometheus_client import CollectorRegistry
 
-    from app.sidecar.config import Upstream
+    from agentic_auth.sidecar.config import Upstream
     from tests.fixtures.upstream.server import build_upstream
 
     upstream_app, recorder = build_upstream()
@@ -585,8 +585,8 @@ def telemetry(metrics_registry):
     from opentelemetry.sdk._logs.export import InMemoryLogExporter, SimpleLogRecordProcessor
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-    from app import observability
-    from app.observability.config import ObservabilityConfig
+    from agentic_auth import observability
+    from agentic_auth.observability.config import ObservabilityConfig
 
     span_exporter = InMemorySpanExporter()
     log_exporter = InMemoryLogExporter()
@@ -643,6 +643,6 @@ def telemetry(metrics_registry):
 
     for h in handlers:
         logging.getLogger().removeHandler(h)
-    from app import observability as _obs
+    from agentic_auth import observability as _obs
 
     _obs._reset_for_tests()

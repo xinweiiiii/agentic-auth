@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import pytest
 
-from app.boundary.guarantee import Guarantee
-from app.schemas.authorize import AuthorizeRequest, DenyReason
-from app.services import decision_cache
-from app.services.pdp import Decision
+from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.schemas.authorize import AuthorizeRequest, DenyReason
+from agentic_auth.services import decision_cache
+from agentic_auth.services.pdp import Decision
 
 CHAIN = ["user:alice", "agent://root"]
 

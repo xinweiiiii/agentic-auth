@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.schemas.authorize import DenyReason, Taint
-from app.sdk import AgenticAuthClient, ControlPlaneUnavailable, HopContext, PolicyDenied
+from agentic_auth.schemas.authorize import DenyReason, Taint
+from agentic_auth.sdk import AgenticAuthClient, ControlPlaneUnavailable, HopContext, PolicyDenied
 from tests.fixtures.chains import KB_SEARCH, NOTIFIER, ORCHESTRATOR, SUMMARIZER
 
 USER = "user:alice"
@@ -174,7 +174,7 @@ async def test_a_reported_taint_travels_and_only_matters_at_a_protected_target(s
 
 
 def test_wrap_result_classifies_like_the_pdp_and_the_context_is_monotonic(sdk) -> None:
-    from app.sdk import HopContext
+    from agentic_auth.sdk import HopContext
 
     sdk.use_manifest({"spec": {"taint_policy": {"trusted_sources": ["mcp://accounts.internal/*"]}}})
     trusted = sdk.wrap_result({"balance": 10}, "mcp://accounts.internal/read_balance")
@@ -249,7 +249,7 @@ async def test_a_privileged_call_without_params_raises_before_anything_is_spent(
 ) -> None:
     from sqlalchemy import text
 
-    from app.sdk import TransactionParamsRequired
+    from agentic_auth.sdk import TransactionParamsRequired
 
     ctx = await _notifier_ctx(sdk, rooted)
     before = (await db_session.execute(text("SELECT count(*) FROM audit_decisions"))).scalar_one()

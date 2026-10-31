@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.schemas.edge_trace import (
+from agentic_auth.schemas.edge_trace import (
     DriftInputs,
     EdgeOutcomes,
     EdgeTrace,
@@ -14,8 +14,8 @@ from app.schemas.edge_trace import (
     TraceRun,
     Unattributed,
 )
-from app.schemas.manifest import AgentManifest
-from app.services.drift import declared_graph, diff
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.drift import declared_graph, diff
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,

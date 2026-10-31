@@ -17,7 +17,7 @@ import re
 
 import pytest
 
-from app.observability import surface
+from agentic_auth.observability import surface
 
 USER = "user:alice"
 

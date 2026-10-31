@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from prometheus_client import CollectorRegistry, generate_latest
 
-from app.services.metrics import (
+from agentic_auth.services.metrics import (
     build_control_plane_metrics,
     build_drift_metrics,
     build_pep_metrics,
@@ -165,10 +165,10 @@ def test_new_families_do_not_collide_with_published_ones() -> None:
 
 
 def test_the_new_families_match_the_surface_contract() -> None:
-    from app.observability import surface
+    from agentic_auth.observability import surface
 
     assert NEW_FAMILIES == surface.NEW_METRIC_NAMES, (
-        "this test and app/observability/surface.py disagree about what was added"
+        "this test and agentic_auth/observability/surface.py disagree about what was added"
     )
 
 

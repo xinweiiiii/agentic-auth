@@ -12,9 +12,15 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from app.cli import app
-from app.schemas.edge_trace import EdgeOutcomes, EdgeTrace, ObservedEdge, TraceRun, Unattributed
-from app.services.edge_trace import EdgeRecorder
+from agentic_auth.cli import app
+from agentic_auth.schemas.edge_trace import (
+    EdgeOutcomes,
+    EdgeTrace,
+    ObservedEdge,
+    TraceRun,
+    Unattributed,
+)
+from agentic_auth.services.edge_trace import EdgeRecorder
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,
@@ -422,7 +428,7 @@ def test_record_exits_with_the_commands_code_and_still_writes_the_trace(tmp_path
 def test_record_captures_what_the_wrapped_run_records(tmp_path) -> None:
     out = tmp_path / "edge-trace.json"
     child = (
-        "import os; from app.services.edge_trace import EdgeRecorder; "
+        "import os; from agentic_auth.services.edge_trace import EdgeRecorder; "
         "EdgeRecorder(os.environ['AGENTIC_AUTH_TRACE_PATH'], 'sdk').record("
         f"acting_agent='{SUPPORT_AGENT}', target='{TERMINATE_ACCOUNT}', "
         "outcome='observed', reason='OUT_OF_SCOPE')"
@@ -486,12 +492,12 @@ def test_record_without_a_command_needs_an_events_file(tmp_path) -> None:
 def test_the_check_logic_imports_no_http_client() -> None:
     """Judging a trace needs manifests and a file, nothing on the network.
 
-    The probe targets ``app.services.drift`` — where loading, compiling and diffing live.
-    The ``app.cli`` package itself imports ``httpx`` because the manifest commands run
+    The probe targets ``agentic_auth.services.drift`` — where loading, compiling and diffing live.
+    The ``agentic_auth.cli`` package itself imports ``httpx`` because the manifest commands run
     discovery; that is the CLI shell, not the check.
     """
     probe = (
-        "import sys; import app.services.drift; "
+        "import sys; import agentic_auth.services.drift; "
         "assert 'httpx' not in sys.modules, 'httpx was imported'"
     )
     completed = subprocess.run(

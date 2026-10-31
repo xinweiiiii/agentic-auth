@@ -13,8 +13,8 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy import text
 
-from app.api.v1.token import ACTION_ID_INVALID, ACTION_ID_REQUIRED
-from app.schemas.token import GRANT_TYPE, JWT_TOKEN_TYPE
+from agentic_auth.api.v1.token import ACTION_ID_INVALID, ACTION_ID_REQUIRED
+from agentic_auth.schemas.token import GRANT_TYPE, JWT_TOKEN_TYPE
 from tests.fixtures.chains import KB_SEARCH, NOTIFIER, ORCHESTRATOR, SUMMARIZER
 from tests.fixtures.hops import authorize, claims, exchange
 
@@ -215,7 +215,7 @@ async def test_a_recorded_allow_that_no_longer_holds_is_re_decided_and_refused(
 ) -> None:
     """Defence in depth. The exchange re-runs the decision rather than trusting the row, so
     even a recorded allow for an undeclared edge buys nothing — and the refusal is recorded."""
-    from app.repositories import audit_decisions as audit_repo
+    from agentic_auth.repositories import audit_decisions as audit_repo
 
     root = rooted["root_grant"]
     stale = await audit_repo.append(
@@ -401,7 +401,7 @@ async def test_a_decision_from_another_session_is_refused(client, rooted, consen
 async def test_a_decision_made_for_a_different_subject_token_is_refused(client, rooted) -> None:
     """Same session, same hop, same target and data class — but not the token that was
     decided. The allow is bound to the exact token presented at authorize."""
-    from app.api.service_deps import get_token_profile
+    from agentic_auth.api.service_deps import get_token_profile
 
     root = rooted["root_grant"]
     twin = get_token_profile().mint_root_grant(
@@ -508,9 +508,9 @@ async def test_the_replay_guard_outlives_the_window_in_which_the_token_is_accept
     defaults, up to 59 seconds wide. Both existing replay tests spend and re-present
     immediately, so neither can see it; this one inspects the TTL Redis actually holds.
     """
-    from app.config import get_settings
-    from app.services.tokens.jwt_profile import LEEWAY_SECONDS
-    from app.services.tokens.replay import spent_key
+    from agentic_auth.config import get_settings
+    from agentic_auth.services.tokens.jwt_profile import LEEWAY_SECONDS
+    from agentic_auth.services.tokens.replay import spent_key
     from tests.fixtures.tokens import raw_claims
 
     decision = (
@@ -546,7 +546,7 @@ async def test_a_guard_that_cannot_be_written_fails_the_exchange_closed(
 ) -> None:
     """The other three bindings (aud, scope, hop) still hold, but a guarantee that
     quietly degrades is worse than one that refuses."""
-    from app.services.tokens import replay
+    from agentic_auth.services.tokens import replay
 
     async def _dead(*_a, **_k):
         raise replay.ReplayGuardUnavailable("redis is down")

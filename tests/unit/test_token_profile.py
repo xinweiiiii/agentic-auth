@@ -13,9 +13,13 @@ from datetime import UTC, datetime, timedelta
 import jwt
 import pytest
 
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import ALGORITHM, JwtTokenProfile, TokenVerificationError
-from app.services.tokens.keys import load_or_generate
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import (
+    ALGORITHM,
+    JwtTokenProfile,
+    TokenVerificationError,
+)
+from agentic_auth.services.tokens.keys import load_or_generate
 
 USER = "user:alice"
 TARGET = "mcp://kb.internal/search"
@@ -237,7 +241,7 @@ def test_jwks_publishes_a_verifiable_public_key(profile: JwtTokenProfile) -> Non
 
 
 def test_hop_token_carries_the_effective_taint(profile: JwtTokenProfile) -> None:
-    from app.schemas.authorize import Taint
+    from agentic_auth.schemas.authorize import Taint
 
     raw = profile.mint_hop_token(
         sub=USER,

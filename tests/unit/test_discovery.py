@@ -6,7 +6,7 @@ import httpx
 import pytest
 from httpx import ASGITransport
 
-from app.services.discovery import DiscoveryClient, authority_for, tool_name
+from agentic_auth.services.discovery import DiscoveryClient, authority_for, tool_name
 from tests.fixtures.discovery.server import fake_discovery_app
 
 

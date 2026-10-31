@@ -78,17 +78,17 @@ async def _measure(enabled: bool, iterations: int) -> list[float]:
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
     from sqlalchemy.pool import NullPool
 
-    from app import observability
-    from app.api import service_deps
-    from app.config import get_settings
-    from app.db import get_session
-    from app.main import create_app
-    from app.models import Base
-    from app.observability.config import ObservabilityConfig
-    from app.services import metrics as metrics_module
-    from app.services.dag_compiler import DagCompiler
-    from app.services.manifest_service import ManifestService
-    from app.services.reconciler import ReconcilerService
+    from agentic_auth import observability
+    from agentic_auth.api import service_deps
+    from agentic_auth.config import get_settings
+    from agentic_auth.db import get_session
+    from agentic_auth.main import create_app
+    from agentic_auth.models import Base
+    from agentic_auth.observability.config import ObservabilityConfig
+    from agentic_auth.services import metrics as metrics_module
+    from agentic_auth.services.dag_compiler import DagCompiler
+    from agentic_auth.services.manifest_service import ManifestService
+    from agentic_auth.services.reconciler import ReconcilerService
     from tests.fixtures.chains import CHAIN_AGENTS, chain_docs
 
     get_settings.cache_clear()
@@ -99,7 +99,7 @@ async def _measure(enabled: bool, iterations: int) -> list[float]:
 
     from redis.asyncio import from_url
 
-    from app.services.discovery import DiscoveryClient
+    from agentic_auth.services.discovery import DiscoveryClient
     from tests.fixtures.discovery.server import fake_discovery_app
 
     redis = from_url(get_settings().redis_url, decode_responses=True)
@@ -191,10 +191,10 @@ def _measure_span_emission(iterations: int) -> list[float]:
     """Measurement A: the synchronous span-emission path, with nothing else in the way."""
     from prometheus_client import CollectorRegistry
 
-    from app import observability
-    from app.observability import surface
-    from app.observability.config import ObservabilityConfig
-    from app.services.metrics import build_control_plane_metrics
+    from agentic_auth import observability
+    from agentic_auth.observability import surface
+    from agentic_auth.observability.config import ObservabilityConfig
+    from agentic_auth.services.metrics import build_control_plane_metrics
 
     registry = build_control_plane_metrics(CollectorRegistry())
     config = ObservabilityConfig.resolve(

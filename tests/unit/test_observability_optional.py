@@ -1,13 +1,13 @@
 """The layer is a no-op when the OpenTelemetry extra is absent.
 
 ``opentelemetry`` is an optional extra. A deployment that never enables telemetry must not need
-it installed, which means **nothing in ``app.observability`` may import it at module scope** —
-and that is an easy invariant to break by accident, because the natural way to write
+it installed, which means **nothing in ``agentic_auth.observability`` may import it at module
+scope** — and that is an easy invariant to break by accident, because the natural way to write
 ``context.py`` or ``spans.py`` is with a top-level import.
 
 It broke exactly once during implementation: ``context.py`` imported
 ``opentelemetry.trace.propagation.tracecontext`` at module scope, and because
-``app/observability/__init__.py`` imports ``context`` eagerly, importing *anything* in the
+``agentic_auth/observability/__init__.py`` imports ``context`` eagerly, importing *anything* in the
 package pulled the SDK in. The suite only caught it when the extra was uninstalled.
 
 Rather than depend on someone remembering to run the suite with the extra removed, these tests
@@ -51,8 +51,8 @@ def _run(body: str) -> subprocess.CompletedProcess[str]:
 def test_package_imports_without_opentelemetry() -> None:
     result = _run(
         """
-        import app.observability as obs
-        from app.observability import config, context, ids, spans, surface
+        import agentic_auth.observability as obs
+        from agentic_auth.observability import config, context, ids, spans, surface
         print("IMPORTED")
         """
     )
@@ -62,8 +62,8 @@ def test_package_imports_without_opentelemetry() -> None:
 def test_setup_reports_sdk_missing_and_does_not_raise() -> None:
     result = _run(
         """
-        from app.observability import setup
-        from app.observability.config import DISABLED_SDK_MISSING, ObservabilityConfig
+        from agentic_auth.observability import setup
+        from agentic_auth.observability.config import DISABLED_SDK_MISSING, ObservabilityConfig
         cfg = ObservabilityConfig.resolve(
             enabled=True, key="k" * 32, identity_disclosure=False,
             allow_sample_ratio=1.0, service_name="control_plane",
@@ -82,7 +82,7 @@ def test_the_pure_primitives_still_work_without_the_sdk() -> None:
     is what lets their unit tests run in a deployment without the extra."""
     result = _run(
         """
-        from app.observability.ids import pseudonym, session_trace_id
+        from agentic_auth.observability.ids import pseudonym, session_trace_id
         assert len(pseudonym("agent", "agent://x", b"k" * 32)) == 32
         assert session_trace_id("s-1", b"k" * 32) > 0
         print("PRIMITIVES_OK")
@@ -95,7 +95,7 @@ def test_the_control_plane_app_still_builds_without_the_sdk() -> None:
     """The end-to-end claim: a deployment that never installs the extra still serves."""
     result = _run(
         """
-        from app.main import create_app
+        from agentic_auth.main import create_app
         app = create_app()
         assert app.title
         print("APP_BUILDS")
@@ -109,7 +109,7 @@ def test_tracer_is_a_noop_without_the_sdk() -> None:
     must support the context-manager protocol rather than being None."""
     result = _run(
         """
-        from app.observability import tracer
+        from agentic_auth.observability import tracer
         with tracer().start_as_current_span("authz.decide") as span:
             span.set_attribute("authz.hop", 1)
             assert not span.is_recording()

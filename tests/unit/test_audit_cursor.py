@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from app.errors import QueryValidationError
-from app.services.audit_cursor import decode_cursor, encode_cursor
+from agentic_auth.errors import QueryValidationError
+from agentic_auth.services.audit_cursor import decode_cursor, encode_cursor
 
 
 def _raw(payload: object) -> str:

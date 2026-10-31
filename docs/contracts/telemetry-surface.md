@@ -1,7 +1,7 @@
 # Contract: Telemetry Surface
 
 **The** enumerated surface. Every metric name, span name, attribute key and structured log field this
-feature may emit is listed here. `app/observability/surface.py` holds the same set as code, and
+feature may emit is listed here. `agentic_auth/observability/surface.py` holds the same set as code, and
 `tests/unit/test_telemetry_surface.py` fails if the two disagree or if the integration suite emits a
 key that is not here.
 
@@ -53,7 +53,7 @@ Served on the control plane at the existing `GET /metrics`, and on each PEP at
 | `agentic_auth_pep_calls_total` | counter | `outcome` (`allowed`\|`blocked`\|`observed_would_block`) | Proxied calls by what the PEP did. `observed_would_block` is forwarded but refused on the merits — never counted as `allowed` |
 | `agentic_auth_pep_blocks_total` | counter | `cause` (see below) | **The most important series here.** Separates "policy said no" from "the guardrail could not reach policy" |
 
-`cause` values, derived by enumerating every return path in `app/sidecar/enforce.py`:
+`cause` values, derived by enumerating every return path in `agentic_auth/sidecar/enforce.py`:
 
 | Value | Meaning | Guardrail's fault? |
 |---|---|---|
@@ -141,7 +141,7 @@ receive two spellings of one identity.
 
 **Never an attribute, on any span, at any disclosure setting:** `target` (the full tool/agent
 URI), `caller`, `subject_jti`, any `jti`, `params_hash`, `binding`, request/response bodies, and
-query strings. `app/observability/surface.py` refuses these by substring
+query strings. `agentic_auth/observability/surface.py` refuses these by substring
 (`FORBIDDEN_ATTR_SUBSTRINGS`), so a plausible future addition like `authz.subject_jti` fails a
 test rather than shipping.
 

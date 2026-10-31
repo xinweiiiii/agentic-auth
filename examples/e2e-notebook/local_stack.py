@@ -4,7 +4,7 @@ What a customer would run as four things — a control plane, an MCP capability 
 protected tool server, and the company IdP — this module runs as four ASGI apps behind one
 ``httpx`` transport that routes by host. No ports are opened and nothing is mocked: the
 control plane is the real FastAPI app on a real PostgreSQL and Redis, the tool server is
-guarded by the real ``app.verify``, and every decision is really recorded.
+guarded by the real ``agentic_auth.verify``, and every decision is really recorded.
 
 Only two things are stand-ins for infrastructure a customer already owns:
 
@@ -17,7 +17,7 @@ its own database and Redis index, so it never touches development data.
 
     stack = await LocalStack.start()
     client = stack.client("balance-agent", key=key)      # an SDK client for one agent
-    tools = await stack.tool_server(agents=[...])        # a resource guarded by app.verify
+    tools = await stack.tool_server(agents=[...])        # a resource guarded by agentic_auth.verify
     await stack.aclose()
 """
 
@@ -87,8 +87,8 @@ from starlette.requests import Request  # noqa: E402
 from starlette.responses import JSONResponse  # noqa: E402
 from starlette.routing import Route  # noqa: E402
 
-from app.config import get_settings  # noqa: E402
-from app.sdk import (  # noqa: E402
+from agentic_auth.config import get_settings  # noqa: E402
+from agentic_auth.sdk import (  # noqa: E402
     Admission,
     AgenticAuthClient,
     AgentKey,
@@ -392,7 +392,7 @@ class LocalStack:
             os.environ["AGENTIC_AUTH_DATABASE_URL"] = writer_url
             get_settings.cache_clear()
 
-        from app.redis import get_redis
+        from agentic_auth.redis import get_redis
 
         if reset:
             await get_redis().flushdb()
@@ -406,7 +406,7 @@ class LocalStack:
         router.mount("control-plane.local", _control_plane(http))
 
         # The principal binder fetches the IdP's keys through the same transport.
-        from app.services import principal
+        from agentic_auth.services import principal
 
         principal.jwks_http_client = lambda: http
 
@@ -416,8 +416,8 @@ class LocalStack:
         for server in self._servers:
             await server.aclose()
         await self.http.aclose()
-        from app.db import get_engine
-        from app.redis import get_redis
+        from agentic_auth.db import get_engine
+        from agentic_auth.redis import get_redis
 
         await get_redis().aclose()
         await get_engine().dispose()
@@ -531,10 +531,10 @@ class LocalStack:
 
 def _control_plane(http: httpx.AsyncClient) -> Any:
     """The real FastAPI app, with capability discovery pointed at the local source."""
-    from app.api import service_deps
-    from app.main import create_app
-    from app.services.discovery import DiscoveryClient
-    from app.services.manifest_service import ManifestService
+    from agentic_auth.api import service_deps
+    from agentic_auth.main import create_app
+    from agentic_auth.services.discovery import DiscoveryClient
+    from agentic_auth.services.manifest_service import ManifestService
 
     app = create_app()
 
@@ -583,8 +583,8 @@ async def _prepare_schema() -> str | None:
     created — in which case the control plane runs as the owner and the append-only check
     will say so instead of proving it.
     """
-    from app.models.audit_decision import WRITER_GRANTS_SQL, WRITER_ROLE_SQL
-    from app.models.transaction_token import WRITER_GRANTS_SQL_0004
+    from agentic_auth.models.audit_decision import WRITER_GRANTS_SQL, WRITER_ROLE_SQL
+    from agentic_auth.models.transaction_token import WRITER_GRANTS_SQL_0004
 
     # The schema comes from the project's own migrations, exactly as a deployment gets it.
     # `create_all` would be simpler and wrong: it creates missing tables but never alters

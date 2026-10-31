@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from app.schemas.authorize import DenyReason
-from app.schemas.manifest import AgentManifest
-from app.services.drift import declared_graph
-from app.services.edge_rules import RUNTIME_REASON, EdgeVerdict, classify_edge, delegate_of
+from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.drift import declared_graph
+from agentic_auth.services.edge_rules import RUNTIME_REASON, EdgeVerdict, classify_edge, delegate_of
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,

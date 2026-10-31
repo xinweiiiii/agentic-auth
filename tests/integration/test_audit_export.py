@@ -8,9 +8,9 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from typer.testing import CliRunner
 
-from app.cli import app as cli
-from app.cli.audit import export_before
-from app.config import get_settings
+from agentic_auth.cli import app as cli
+from agentic_auth.cli.audit import export_before
+from agentic_auth.config import get_settings
 from tests.fixtures.bank import BANK_ASSISTANT, CLEAN_CALLS, bank_docs
 from tests.fixtures.hops import authorize, consent_session, register_agents, run_calls
 

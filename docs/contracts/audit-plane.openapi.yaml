@@ -303,6 +303,7 @@ components:
         # -- added by Phase 5 --
         guarantee_level: { $ref: '#/components/schemas/GuaranteeLevel' }
         step_up_ref: { type: [string, 'null'], format: uuid, description: 'Phase 5. The step-up grant this row records, if any. Null on every ordinary decision.' }
+        deployment: { type: string, enum: [server, embedded], default: server, description: 'Which deployment wrote the row. `embedded` is an in-process control plane (agentic_auth.embedded), for development and testing only. A row written before the field existed reads as `server`, which is what wrote it.' }
 
     GuaranteeLevel: { type: string, enum: [full, connector, network, consent_only], description: 'Phase 5. How strong the enforcement actually was for this decision. A row written before Phase 5 reads as `full`, which is accurate: every enforcement point that produced one was per-hop.' }
     TransactionFingerprint:

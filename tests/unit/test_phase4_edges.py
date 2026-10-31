@@ -8,8 +8,13 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.taint import SENTINEL, ancestors_of
-from app.verify.canonical import CanonicalizationError, binding_hash, canonical_json, select_binding
+from agentic_auth.services.taint import SENTINEL, ancestors_of
+from agentic_auth.verify.canonical import (
+    CanonicalizationError,
+    binding_hash,
+    canonical_json,
+    select_binding,
+)
 
 # -- ES6 Number::toString boundaries ---------------------------------------------------------
 

@@ -11,7 +11,7 @@ import itertools
 
 import pytest
 
-from app.boundary.guarantee import (
+from agentic_auth.boundary.guarantee import (
     STRENGTH,
     Guarantee,
     is_degrade,

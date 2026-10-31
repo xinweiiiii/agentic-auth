@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DagCompiler
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DagCompiler
 
 ORCHESTRATOR = "orchestrator"
 KB_SEARCH = "kb-search"

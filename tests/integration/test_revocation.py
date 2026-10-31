@@ -6,8 +6,8 @@ import uuid
 
 import pytest
 
-from app.schemas.authorize import DenyReason
-from app.sdk import AgenticAuthClient, AgentKey
+from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.sdk import AgenticAuthClient, AgentKey
 from tests.conftest import ADMIN_TOKEN
 from tests.fixtures.bank import (
     BALANCE_AGENT,
@@ -202,7 +202,7 @@ async def test_a_revoked_key_is_never_re_pinned_by_another_enrollment(
             principal_assertion=principal_assertion_for(SUPPORT_AGENT),
         )
     )["trust_anchor_version"] == 2
-    from app.sdk.client import ControlPlaneUnavailable
+    from agentic_auth.sdk.client import ControlPlaneUnavailable
 
     with pytest.raises(ControlPlaneUnavailable, match="409"):
         await sdk.enroll(

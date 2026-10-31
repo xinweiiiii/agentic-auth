@@ -11,8 +11,8 @@ import yaml
 from httpx import ASGITransport
 from typer.testing import CliRunner
 
-from app.cli import app
-from app.services.discovery import DiscoveryClient
+from agentic_auth.cli import app
+from agentic_auth.services.discovery import DiscoveryClient
 from tests.fixtures.bank import BALANCE_AGENT, BANK_ASSISTANT, SUPPORT_AGENT, bank_docs
 from tests.fixtures.discovery.server import fake_discovery_app
 from tests.fixtures.manifests import base_manifest, discovery_down_manifest, overbroad_manifest
@@ -27,7 +27,7 @@ def _wire_fake_discovery(monkeypatch):
             client=httpx.AsyncClient(transport=ASGITransport(app=fake_discovery_app))
         )
 
-    monkeypatch.setattr("app.cli.manifest._make_discovery_client", _factory)
+    monkeypatch.setattr("agentic_auth.cli.manifest._make_discovery_client", _factory)
 
 
 def _write(tmp_path, doc, name="m.yaml"):
@@ -158,7 +158,8 @@ def _control_plane(monkeypatch, *, reject: str | None = None):
 
     transport = httpx.MockTransport(handler)
     monkeypatch.setattr(
-        "app.cli.manifest._make_http_client", lambda timeout: httpx.AsyncClient(transport=transport)
+        "agentic_auth.cli.manifest._make_http_client",
+        lambda timeout: httpx.AsyncClient(transport=transport),
     )
     return seen
 

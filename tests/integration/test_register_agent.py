@@ -25,7 +25,7 @@ async def test_manifest_reads_back_byte_identical(client: httpx.AsyncClient, adm
     resp = await client.get("/v1/manifests/kb-search-agent?version=1", headers=admin_headers)
     assert resp.status_code == 200
     doc = resp.json()["doc"]
-    from app.schemas.manifest import AgentManifest
+    from agentic_auth.schemas.manifest import AgentManifest
 
     assert (
         AgentManifest.model_validate(doc).canonical_doc()

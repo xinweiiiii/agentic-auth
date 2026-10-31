@@ -5,7 +5,13 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.taint import SENTINEL, Marked, TaintStore, TaintStoreUnavailable, taint_key
+from agentic_auth.services.taint import (
+    SENTINEL,
+    Marked,
+    TaintStore,
+    TaintStoreUnavailable,
+    taint_key,
+)
 
 
 async def test_marks_round_trip_with_their_source_and_deciding_action(redis_client) -> None:

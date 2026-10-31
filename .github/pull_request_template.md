@@ -21,4 +21,4 @@
 ## Anything deliberate
 
 <!-- Did you touch a metric name, a label set, the decision path, the audit record, or
-     app/verify/'s import graph? Those are load-bearing — say so here. See CONTRIBUTING.md. -->
+     agentic_auth/verify/'s import graph? Those are load-bearing — say so here. See CONTRIBUTING.md. -->

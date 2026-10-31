@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.sdk import AgenticAuthClient, AgentKey
+from agentic_auth.sdk import AgenticAuthClient, AgentKey
 from tests.conftest import ADMIN_TOKEN
 from tests.fixtures.bank import (
     BALANCE_AGENT,

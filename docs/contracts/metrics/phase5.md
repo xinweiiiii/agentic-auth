@@ -1,6 +1,6 @@
 # Contract — Metrics
 
-New metrics for Phase 5, following the existing naming in `app/services/metrics.py`
+New metrics for Phase 5, following the existing naming in `agentic_auth/services/metrics.py`
 (`agentic_auth_*`, Prometheus, built into `ControlPlaneMetrics` and exposed at `/metrics`).
 
 ## 1. Control plane

@@ -5,10 +5,10 @@ from __future__ import annotations
 import httpx
 from httpx import ASGITransport
 
-from app.schemas.manifest import AgentManifest
-from app.schemas.reconciliation import DiffCode
-from app.services.discovery import DiscoveryClient
-from app.services.reconciler import ReconcilerService
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.schemas.reconciliation import DiffCode
+from agentic_auth.services.discovery import DiscoveryClient
+from agentic_auth.services.reconciler import ReconcilerService
 from tests.fixtures.discovery.server import fake_discovery_app
 from tests.fixtures.manifests import (
     base_manifest,
@@ -94,7 +94,7 @@ async def test_multiple_unreachable_tools_all_reported() -> None:
 
 
 def test_missing_authority_in_discovered_dict_is_unavailable() -> None:
-    from app.schemas.manifest import AgentManifest
+    from agentic_auth.schemas.manifest import AgentManifest
     from tests.fixtures.manifests import base_manifest as _bm
 
     manifest = AgentManifest.model_validate(_bm())
@@ -128,8 +128,8 @@ async def test_discovery_unavailable_flags_needs_review() -> None:
 
 def test_resource_present_but_none_is_treated_as_unavailable() -> None:
     """Guards the ``or result.resource is None`` branch."""
-    from app.schemas.manifest import AgentManifest
-    from app.services.discovery import DiscoveryResult
+    from agentic_auth.schemas.manifest import AgentManifest
+    from agentic_auth.services.discovery import DiscoveryResult
     from tests.fixtures.manifests import base_manifest
 
     manifest = AgentManifest.model_validate(base_manifest())

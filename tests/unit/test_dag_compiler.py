@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.errors import DagCycleError
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DagCompiler
+from agentic_auth.errors import DagCycleError
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DagCompiler
 
 
 def _manifest(

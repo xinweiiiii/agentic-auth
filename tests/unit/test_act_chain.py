@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.tokens.act_chain import (
+from agentic_auth.services.tokens.act_chain import (
     MAX_DEPTH,
     MalformedActChain,
     current_actor,

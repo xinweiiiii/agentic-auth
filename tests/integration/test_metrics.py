@@ -16,12 +16,12 @@ from httpx import ASGITransport
 from sqlalchemy.exc import OperationalError
 from typer.testing import CliRunner
 
-from app.boundary.guarantee import Guarantee
-from app.cli import app as cli
-from app.config import get_settings
-from app.schemas.authorize import DenyReason
-from app.services.audit import AuditService
-from app.services.audit_chain import ChainBreak
+from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.cli import app as cli
+from agentic_auth.config import get_settings
+from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.services.audit import AuditService
+from agentic_auth.services.audit_chain import ChainBreak
 from tests.fixtures.bank import bank_docs
 from tests.fixtures.chains import SUMMARIZER
 from tests.fixtures.hops import authorize
@@ -194,7 +194,7 @@ async def test_metrics_are_served_for_scraping(
 
 
 async def test_metrics_can_be_switched_off(monkeypatch) -> None:
-    from app.main import create_app
+    from agentic_auth.main import create_app
 
     monkeypatch.setenv("AGENTIC_AUTH_METRICS_ENABLED", "false")
     get_settings.cache_clear()
@@ -258,7 +258,7 @@ def test_the_metrics_textfile_must_be_a_prom_file(tmp_path, name) -> None:
 async def test_phase_4_counters_match_a_known_mix(
     client, admin_headers, consent, metrics_registry, flags, fake_idp, principal_assertion_for
 ) -> None:
-    from app.sdk import AgenticAuthClient, AgentKey
+    from agentic_auth.sdk import AgenticAuthClient, AgentKey
     from tests.conftest import ADMIN_TOKEN
     from tests.fixtures.bank import (
         BALANCE_AGENT,
@@ -387,7 +387,7 @@ def test_the_exposition_registry_switches_to_the_multiprocess_collector(
     the directory is set by the process manager, which may start after this module is loaded."""
     from prometheus_client import CollectorRegistry
 
-    from app.services.metrics import exposition_registry, get_metrics
+    from agentic_auth.services.metrics import exposition_registry, get_metrics
 
     single = exposition_registry()
     assert single is get_metrics().registry, "single-process serves the live registry"

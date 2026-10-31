@@ -7,8 +7,8 @@ these tests pin both, and pin that the v1 keys did not change meaning.
 
 from __future__ import annotations
 
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DAG_SCHEMA_VERSION, DagCompiler
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DAG_SCHEMA_VERSION, DagCompiler
 
 
 def _manifest(

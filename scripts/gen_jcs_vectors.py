@@ -2,7 +2,7 @@
 
 RFC 8785 Appendix B verbatim, plus this project's cases from
 ``docs/canonicalization.md`` §6. The
-canonical strings are typed here by hand from the RFC, NOT produced by ``app.verify``, so
+canonical strings are typed here by hand from the RFC, NOT produced by ``agentic_auth.verify``, so
 the vectors are an independent check on the implementation.
 
 Run from the repository root:  ``python scripts/gen_jcs_vectors.py``

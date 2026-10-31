@@ -11,8 +11,8 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
-from app.api.v1.token import ACTION_ID_REQUIRED
-from app.services.audit import AuditService
+from agentic_auth.api.v1.token import ACTION_ID_REQUIRED
+from agentic_auth.services.audit import AuditService
 from tests.fixtures.chains import SUMMARIZER
 from tests.fixtures.hops import authorize, exchange
 
@@ -120,7 +120,7 @@ async def test_observe_mode_does_not_forward_an_infrastructure_failure(
     sidecar_stack, rooted, monkeypatch
 ) -> None:
     """Phase 2 forwarded this: a PDP_UNAVAILABLE deny body looked like any other deny."""
-    from app.services import policy_loader
+    from agentic_auth.services import policy_loader
 
     sidecar = await sidecar_stack.client(observe_mode=True)
 

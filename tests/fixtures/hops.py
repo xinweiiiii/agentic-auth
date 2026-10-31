@@ -2,7 +2,7 @@
 
 Decide, then exchange against the recorded decision — since Phase 3 that is the only way a
 token is ever issued. The caller and session for each request are read off the token being
-presented, exactly as ``app.sdk.context.HopContext`` does, so a test cannot accidentally
+presented, exactly as ``agentic_auth.sdk.context.HopContext`` does, so a test cannot accidentally
 present one identity while holding another's token.
 """
 
@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from app.schemas.token import GRANT_TYPE, JWT_TOKEN_TYPE
+from agentic_auth.schemas.token import GRANT_TYPE, JWT_TOKEN_TYPE
 from tests.fixtures.bank import USER, leaf_first
 
 

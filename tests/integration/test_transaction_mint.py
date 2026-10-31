@@ -7,7 +7,7 @@ import uuid
 import pytest
 from sqlalchemy import text
 
-from app.verify.canonical import binding_hash
+from agentic_auth.verify.canonical import binding_hash
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     KB_SEARCH_TOOL,

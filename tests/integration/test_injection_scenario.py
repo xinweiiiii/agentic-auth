@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.schemas.authorize import DenyReason
-from app.sidecar.config import Upstream
+from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.sidecar.config import Upstream
 from tests.conftest import ADMIN_TOKEN
 from tests.fixtures.bank import (
     BALANCE_AGENT,

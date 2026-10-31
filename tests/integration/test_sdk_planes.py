@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.sdk import AgenticAuthClient, ControlPlaneRejected, DenyReason, ManifestRejected
+from agentic_auth.sdk import AgenticAuthClient, ControlPlaneRejected, DenyReason, ManifestRejected
 from tests.fixtures.chains import CHAIN_AGENTS, KB_SEARCH, ORCHESTRATOR, chain_docs, manifest_doc
 
 USER = "user:alice"
@@ -157,7 +157,7 @@ async def test_the_audit_plane_reads_history_and_chains(sdk, reader, register_ch
 
 
 async def test_a_refusal_names_the_record_that_explains_it(sdk, reader, register_chain) -> None:
-    from app.sdk import PolicyDenied
+    from agentic_auth.sdk import PolicyDenied
 
     await register_chain()
     session = await sdk.consent(scope=ORCHESTRATOR, user_sub=USER)
@@ -179,7 +179,7 @@ async def test_a_refusal_names_the_record_that_explains_it(sdk, reader, register
 async def test_the_identity_plane_serves_what_a_verifier_bootstraps_from(
     sdk, reader, register_chain, principal_assertion_for
 ) -> None:
-    from app.sdk import AgentKey
+    from agentic_auth.sdk import AgentKey
 
     await register_chain()
     agent_id = await sdk.admin.agent_id(ORCHESTRATOR)

@@ -8,7 +8,8 @@ script measures. If the series count grows with ``--agents`` or ``--sessions``, 
 reached a label, and the metric surface will eventually take the monitoring system down with it.
 
 The bound is a *constant*: the product of the closed label value sets in
-``app/observability/surface.py``, independent of how many agents, sessions or targets exist.
+``agentic_auth/observability/surface.py``, independent of how many agents, sessions or targets
+exist.
 """
 
 from __future__ import annotations
@@ -20,9 +21,9 @@ import uuid
 
 from prometheus_client import CollectorRegistry, generate_latest
 
-from app.observability import surface
-from app.observability.pep import classify
-from app.services.metrics import build_control_plane_metrics, build_pep_metrics
+from agentic_auth.observability import surface
+from agentic_auth.observability.pep import classify
+from agentic_auth.services.metrics import build_control_plane_metrics, build_pep_metrics
 
 
 def _series_names(registry: CollectorRegistry) -> set[str]:

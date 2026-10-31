@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.manifest import AgentManifest
+from agentic_auth.schemas.manifest import AgentManifest
 from tests.fixtures.contracts import contract_path
 from tests.fixtures.manifests import base_manifest
 
@@ -68,7 +68,7 @@ def test_bad_tool_ref_scheme_rejected() -> None:
 def test_json_schema_no_drift() -> None:
     generated = AgentManifest.model_json_schema()
     on_disk = json.loads(SCHEMA_PATH.read_text())
-    assert on_disk.get("x-generated-from") == "app.schemas.manifest.AgentManifest"
+    assert on_disk.get("x-generated-from") == "agentic_auth.schemas.manifest.AgentManifest"
     assert on_disk["properties"].keys() == generated["properties"].keys()
 
 

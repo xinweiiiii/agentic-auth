@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.observability import surface
-from app.observability.ids import session_trace_id
+from agentic_auth.observability import surface
+from agentic_auth.observability.ids import session_trace_id
 
 USER = "user:alice"
 GOOD_TRACEPARENT = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
@@ -462,7 +462,7 @@ class TestStructuredLogs:
         # the system: it means a call was refused for lack of evidence. (The taint-store path
         # only logs for a *protected* target, which needs an agent-held token — a narrower
         # setup for a less important record.)
-        from app.services.audit import AuditService
+        from agentic_auth.services.audit import AuditService
 
         async def _boom(self, db):  # noqa: ANN001
             raise RuntimeError("commit refused")
@@ -497,7 +497,7 @@ class TestStructuredLogs:
         telemetry.enable()
         session = await _rooted(register_chain, consent)
 
-        from app.services.audit import AuditService
+        from agentic_auth.services.audit import AuditService
 
         async def _boom(self, db):  # noqa: ANN001
             raise RuntimeError("a token fragment eyJhbGciOiJFZERTQSJ9 in the message")

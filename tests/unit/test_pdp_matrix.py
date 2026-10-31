@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import pytest
 
-from app.boundary.guarantee import Guarantee
-from app.schemas.authorize import AuthorizeRequest, DenyReason, Taint, is_recoverable
-from app.services.pdp import decide
-from app.services.policy_loader import build_index
-from app.services.tokens.act_chain import nest
-from app.services.tokens.profile import VerifiedToken
+from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.schemas.authorize import AuthorizeRequest, DenyReason, Taint, is_recoverable
+from agentic_auth.services.pdp import decide
+from agentic_auth.services.policy_loader import build_index
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.profile import VerifiedToken
 from tests.fixtures.chains import (
     KB_SEARCH,
     NOTIFIER,

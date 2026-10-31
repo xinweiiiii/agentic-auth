@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import Settings
+from agentic_auth.config import Settings
 
 
 def test_step_up_without_consent_granularity_is_refused() -> None:

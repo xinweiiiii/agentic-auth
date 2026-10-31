@@ -2,7 +2,7 @@
 
 Run from the repository root: ``python scripts/export_openapi.py``
 
-Generated from the actual FastAPI app (``app.main.create_app().openapi()``), never
+Generated from the actual FastAPI app (``agentic_auth.main.create_app().openapi()``), never
 hand-written — so the docs site's "try it" panel can only ever describe endpoints that
 really exist, and so the docs site's Reference section can never describe an endpoint
 that has not shipped.
@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from app.main import create_app
+from agentic_auth.main import create_app
 
 OUT = Path(__file__).resolve().parents[1] / "openapi" / "agentic-auth.json"
 
@@ -49,7 +49,7 @@ def build() -> dict:
         BEARER_SECURITY_SCHEME
     )
     schema["security"] = [{"bearerAuth": []}]
-    schema["info"]["x-generated-from"] = "app.main.create_app().openapi()"
+    schema["info"]["x-generated-from"] = "agentic_auth.main.create_app().openapi()"
     return schema
 
 

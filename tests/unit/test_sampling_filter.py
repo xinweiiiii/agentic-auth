@@ -24,8 +24,8 @@ from opentelemetry import trace as trace_api  # noqa: E402
 from opentelemetry.sdk.trace.export import SpanExportResult  # noqa: E402
 from opentelemetry.sdk.trace.sampling import Decision  # noqa: E402
 
-from app.observability import surface  # noqa: E402
-from app.observability.tracing import AlwaysSampleAuthz, RefusalPreservingFilter  # noqa: E402
+from agentic_auth.observability import surface  # noqa: E402
+from agentic_auth.observability.tracing import AlwaysSampleAuthz, RefusalPreservingFilter  # noqa: E402
 
 # Every refusal shape the control plane and the PEP can produce. Each one must survive the most
 # aggressive sampling the layer permits.

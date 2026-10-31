@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from app.schemas.manifest import AgentManifest
-from app.services.drift import load_manifest_dirs
-from app.sidecar.config import load as load_sidecar_config
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.drift import load_manifest_dirs
+from agentic_auth.sidecar.config import load as load_sidecar_config
 from tests.fixtures.bank import bank_docs
 
 FIXTURE = Path(__file__).resolve().parents[2] / "examples" / "drift-fixture"
