@@ -127,10 +127,7 @@ async def _embedded() -> AsyncIterator[Deployment]:
         return await cp.verifier(agents=agents, **kwargs)
 
     def flags(**values: Any) -> None:
-        settings = cp._runtime.settings
-        for name, value in values.items():
-            assert hasattr(settings, name), name
-            setattr(settings, name, value)
+        cp.configure(**values)
 
     async def raw_sql(statement: str) -> str:
         try:

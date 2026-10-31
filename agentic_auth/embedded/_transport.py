@@ -29,9 +29,10 @@ class HostRouter(httpx.AsyncBaseTransport):
         host = request.url.host
         if host in self.cut:
             raise httpx.ConnectError(f"{host} is unreachable", request=request)
-        # A tool host's RFC 9728 document is served by the capability source, the way a real
-        # MCP server answers on its own well-known path.
-        if request.url.path == WELL_KNOWN and host not in self.routes:
+        # Every tool host's RFC 9728 document is served by the capability source — including
+        # a host with a tool server mounted, which answers only for its tools. That is what
+        # a real MCP server looks like from outside: one host, both paths.
+        if request.url.path == WELL_KNOWN:
             host = CAPABILITIES
         transport = self.routes.get(host)
         if transport is None:
