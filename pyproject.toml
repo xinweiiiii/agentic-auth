@@ -103,6 +103,9 @@ dev = [
     "jsonschema",
     "build",
     "twine",
+    # tests/embedded/test_walkthrough_notebook.py executes the notebook headless.
+    "nbclient>=0.10",
+    "ipykernel>=6",
 ]
 
 # Traces and logs. Deliberately NOT a base dependency:

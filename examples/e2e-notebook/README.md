@@ -1,30 +1,38 @@
 # End-to-end walkthrough notebook
 
-`customer_walkthrough.ipynb` is the product from the outside: a platform team at a fictional
-bank takes three agents from "here is what they are allowed to do" through consent,
-delegation, a privileged call, an attempted prompt injection, an audit review, a CI gate, a
-revocation and an outage — using only the SDK (`agentic_auth.sdk`), as a customer would.
+`customer_walkthrough.ipynb` is the product from the outside. A platform team at a fictional
+bank takes three agents through these steps, using only the SDK (`agentic_auth.sdk`), as a
+customer would:
+
+1. declaring what each agent is allowed to do
+2. consent
+3. delegation
+4. a privileged call
+5. an attempted prompt injection
+6. an audit review
+7. a CI gate
+8. a revocation
+9. an outage
 
 Every cell asserts its own outcome, so the notebook is also a test: if it runs clean, the
 behaviour it documents is the behaviour you get. The checked-in copy keeps its outputs, so
-it reads without running anything.
+you can read it without running anything.
 
-It is also the source of the documentation site's **End-to-end walkthrough** page
-(`website/docs/tutorials/end-to-end-walkthrough.md`), which is generated from this file by
-`cd website && npm run gen-walkthrough`. After changing and re-running the notebook,
-regenerate that page in the same commit — the Docs build workflow fails if the two have
-drifted apart.
+It is also the source of the documentation site's **End-to-end walkthrough** page, which the
+docs repository generates from this file at a pinned release tag.
 
 ## Run it
 
 ```bash
-docker compose up -d                 # PostgreSQL + Redis, from the repository root
-pip install -e '.[notebook]'       # the product, plus Jupyter
+pip install 'authzai[notebook]'      # the product, embedded mode, and Jupyter
 cd examples/e2e-notebook
 jupyter lab customer_walkthrough.ipynb
 ```
 
-Then "Restart kernel and run all cells". Headless, as CI would:
+From a checkout, use `pip install -e '.[notebook]'` instead.
+
+You need no Docker, database, Redis server or open ports. Choose "Restart kernel and run all
+cells". To run it headless, as CI would:
 
 ```bash
 pip install nbclient
@@ -36,46 +44,46 @@ NotebookClient(nb, timeout=300, resources={"metadata": {"path": "."}}).execute()
 PY
 ```
 
-The notebook uses its own PostgreSQL database (`agentic_auth_notebook`) and Redis index
-(`9`), created on first run and truncated on every run, so it never touches development
-data. It opens no ports and reaches no network.
+Every run starts from an empty control plane and leaves nothing behind.
 
 ## What is real and what stands in
 
-`local_stack.py` runs four services as ASGI apps behind one `httpx` transport that routes
-by host. Real:
+`local_stack.py` runs everything on `agentic_auth.embedded`: the control plane inside the
+notebook's process, reached through an in-process transport.
 
-- **the control plane** — the actual FastAPI app, on real PostgreSQL and Redis, running as
-  the least-privileged database role it runs as in production (which is what makes §14's
-  append-only demonstration a demonstration rather than a claim)
-- **the tool server** — a plain Starlette app guarded by `agentic_auth.verify`, the same verifier
-  library a customer puts in front of their own MCP tools
-- **every decision, token, record, mint and revocation** — nothing is stubbed
+What is real:
 
-Standing in for infrastructure a customer already owns:
+- **The control plane.** It is the actual FastAPI app, decision point, token exchange and
+  audit log a deployment runs. It runs on SQLite and an in-process Redis instead of
+  PostgreSQL and a Redis server. `tests/conformance` holds embedded mode to the same
+  decisions as a deployment.
+- **Append-only audit storage.** It is enforced in the store by a trigger, so §14's
+  demonstration is a demonstration rather than a claim. A deployment has the same trigger in
+  PostgreSQL, and also runs as a role granted only `SELECT, INSERT`.
+- **The tool server.** It is a plain Starlette app guarded by `agentic_auth.verify`, the same
+  verifier library a customer puts in front of their own MCP tools.
+- **Every decision, token, record, mint and revocation.** Nothing is stubbed.
 
-- **`CapabilitySource`** — the `/.well-known/oauth-protected-resource` documents real MCP
-  hosts publish (RFC 9728), which manifest reconciliation reads. Includes `down.internal`,
-  which answers 503, so the notebook can show what an unreachable capability source does.
-- **`FakeIdp`** — the company identity provider that enrollment binds an agent to.
+What stands in for infrastructure a customer already owns:
 
-The issuer key is ephemeral (generated at startup), which is fine for one process and is
-exactly what the startup warning in the first cell is telling you.
+- **`DOCUMENTS`.** These are the `/.well-known/oauth-protected-resource` documents real MCP
+  hosts publish (RFC 9728), which manifest reconciliation reads. A host with no document,
+  such as `down.internal`, is unreachable, so the notebook can show what that does.
+- **`stack.idp`.** This is the company identity provider that enrollment binds an agent to.
+
+**Embedded mode is for development and testing only.** The first cell's warning says so, and
+every decision it records is labelled `deployment: embedded`.
 
 ## Files
 
 | File | What it is |
 |---|---|
 | `customer_walkthrough.ipynb` | The walkthrough. Start here. |
-| `local_stack.py` | The local deployment: control plane, capability source, tool server, IdP. |
+| `local_stack.py` | The local deployment: embedded control plane, capability documents, tool server, IdP. |
 
 ## If a cell fails
 
-- **`ConnectionRefusedError` / `InvalidCatalogName`** — `docker compose up -d` first.
-- **`InsufficientPrivilege` on the first cell** — the notebook creates a role and grants;
-  the `app` role must be able to. The bundled `docker-compose.yml` gives it that.
-- **`permission denied for table audit_decisions` outside §14** — §14 expects it. Anywhere
-  else it means the grants in `_prepare_schema` did not run; drop the
-  `agentic_auth_notebook` database and re-run.
-- **A hop fails with `GRANT_EXPIRED` at the tool server** — hop tokens live 60 seconds by
+- **`ImportError: ... needs the 'embedded' extra`.** Install `authzai[notebook]`, which
+  includes it.
+- **A hop fails with `GRANT_EXPIRED` at the tool server.** Hop tokens live 60 seconds by
   design. Re-run the cell that minted the grant, or the whole notebook.

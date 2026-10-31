@@ -370,6 +370,39 @@ class EmbeddedControlPlane:
             enroll_token=self._runtime.settings.enroll_token,
         )
 
+    @property
+    def admin_token(self) -> str:
+        """This instance's admin bearer. In-process only; generated per instance."""
+        return self._runtime.settings.admin_token
+
+    @property
+    def audit_token(self) -> str:
+        """This instance's read-only audit and identity bearer."""
+        return self._runtime.settings.audit_read_token
+
+    @property
+    def enroll_token(self) -> str:
+        """This instance's enrollment bearer."""
+        return self._runtime.settings.enroll_token
+
+    @property
+    def idp(self) -> _idp.TestIdp:
+        """The built-in test identity provider: ``cp.idp.mint(agent=..., sub=...)``."""
+        return self._idp
+
+    def configure(self, **settings: Any) -> dict[str, Any]:
+        """Change control-plane settings for the rest of the run, as a redeploy would.
+        Returns what changed, ``{name: {"from": old, "to": new}}``."""
+        self._check_open()
+        current = self._runtime.settings
+        changed: dict[str, Any] = {}
+        for name, value in settings.items():
+            if name not in type(current).model_fields:
+                raise AttributeError(f"unknown setting {name!r}")
+            changed[name] = {"from": getattr(current, name), "to": value}
+            setattr(current, name, value)
+        return changed
+
     def mount(self, host: str, app: Any) -> None:
         """Serve an ASGI app (a tool server, say) at ``https://{host}`` on :attr:`http`."""
         self._check_open()
@@ -419,6 +452,7 @@ class _Opening:
 
 __all__ = [
     "BASE_URL",
+    "HOST",
     "EmbeddedControlPlane",
     "ManifestRejected",
     "PolicyDenied",
