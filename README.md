@@ -56,10 +56,26 @@ cannot be recorded is refused, never dispatched unrecorded.
 
 - **Tokens narrow at every hop** (RFC 8693 exchange), carrying an `act` chain that says who
   is acting for whom.
-- **Everything is auditable.** The decision log is append-only, hash-chained, and queryable
-  by action, agent, or delegation chain.
+- **Everything is auditable.** The decision log is append-only, with every decision linked to
+  its parent, and queryable by action, agent, or delegation chain.
 - **CI catches drift.** `agentic-auth drift check` fails a pull request when an agent's
   observed calls include an edge its manifests never declared.
+
+## Install
+
+Installs as `authzai`, imports as `agentic_auth`. Pick the part you need:
+
+| You are | Install | You get |
+|---|---|---|
+| A tool owner verifying incoming calls | `pip install authzai` | `agentic_auth.verify`, offline, with `pyjwt[crypto]` only |
+| An agent calling a control plane | `pip install 'authzai[client]'` | `agentic_auth.sdk` |
+| A CI pipeline checking for drift | `pip install 'authzai[drift]'` | the `agentic-auth` CLI and `agentic_auth.sdk.drift` |
+| Trying it, or testing your agents | `pip install 'authzai[embedded]'` | `agentic_auth.embedded`: the whole control plane in your process, no server |
+| Running the control plane | `pip install 'authzai[server]'` | the control plane, sidecar, gateway and boundary adapter |
+
+Add `otel` to any of these for OpenTelemetry traces and logs, or install `all` for
+everything. Code written against 0.1.x imported `app.*`; see
+[`compat/README.md`](compat/README.md) to migrate.
 
 ## Quickstart
 
@@ -74,7 +90,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e '.[dev,otel]'
 alembic upgrade head
 
-uvicorn app.main:app --port 8099          # the control plane
+uvicorn agentic_auth.main:app --port 8099  # the control plane
 ```
 
 Check it is up:

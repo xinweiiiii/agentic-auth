@@ -11,13 +11,21 @@ git clone https://github.com/xinweiiiii/agentic-auth
 cd agentic-auth
 docker compose up -d                 # PostgreSQL 16 + Redis 7
 python -m venv .venv && source .venv/bin/activate
-pip install -e '.[dev,otel]'
+pip install -e '.[dev]'
 ```
 
-**Install `[dev,otel]`, not `[dev]`.** Parts of the suite import the OpenTelemetry SDK
-directly, and `[dev]` alone fails at collection. The product itself does not need the extra
-— the observability layer is optional at runtime and degrades to a no-op without it — but
-the tests that prove that do need it installed.
+`[dev]` includes every install option, `otel` among them. Parts of the suite import the
+OpenTelemetry SDK directly. The product itself does not need it: the observability layer is
+optional at runtime and degrades to a no-op without it. The tests that prove that do need it
+installed.
+
+The distribution is `authzai` and the import root is `agentic_auth`. The install options
+(`client`, `drift`, `embedded`, `server`, `otel`, `all`) are in `pyproject.toml`.
+`tests/packaging/` checks that each one imports only what it should, against the built wheel:
+
+```bash
+pytest -m packaging tests/packaging   # builds the wheels, installs each extra into a fresh venv
+```
 
 ## Running the checks
 
@@ -50,8 +58,8 @@ pytest tests/load           # throughput, needs a stable environment to mean any
 - Branch from `main`.
 - Keep the change focused. One concern per pull request.
 - Add tests for success, validation, permission, and not-found cases where they apply.
-- The decision path is the product. A change to `app/services/pdp.py`,
-  `app/services/edge_rules.py`, or anything under `app/verify/` needs a test that would
+- The decision path is the product. A change to `agentic_auth/services/pdp.py`,
+  `agentic_auth/services/edge_rules.py`, or anything under `agentic_auth/verify/` needs a test that would
   fail without it.
 - Run the checks above before pushing.
 
@@ -65,7 +73,7 @@ Before changing one of these, please open an issue — they look like oversights
 - **Labels never carry identities.** No agent name, user subject, session id, or target in
   any metric label. This is structural, not a setting.
 - **An allowed call that cannot be recorded is refused.** Never dispatched unrecorded.
-- **`app/verify/` imports no control plane.** It must stay installable with `pyjwt[crypto]`
+- **`agentic_auth/verify/` imports no control plane.** It must stay installable with `pyjwt[crypto]`
   alone; `tests/unit/test_verify_imports.py` enforces the import graph.
 - **The FastAPI upper bound in `pyproject.toml`** is load-bearing. See the comment there.
 
