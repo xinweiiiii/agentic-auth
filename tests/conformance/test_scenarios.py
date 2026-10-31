@@ -159,17 +159,42 @@ async def test_s05_tainted_into_privileged(request, deployment) -> None:
     t.save()
 
 
-async def test_s06_scope_not_consented_is_recoverable(request, deployment) -> None:
+async def test_s06_step_up_lets_the_blocked_hop_finish(request, deployment) -> None:
+    """A session consented to less than the policy allows. The hop that needs the rest is
+    refused recoverably and carries a challenge; the consenting human approves it with
+    their own credential, and the same hop, retried with the same context, is allowed.
+    The hop budget does not reset: nothing was spent by the refusal."""
     t = _t(request, deployment)
-    await deployment.register(chain_docs())
-    session = await deployment.sdk.consent(scope=ORCHESTRATOR, user_sub=USER)
+    deployment.flags(
+        consent_granularity_enabled=True, step_up_enabled=True, taint_enforcement_enabled=False
+    )
+    await deployment.register(bank_docs(widened=True, trust_kb=True))
+    sdk = deployment.sdk
+    session = await sdk.consent(scope=BANK_ASSISTANT, user_sub=USER, data_classes=["account.read"])
+    _, ctx = await sdk.hop(
+        session.context(), target=f"agent://{BALANCE_AGENT}", data_class="account.read"
+    )
+
     denied = await _denied(
-        deployment.sdk.authorize(
-            session.context(), target=f"agent://{KB_SEARCH}", data_class="account.write"
-        )
+        sdk.authorize(ctx, target=f"agent://{SUPPORT_AGENT}", data_class="kb.internal")
     )
     assert denied.reason is DenyReason.SCOPE_NOT_CONSENTED and denied.recoverable
-    t.denial("undeclared-class", denied)
+    assert denied.challenge is not None
+    t.denial("withheld-class", denied)
+    t.add(
+        "challenge",
+        {k: denied.challenge.get(k) for k in ("data_class", "target", "reason")},
+    )
+
+    approval = await sdk.approve(denied.challenge, credential=deployment.human_credential("alice"))
+    assert approval["approved"] is True
+    t.add("approval", {"approved": approval["approved"]})
+
+    resumed = await sdk.resume(ctx, denied)
+    # A refusal reports the hop being decided; a grant, the hop its narrowed token is for.
+    # So the grant the refusal withheld is exactly the next one: the budget did not reset.
+    assert resumed.hop == denied.hop + 1
+    t.grant("resumed", resumed)
     t.save()
 
 

@@ -35,6 +35,7 @@ class Deployment:
     _agent_client: Callable[[str, AgentKey], AgenticAuthClient]
     _flags: Callable[..., None]
     _raw_sql: Callable[[str], Awaitable[str]]
+    _human: Callable[[str], str]
     verifiers: list[Verifier] = field(default_factory=list)
 
     async def register(self, docs: dict[str, dict[str, Any]]) -> None:
@@ -57,6 +58,11 @@ class Deployment:
     async def raw_sql(self, statement: str) -> str:
         """Run ``statement`` as the deployment's own database role; "ok" or the refusal."""
         return await self._raw_sql(statement)
+
+    def human_credential(self, sub: str) -> str:
+        """An ID token from the deployment's identity provider for the person ``sub`` —
+        what approving a step-up requires, since the session's own grant may not."""
+        return self._human(sub)
 
 
 async def _remote(
@@ -109,7 +115,17 @@ async def _remote(
             return "refused"
         return "ok"
 
-    yield Deployment("remote", sdk, register, enroll, verifier, agent_client, flags, raw_sql)
+    yield Deployment(
+        "remote",
+        sdk,
+        register,
+        enroll,
+        verifier,
+        agent_client,
+        flags,
+        raw_sql,
+        lambda sub: principal_assertion_for(None, sub=sub),
+    )
 
 
 async def _embedded() -> AsyncIterator[Deployment]:
@@ -147,6 +163,7 @@ async def _embedded() -> AsyncIterator[Deployment]:
             lambda agent, key: cp.client(agent, key=key),
             flags,
             raw_sql,
+            lambda sub: cp.idp.mint(sub=sub),
         )
     finally:
         await cp.aclose()

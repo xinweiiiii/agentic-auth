@@ -76,6 +76,9 @@ def test_both_bearer_checks_compare_in_constant_time() -> None:
         "require_audit_reader",
         "require_enroller",
         "require_identity_reader",
+        # Phase 5. Approving a step-up widening is a credential check like any other, and
+        # its admin fallback compares a secret — so it belongs under the same rule.
+        "require_consenting_human",
     }
 
     for func in checkers:

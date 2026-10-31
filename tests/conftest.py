@@ -469,12 +469,12 @@ async def gateway_stack(client, redis_client):
     passes with hops pinned to one instance, that is a correctness bug.
     """
     import httpx
-    from agentic_auth.gateway.app import build_app
-    from agentic_auth.gateway.config import GatewayConfig
-    from agentic_auth.gateway.metrics import build_gateway_metrics
     from httpx import ASGITransport
     from prometheus_client import CollectorRegistry
 
+    from agentic_auth.gateway.app import build_app
+    from agentic_auth.gateway.config import GatewayConfig
+    from agentic_auth.gateway.metrics import build_gateway_metrics
     from agentic_auth.sidecar.config import Upstream
     from tests.fixtures.upstream.server import build_upstream
 

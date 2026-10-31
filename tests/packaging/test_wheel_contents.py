@@ -44,23 +44,13 @@ def test_main_wheel_has_every_subpackage(built_wheels) -> None:
     assert expected - names == set()
 
 
-# The Phase 5 gateway, boundary adapters and cold start (agentic_auth/gateway, the rungs
-# under agentic_auth/boundary, agentic_auth/coldstart) were built on feature branches that
-# never merged to the planning repository's main, so the open-source split never carried
-# them here. Their console scripts have shipped since 0.1.0 pointing at modules that do not
-# exist. Strict: restoring them makes these XPASS and fail, the prompt to delete the marker.
-PHASE5_MISSING = pytest.mark.xfail(
-    strict=True, reason="Phase 5 enforcement modules never reached this repository"
-)
-
-
 @pytest.mark.parametrize(
     "script",
     [
         "agentic-auth",
         "agentic-auth-sidecar",
-        pytest.param("agentic-auth-gateway", marks=PHASE5_MISSING),
-        pytest.param("agentic-auth-boundary", marks=PHASE5_MISSING),
+        "agentic-auth-gateway",
+        "agentic-auth-boundary",
     ],
 )
 def test_every_console_script_resolves(venv_factory, script) -> None:
