@@ -6,7 +6,7 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.2.0rc2] - 2026-11-01
+## [0.2.0] - 2026-10-31
 
 ### Added
 
@@ -96,6 +96,7 @@ First public release.
   calls include an edge its manifests never declared.
 - **Offline verifier library** (`app.verify`) — installable with `pyjwt[crypto]` alone.
 
-[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/xinweiiiii/agentic-auth/releases/tag/v0.1.0
