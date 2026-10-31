@@ -6,6 +6,46 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+The Phase 5 enforcement points and consent flows. They were declared in 0.1.x (the
+`agentic-auth-gateway` and `agentic-auth-boundary` commands existed) but their code never
+reached this repository, so those commands could not start.
+
+- **Gateway** (`agentic-auth-gateway`, `agentic_auth.gateway`). A shared, central enforcement
+  point that runs the same `enforce()` as the sidecar, so it reaches the same decisions.
+  - It fails closed when the control plane is unreachable or past its decision deadline.
+  - It supports observe mode, and runs as several stateless instances.
+- **Boundary adapters** (`agentic-auth-boundary`, `agentic_auth.boundary`), for agents you
+  cannot modify:
+  - **Resource-server guard:** the tool admits only a grant plus identity.
+  - **MCP connector proxy:** filters `tools/list` to what the manifest declares.
+  - **Egress proxy.**
+  - Each labels its decisions with the guarantee level it can actually give.
+- **Step-up consent.** A recoverable refusal (`SCOPE_NOT_CONSENTED`) carries a challenge.
+  - The consenting human approves it at `/v1/consent/step-up/complete` with their own
+    credential. The session's grant is not enough, so an agent cannot approve its own
+    widening.
+  - The blocked hop then resumes, with its hop budget intact.
+  - `client.step_up()`, `client.approve()` and `client.resume()` now have a server to call.
+- **Cold start.** A first-time agent can be registered with no manifest and run in a sandbox
+  (`/v1/agents/{id}/sandbox`, `agentic-auth sandbox`). A manifest is proposed from what it was
+  observed doing, and a human ratifies it before it carries any authority.
+- **Consent to a subset** (`consent(data_classes=...)`), behind
+  `AGENTIC_AUTH_CONSENT_GRANULARITY_ENABLED`.
+- **Feature flags.** Each new control is off by default: `CONSENT_GRANULARITY_ENABLED`,
+  `STEP_UP_ENABLED` and `SANDBOX_ENABLED`. With them off, no new route is advertised and
+  every decision is unchanged.
+- **Contracts and testing:** `docs/contracts/conformance.md` and
+  `docs/contracts/stepup.openapi.yaml`. A conformance test holds the SDK, sidecar and gateway
+  to the same decisions.
+- The embedded control plane serves step-up and sandbox too. The embedded/remote conformance
+  suite now runs the full step-up flow: refused, approved by the human, resumed.
+
+### Fixed
+
+- The OpenAPI document reports the package's version instead of a hard-coded `0.1.0`.
+
 ## [0.2.1] - 2026-10-31
 
 ### Added

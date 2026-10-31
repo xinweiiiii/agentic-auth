@@ -5,7 +5,14 @@
         "additionalProperties": false,
         "properties": {
           "manifest": {
-            "$ref": "#/components/schemas/AgentManifest"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentManifest"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
@@ -24,8 +31,7 @@
           }
         },
         "required": [
-          "name",
-          "manifest"
+          "name"
         ],
         "title": "AgentCreate",
         "type": "object"
@@ -1493,6 +1499,39 @@
         "title": "ManifestSpec",
         "type": "object"
       },
+      "ObservedRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data_classes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Data Classes",
+            "type": "array"
+          },
+          "deepest_chain": {
+            "default": 1,
+            "title": "Deepest Chain",
+            "type": "integer"
+          },
+          "downstream_agents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Downstream Agents",
+            "type": "array"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "title": "ObservedRead",
+        "type": "object"
+      },
       "OverrideDecl": {
         "additionalProperties": false,
         "properties": {
@@ -1549,6 +1588,91 @@
           "page"
         ],
         "title": "Page[AgentListItem]",
+        "type": "object"
+      },
+      "ProposedManifestRead": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "format": "uuid",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "covers_no_behaviour": {
+            "description": "The run reached no tools at all. Marked rather than presented as a complete manifest, because an empty manifest and 'we watched and saw nothing' are the same document and completely different facts (FR-041).",
+            "title": "Covers No Behaviour",
+            "type": "boolean"
+          },
+          "doc": {
+            "additionalProperties": true,
+            "title": "Doc",
+            "type": "object"
+          },
+          "manifest_id": {
+            "format": "uuid",
+            "title": "Manifest Id",
+            "type": "string"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status": {
+            "const": "proposed",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "manifest_id",
+          "agent_id",
+          "run_id",
+          "status",
+          "doc",
+          "covers_no_behaviour"
+        ],
+        "title": "ProposedManifestRead",
+        "type": "object"
+      },
+      "RatifyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "doc": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The administrator's edited document. Omitted means 'ratify as generated'. Present means THIS is what gets pinned \u2014 what was approved, not what was proposed (FR-039).",
+            "title": "Doc"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "RatifyRequest",
         "type": "object"
       },
       "ReconciliationReport": {
@@ -1742,6 +1866,189 @@
         "title": "RootConsent",
         "type": "object"
       },
+      "SandboxRunListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "started_at"
+        ],
+        "title": "SandboxRunListItem",
+        "type": "object"
+      },
+      "SandboxRunPage": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SandboxRunListItem"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "SandboxRunPage",
+        "type": "object"
+      },
+      "SandboxRunRead": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "format": "uuid",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "deadline_at": {
+            "format": "date-time",
+            "title": "Deadline At",
+            "type": "string"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ObservedRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorder_errors": {
+            "default": 0,
+            "description": "Events the recorder could not write. Non-zero means observation was incomplete, so the proposal may be narrower than the agent's real behaviour \u2014 and the proposal says so rather than under-declaring quietly.",
+            "title": "Recorder Errors",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "completed",
+              "deadline_exceeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "agent_id",
+          "status",
+          "scope",
+          "started_at",
+          "deadline_at"
+        ],
+        "title": "SandboxRunRead",
+        "type": "object"
+      },
+      "SandboxStart": {
+        "additionalProperties": false,
+        "properties": {
+          "deadline_seconds": {
+            "anyOf": [
+              {
+                "maximum": 3600.0,
+                "minimum": 10.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The run ends here whether or not the agent stopped, and the proposal covers what was observed up to that point (FR-033).",
+            "title": "Deadline Seconds"
+          },
+          "mock_tools": {
+            "description": "Tool refs the sandbox exposes. Every one is backed by a recorder that performs nothing; a ref not listed here is unreachable from the sandbox, which is what bounds the risk of observing an unknown agent.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "title": "Mock Tools",
+            "type": "array"
+          },
+          "scope": {
+            "description": "The synthetic all-allow scope this run is driven under.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope"
+        ],
+        "title": "SandboxStart",
+        "type": "object"
+      },
       "ScopeCatalog": {
         "properties": {
           "data_classes": {
@@ -1836,6 +2143,138 @@
           "expires_at"
         ],
         "title": "StepUpChallenge",
+        "type": "object"
+      },
+      "StepUpComplete": {
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "challenge_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Challenge Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "approved"
+        ],
+        "title": "StepUpComplete",
+        "type": "object"
+      },
+      "StepUpGrantRead": {
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "audit_event_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Event Id"
+          },
+          "blocked_action_id": {
+            "format": "uuid",
+            "title": "Blocked Action Id",
+            "type": "string"
+          },
+          "data_class": {
+            "title": "Data Class",
+            "type": "string"
+          },
+          "declined_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declined At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "blocked_action_id",
+          "data_class",
+          "target",
+          "approved"
+        ],
+        "title": "StepUpGrantRead",
+        "type": "object"
+      },
+      "StepUpRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "blocked_action_id": {
+            "description": "The audit row of the refusal. Everything else \u2014 data class, target, hop, reason \u2014 is read from that row, never from the caller.",
+            "format": "uuid",
+            "title": "Blocked Action Id",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "blocked_action_id"
+        ],
+        "title": "StepUpRequest",
         "type": "object"
       },
       "Taint": {
@@ -2090,7 +2529,7 @@
   },
   "info": {
     "title": "Agentic Authorization SDK \u2014 Control Plane",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "x-generated-from": "agentic_auth.main.create_app().openapi()"
   },
   "openapi": "3.1.0",
@@ -2515,6 +2954,155 @@
         ]
       }
     },
+    "/v1/agents/{agent_id}/proposed-manifest": {
+      "get": {
+        "description": "The manifest proposed from a run \u2014 inert until ratified.",
+        "operationId": "read_proposal_v1_agents__agent_id__proposed_manifest_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposedManifestRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Proposal",
+        "tags": [
+          "cold-start"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/proposed-manifest/ratify": {
+      "post": {
+        "description": "The human act that makes a proposal real (FR-037).\n\nFor an agent with no prior manifest this pins version 1, immutable from here\n(FR-038). Reconciliation then runs against it exactly as it would for a hand-written\nmanifest, so a ratified manifest that fails reconciliation does not enrol the agent\n(FR-042).",
+        "operationId": "ratify_proposal_v1_agents__agent_id__proposed_manifest_ratify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ratify Proposal V1 Agents  Agent Id  Proposed Manifest Ratify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ratify Proposal",
+        "tags": [
+          "cold-start"
+        ]
+      }
+    },
     "/v1/agents/{agent_id}/reconciliation": {
       "get": {
         "operationId": "get_reconciliation_v1_agents__agent_id__reconciliation_get",
@@ -2648,6 +3236,214 @@
         "summary": "Revoke Agent",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sandbox": {
+      "get": {
+        "operationId": "list_runs_v1_agents__agent_id__sandbox_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRunPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Runs",
+        "tags": [
+          "cold-start"
+        ]
+      },
+      "post": {
+        "description": "Begin observing. Every call the agent attempts is allowed and recorded, and every\ntool it can reach is a mock with nothing real behind it (FR-032).",
+        "operationId": "start_run_v1_agents__agent_id__sandbox_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SandboxStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRunRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Run",
+        "tags": [
+          "cold-start"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sandbox/{run_id}": {
+      "get": {
+        "operationId": "read_run_v1_agents__agent_id__sandbox__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRunRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Run",
+        "tags": [
+          "cold-start"
         ]
       }
     },
@@ -3064,6 +3860,126 @@
         "summary": "Create Consent",
         "tags": [
           "consent"
+        ]
+      }
+    },
+    "/v1/consent/step-up": {
+      "post": {
+        "description": "Ask the human whether to widen this session by the data class that was refused.\n\nThe session's pinned policy is loaded here so the ceiling can be checked before a\nhuman is ever asked: a widening that could not be granted should fail now, not after\nsomeone approves it.",
+        "operationId": "raise_challenge_v1_consent_step_up_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpChallenge"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Raise Challenge",
+        "tags": [
+          "step-up"
+        ]
+      }
+    },
+    "/v1/consent/step-up/complete": {
+      "post": {
+        "description": "Record the human's answer. On an approval the chain may resume from the blocked\nhop; on a decline the original refusal stands.",
+        "operationId": "complete_challenge_v1_consent_step_up_complete_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpComplete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpGrantRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Challenge",
+        "tags": [
+          "step-up"
         ]
       }
     },
