@@ -6,6 +6,25 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Move an embedded instance to a deployment.** Starting from `EmbeddedControlPlane.export()`:
+  - `agentic-auth manifest register-bundle <bundle>` re-registers every manifest version, in
+    order and downstream first, through the admin API. Each version reconciles against the
+    deployment's real capability discovery.
+  - `agentic-auth audit import <bundle>` appends the exported decisions to a new
+    append-only table, `imported_audit` (migration `0007`), apart from the deployment's own
+    log. Re-running it adds nothing.
+  - Enrollments are deliberately not carried over: an agent re-enrolls with its own key,
+    because the bundle holds no private keys and enrollment is proof of possessing one.
+  - A malformed bundle is refused, naming the line.
+
+### Changed
+
+- An embedded durable store created by 0.2.0 is moved forward when opened: the new table is
+  created and existing data is kept. A store from any other schema revision is still
+  refused.
+
 ## [0.2.0] - 2026-10-31
 
 ### Added
