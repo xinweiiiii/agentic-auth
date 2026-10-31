@@ -25,8 +25,10 @@ from agentic_auth.services.reconciler import ReconcilerService
 class ProcessOutcome:
     agent_id: uuid.UUID
     agent_name: str
-    version: int
-    status: str  # reconciled | needs_review | rejected
+    # Phase 5: None when an agent was registered with no manifest — a first-time agent
+    # awaiting a sandbox run. It has no version, so nothing compiles for it.
+    version: int | None
+    status: str | None  # reconciled | needs_review | rejected | None
     discovery_ok: bool
     diff: list[dict]
     http_status: int  # 201 | 409 | 422
@@ -50,10 +52,25 @@ class ManifestService:
         redis: Redis,
         *,
         name: str,
-        manifest: AgentManifest,
+        manifest: AgentManifest | None,
         attested_by: str,
         override: OverrideDecl | None,
     ) -> ProcessOutcome:
+        if manifest is None:
+            # Phase 5 cold start: an agent that exists and declares nothing. It has no
+            # manifest version, so nothing compiles for it, so no session can pin it and
+            # it can authorize nothing — it is a name to hang an observation run on
+            # until a human ratifies a proposal (FR-5, FR-036).
+            agent = await agents_repo.create(session, name)
+            return ProcessOutcome(
+                agent_id=agent.id,
+                agent_name=name,
+                version=None,
+                status=None,
+                discovery_ok=True,
+                diff=[],
+                http_status=201,
+            )
         if manifest.metadata.agent != name:
             raise ManifestValidationError(
                 "metadata.agent must match the registered agent name",

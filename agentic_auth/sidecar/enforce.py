@@ -48,10 +48,19 @@ class EnforcementConfig(Protocol):
     key — without either module importing the other.
     """
 
-    pdp_url: str
-    observe_mode: bool
-    guarantee_level: str
-    max_privileged_body_bytes: int
+    # Read-only: enforce() never assigns to its config, and the gateway's config is a frozen
+    # dataclass, whose fields a plain attribute declaration would not accept.
+    @property
+    def pdp_url(self) -> str: ...
+
+    @property
+    def observe_mode(self) -> bool: ...
+
+    @property
+    def guarantee_level(self) -> str: ...
+
+    @property
+    def max_privileged_body_bytes(self) -> int: ...
 
     @property
     def control_plane_timeout_seconds(self) -> float: ...

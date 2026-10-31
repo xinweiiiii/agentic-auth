@@ -51,19 +51,21 @@ class TestIdp:
             ]
         }
 
-    def mint(self, *, agent: str, sub: str, expires_in: int = 300) -> str:
-        """An ID token for ``sub`` naming ``agent`` in the binding claim."""
+    def mint(self, *, sub: str, agent: str | None = None, expires_in: int = 300) -> str:
+        """An ID token for ``sub``. With ``agent``, it names that agent in the binding claim
+        (enrollment); without, it is the person's own credential (approving a step-up)."""
         now = datetime.now(UTC)
-        claims = {
+        claims: dict[str, Any] = {
             "iss": ISSUER,
             "sub": sub,
             "aud": AUDIENCE,
             "iat": int(now.timestamp()),
             "exp": int((now + timedelta(seconds=expires_in)).timestamp()),
             "jti": str(uuid.uuid4()),
-            BINDING_CLAIM: f"agent://{agent}",
             "principal_source": PRINCIPAL_SOURCE,
         }
+        if agent is not None:
+            claims[BINDING_CLAIM] = f"agent://{agent}"
         pem = self.key.private_bytes(
             serialization.Encoding.PEM,
             serialization.PrivateFormat.PKCS8,

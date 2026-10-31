@@ -3,6 +3,8 @@ suite proves Phase 1–3 files still pass; this file proves what "off" means for
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 
 from tests.fixtures.bank import (
@@ -105,3 +107,94 @@ async def test_the_sdk_needs_no_params_for_a_privileged_call(client, off) -> Non
         data_class="account.write",
     )
     assert grant.transaction_token is None and "Txn-Token" not in grant.headers()
+
+
+# -- Phase 5: every new control off means nothing new happens (FR-046, SC-016) ----------
+
+
+async def test_no_phase_5_route_is_advertised_when_its_flag_is_off(
+    client, admin_headers, flags
+) -> None:
+    """A deployment that upgrades and changes nothing should not discover new endpoints
+    it has not decided to adopt."""
+    flags(consent_granularity_enabled=False, step_up_enabled=False, sandbox_enabled=False)
+
+    step_up = await client.post(
+        "/v1/consent/step-up",
+        headers=admin_headers,
+        json={
+            "session_id": "00000000-0000-0000-0000-000000000000",
+            "blocked_action_id": "00000000-0000-0000-0000-000000000000",
+        },
+    )
+    sandbox = await client.post(
+        f"/v1/agents/{uuid.uuid4()}/sandbox",
+        headers=admin_headers,
+        json={"scope": "observe-only"},
+    )
+
+    assert step_up.status_code == 404
+    assert sandbox.status_code == 404
+
+
+async def test_a_deny_carries_no_challenge_when_step_up_is_off(client, admin_headers, flags):
+    """Not merely 'the endpoint is absent': the decision itself must not dangle a
+    prompt a client could try to act on."""
+    flags(consent_granularity_enabled=False, step_up_enabled=False)
+    await register_agents(client, admin_headers, bank_docs(widened=True))
+    session = await _consent(client, admin_headers)
+
+    decision = (
+        await authorize(
+            client,
+            session["root_grant"],
+            target=f"agent://{BALANCE_AGENT}",
+            data_class="nonsense.class",
+        )
+    ).json()
+
+    assert decision["outcome"] == "deny"
+    assert decision["step_up"] is None
+
+
+async def test_consent_still_pins_everything_the_policy_declares(
+    client, admin_headers, flags
+) -> None:
+    """`consented_data_classes` stays NULL, which the PDP reads as "all of them" — so
+    the Phase 2-4 semantics are preserved exactly, not approximated."""
+    flags(consent_granularity_enabled=False)
+    await register_agents(client, admin_headers, bank_docs(widened=True))
+
+    session = await _consent(client, admin_headers)
+
+    assert session["data_classes"] is None
+
+
+async def test_an_undeclared_class_keeps_its_phase_2_reason(client, admin_headers, flags) -> None:
+    """The one behaviour change in the phase is behind a flag, and this is the assertion
+    that the flag actually holds it back (research.md R5)."""
+    flags(consent_granularity_enabled=False)
+    await register_agents(client, admin_headers, bank_docs(widened=True))
+    session = await _consent(client, admin_headers)
+
+    decision = (
+        await authorize(
+            client,
+            session["root_grant"],
+            target=f"agent://{BALANCE_AGENT}",
+            data_class="nonsense.class",
+        )
+    ).json()
+
+    assert decision["reason"] == "SCOPE_NOT_CONSENTED"
+    assert decision["recoverable"] is True
+
+
+async def _consent(client, admin_headers):
+    response = await client.post(
+        "/v1/consent",
+        headers=admin_headers,
+        json={"scope": BANK_ASSISTANT, "user_sub": USER},
+    )
+    assert response.status_code == 201, response.text
+    return response.json()

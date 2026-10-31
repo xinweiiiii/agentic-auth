@@ -28,7 +28,11 @@ class OverrideDecl(BaseModel):
 class AgentCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: AgentName
-    manifest: AgentManifest
+    # Phase 5. Optional, because FR-5's "first-time agent with no declared manifest" has
+    # to be registrable before it can be observed — the sandbox runs against an agent
+    # id, so one must exist first. Omitting it creates the agent row and nothing else:
+    # no manifest version, no compiled policy, and therefore no authority whatsoever.
+    manifest: AgentManifest | None = None
     override: OverrideDecl | None = None
 
 

@@ -20,7 +20,9 @@ from agentic_auth.services.enrollment import EnrollmentService
 from agentic_auth.services.manifest_service import ManifestService
 from agentic_auth.services.principal import PrincipalBinder
 from agentic_auth.services.revocation import RevocationService
+from agentic_auth.services.sandbox import SandboxService
 from agentic_auth.services.sessions import SessionService
+from agentic_auth.services.stepup import StepUpService
 from agentic_auth.services.tokens.exchange import TokenExchangeService
 from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
 from agentic_auth.services.tokens.profile import TokenProfile
@@ -100,6 +102,14 @@ def get_chain_query_service() -> ChainQueryService:
     return ChainQueryService()
 
 
+def get_step_up_service() -> StepUpService:
+    return StepUpService()
+
+
+def get_sandbox_service() -> SandboxService:
+    return SandboxService()
+
+
 ManifestServiceDep = Annotated[ManifestService, Depends(get_manifest_service)]
 RedisDep = Annotated[Redis, Depends(get_redis_dep)]
 TokenProfileDep = Annotated[TokenProfile, Depends(get_token_profile)]
@@ -111,3 +121,5 @@ AnchorCacheDep = Annotated[AnchorCache, Depends(get_anchor_cache)]
 EnrollmentServiceDep = Annotated[EnrollmentService, Depends(get_enrollment_service)]
 RevocationServiceDep = Annotated[RevocationService, Depends(get_revocation_service)]
 ChainQueryServiceDep = Annotated[ChainQueryService, Depends(get_chain_query_service)]
+StepUpServiceDep = Annotated[StepUpService, Depends(get_step_up_service)]
+SandboxServiceDep = Annotated[SandboxService, Depends(get_sandbox_service)]

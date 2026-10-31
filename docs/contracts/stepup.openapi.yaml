@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: Agentic Authorization SDK — Step-Up Consent (Phase 5)
+  version: "0.5.0"
+  description: |
+    A recoverable refusal becomes a question instead of a dead end.
+
+    Only `SCOPE_NOT_CONSENTED` is recoverable (`app/schemas/authorize.py::RECOVERABLE`), and it
+    only becomes grantable once consent has a granularity below the scope — see
+    research.md R5. With `consent_granularity_enabled=false` these routes return 404.
+
+    **Who approves.** Initiating a challenge takes the session's root grant or an admin bearer.
+    *Completing* one takes the consenting human's credential. An agent that could approve its own
+    widening would make `SCOPE_NOT_CONSENTED` a formality, and the threat model assumes the agent
+    may be under an attacker's influence (research.md R6).
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /v1/consent/step-up:
+    post:
+      summary: Raise a step-up challenge for a recoverable refusal
+      operationId: stepUpChallenge
+      security: [{ rootGrant: [] }, { adminBearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StepUpRequest" }
+      responses:
+        "201":
+          description: A challenge the user must answer.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StepUpChallengeRead" }
+        "403":
+          description: |
+            The data class is outside the session's pinned policy. Consent widens only within
+            the pinned manifest (FR-028), so there is nothing here to grant.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "404": { description: Unknown session or blocked action, or step-up is disabled. }
+        "422":
+          description: |
+            The named refusal is not recoverable. Every reason but `SCOPE_NOT_CONSENTED` lands
+            here, including `TAINTED_INTO_PRIVILEGED`, `EDGE_NOT_IN_DAG` and
+            `HOP_BUDGET_EXCEEDED` (FR-024, FR-031).
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+  /v1/consent/step-up/complete:
+    post:
+      summary: Answer a challenge — approve or decline
+      operationId: stepUpComplete
+      security: [{ humanCredential: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StepUpComplete" }
+      responses:
+        "200":
+          description: |
+            Recorded. On an approval the session's consented set now contains the data class and
+            the chain may resume from the blocked hop (FR-025). On a decline the original refusal
+            stands (FR-005 of the spec's story 3).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StepUpGrantRead" }
+        "401": { description: Not the consenting human for this session. }
+        "409":
+          description: The challenge was already answered (FR-027).
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "410":
+          description: The challenge lifetime passed. The original refusal stands (FR-027).
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+components:
+  securitySchemes:
+    rootGrant: { type: http, scheme: bearer, description: The session's root grant. }
+    adminBearer: { type: http, scheme: bearer }
+    humanCredential:
+      type: http
+      scheme: bearer
+      description: |
+        The consenting human, not the agent. In a deployment with `principal_idp_issuer`
+        configured this is an ID token from that provider whose `sub` equals the session's
+        `user_sub`; otherwise the admin bearer stands in, and the deployment is documented as
+        having no independent human channel.
+
+  schemas:
+    StepUpRequest:
+      type: object
+      additionalProperties: false
+      required: [session_id, blocked_action_id]
+      properties:
+        session_id: { type: string, format: uuid }
+        blocked_action_id:
+          type: string
+          format: uuid
+          description: |
+            The audit row of the refusal. Everything else — the data class, the target, the hop,
+            the reason — is read from that row, never accepted from the caller. A caller who
+            could name its own data class would be writing its own consent.
+
+    StepUpChallengeRead:
+      type: object
+      additionalProperties: false
+      required: [challenge_id, session_id, blocked_hop, data_class, target, reason, expires_at]
+      properties:
+        challenge_id:
+          type: string
+          description: Single use. Only its SHA-256 is ever stored (SC-018).
+        session_id: { type: string, format: uuid }
+        blocked_hop: { type: integer, minimum: 1 }
+        data_class: { type: string }
+        target: { type: string }
+        reason: { type: string, enum: [SCOPE_NOT_CONSENTED] }
+        expires_at: { type: string, format: date-time }
+
+    StepUpComplete:
+      type: object
+      additionalProperties: false
+      required: [challenge_id, approved]
+      properties:
+        challenge_id: { type: string }
+        approved: { type: boolean }
+
+    StepUpGrantRead:
+      type: object
+      additionalProperties: false
+      required: [id, session_id, blocked_action_id, data_class, target, approved]
+      properties:
+        id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        blocked_action_id: { type: string, format: uuid }
+        data_class: { type: string }
+        target: { type: string }
+        approved: { type: boolean }
+        approved_by: { type: string, nullable: true }
+        approved_at: { type: string, format: date-time, nullable: true }
+        declined_at: { type: string, format: date-time, nullable: true }
+        audit_event_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The linked audit row recording the widening (FR-025).
+
+    PartialOutcome:
+      type: object
+      additionalProperties: false
+      description: |
+        Returned by the SDK when a chain cannot resume from the blocked hop (FR-030). Names what
+        already ran, so the caller can reason about side effects that have already happened.
+      required: [completed_hops, blocked_hop, reason]
+      properties:
+        completed_hops:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [hop, target, action_id]
+            properties:
+              hop: { type: integer }
+              target: { type: string }
+              action_id: { type: string, format: uuid }
+        blocked_hop: { type: integer }
+        blocked_target: { type: string }
+        reason: { type: string }
+        recoverable: { type: boolean }
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }

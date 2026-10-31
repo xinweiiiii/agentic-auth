@@ -105,8 +105,50 @@ async def presented_token(
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 PresentedTokenDep = Annotated[VerifiedToken, Depends(presented_token)]
+
+
+async def require_consenting_human(
+    authorization: Annotated[str | None, Header()] = None,
+) -> str:
+    """Who may APPROVE a step-up widening: the human, not the agent (research.md R6).
+
+    The whole threat model assumes the agent may be under an attacker's influence. An
+    agent that could approve its own widening would turn ``SCOPE_NOT_CONSENTED`` from a
+    control into a formality — the injected instruction would simply answer the prompt it
+    triggered. So the session's own root grant is deliberately NOT sufficient here, even
+    though it is sufficient to *raise* the challenge.
+
+    Where the deployment has configured a human identity provider, this is an ID token
+    from it and the subject is its ``sub``. Where it has not, the admin bearer stands in
+    and the subject is recorded as ``admin`` — a deployment with no independent human
+    channel, which its documentation must say plainly rather than imply otherwise.
+
+    Returns the subject to record as the approver.
+    """
+    settings = get_settings()
+    if not authorization or not authorization.startswith("Bearer "):
+        raise UnauthorizedError("missing or malformed credential")
+    token = authorization.removeprefix("Bearer ").strip()
+
+    if settings.principal_idp_issuer:
+        from agentic_auth.services.principal import PrincipalBinder
+
+        try:
+            return await PrincipalBinder().verify_human(token)
+        except Exception as exc:  # noqa: BLE001 - any failure here is a refusal
+            raise UnauthorizedError(f"human credential did not verify: {exc}") from exc
+
+    if hmac.compare_digest(token.encode(), settings.admin_token.encode()):
+        return "admin"
+    raise UnauthorizedError(
+        "step-up approval requires the consenting human's credential; the session's own "
+        "grant is not sufficient"
+    )
+
+
 AdminDep = Depends(require_admin)
 AuditReaderDep = Depends(require_audit_reader)
 EnrollerDep = Depends(require_enroller)
 IdentityReaderDep = Depends(require_identity_reader)
+ConsentingHumanDep = Annotated[str, Depends(require_consenting_human)]
 PaginationDep = Annotated[PaginationParams, Depends(pagination_params)]
