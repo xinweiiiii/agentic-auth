@@ -6,17 +6,8 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
+## [0.2.1] - 2026-10-31
 
-- **The walkthrough notebook runs on the embedded control plane.** It needs
-  `pip install 'authzai[notebook]'` and nothing else: no Docker, no PostgreSQL, no Redis
-  server. Its outputs no longer show machine-specific paths, and
-  `tests/embedded/test_walkthrough_notebook.py` runs it on every pull request.
-- `EmbeddedControlPlane` gains:
-  - `configure(**settings)`: change a setting for the rest of the run, as a redeploy would
-  - `admin_token`, `audit_token`, `enroll_token` and `idp`
-- Every `/.well-known/oauth-protected-resource` request inside an embedded instance is now
-  answered by the capability source, including for a host with a tool server mounted.
 ### Added
 
 - **Move an embedded instance to a deployment.** Starting from `EmbeddedControlPlane.export()`:
@@ -32,6 +23,15 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The walkthrough notebook runs on the embedded control plane.** It needs
+  `pip install 'authzai[notebook]'` and nothing else: no Docker, no PostgreSQL, no Redis
+  server. Its outputs no longer show machine-specific paths, and
+  `tests/embedded/test_walkthrough_notebook.py` runs it on every pull request.
+- `EmbeddedControlPlane` gains:
+  - `configure(**settings)`: change a setting for the rest of the run, as a redeploy would
+  - `admin_token`, `audit_token`, `enroll_token` and `idp`
+- Every `/.well-known/oauth-protected-resource` request inside an embedded instance is now
+  answered by the capability source, including for a host with a tool server mounted.
 - An embedded durable store created by 0.2.0 is moved forward when opened: the new table is
   created and existing data is kept. A store from any other schema revision is still
   refused.
@@ -126,7 +126,8 @@ First public release.
   calls include an edge its manifests never declared.
 - **Offline verifier library** (`app.verify`) — installable with `pyjwt[crypto]` alone.
 
-[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/xinweiiiii/agentic-auth/releases/tag/v0.1.0
