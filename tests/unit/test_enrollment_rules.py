@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.enrollment_rules import (
+from agentic_auth.services.enrollment_rules import (
     Bound,
     EnrollDecision,
     NotConfigured,

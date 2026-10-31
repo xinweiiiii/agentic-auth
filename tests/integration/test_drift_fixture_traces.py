@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from app.cli import app
+from agentic_auth.cli import app
 from tests.fixtures.bank import DRIFTED_CALLS
 from tests.integration.test_drift_end_to_end import record_run
 

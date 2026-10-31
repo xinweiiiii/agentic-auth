@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from app.boundary.guarantee import Guarantee
-from app.schemas.authorize import AuthorizeRequest, DenyReason
-from app.services.pdp import decide  # noqa: E402  (after the fixture import for clarity)
+from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.schemas.authorize import AuthorizeRequest, DenyReason
+from agentic_auth.services.pdp import decide  # noqa: E402  (after the fixture import for clarity)
 from tests.fixtures.chains import KB_SEARCH, ORCHESTRATOR, SUMMARIZER
 from tests.unit.test_pdp_matrix import SESSION, USER, _index, _token
 
@@ -57,7 +57,7 @@ def test_an_unrelated_revocation_changes_nothing() -> None:
 
 
 def test_revocation_is_checked_before_taint_and_budget() -> None:
-    from app.schemas.authorize import Taint
+    from agentic_auth.schemas.authorize import Taint
 
     d = decide(
         _index(),
@@ -105,7 +105,7 @@ def test_a_revoked_tool_name_is_not_a_delegate() -> None:
 
 
 def test_a_revoked_refusal_carries_the_hop_and_the_taint_it_was_decided_under() -> None:
-    from app.schemas.authorize import Taint
+    from agentic_auth.schemas.authorize import Taint
 
     d = decide(
         _index(),

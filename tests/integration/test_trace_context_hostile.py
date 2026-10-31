@@ -16,9 +16,9 @@ from __future__ import annotations
 import pytest
 from prometheus_client import generate_latest
 
-from app.observability import surface
-from app.observability.context import extract_parent
-from app.observability.ids import session_trace_id
+from agentic_auth.observability import surface
+from agentic_auth.observability.context import extract_parent
+from agentic_auth.observability.ids import session_trace_id
 
 USER = "user:alice"
 KEY = b"k" * 32
@@ -104,7 +104,7 @@ def test_baggage_is_never_extracted_and_never_propagated() -> None:
     )
     assert baggage.get_all(ctx) == {}
 
-    from app.observability.context import inject
+    from agentic_auth.observability.context import inject
 
     assert "baggage" not in inject({})
 

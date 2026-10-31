@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.observability.ids import PSEUDONYM_HEX_LEN, pseudonym, session_trace_id
+from agentic_auth.observability.ids import PSEUDONYM_HEX_LEN, pseudonym, session_trace_id
 
 KEY = b"0123456789abcdef0123456789abcdef"
 OTHER_KEY = b"fedcba9876543210fedcba9876543210"
@@ -59,7 +59,7 @@ def test_stable_across_fresh_module_imports() -> None:
     state (no random salt, no instance counter)."""
     import importlib
 
-    import app.observability.ids as ids
+    import agentic_auth.observability.ids as ids
 
     first = ids.pseudonym("agent", "agent://router", KEY)
     importlib.reload(ids)

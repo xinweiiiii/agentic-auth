@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-from app.cli import app
-from app.cli.drift_render import (
+from agentic_auth.cli import app
+from agentic_auth.cli.drift_render import (
     render_annotations,
     render_github,
     render_step_summary,
     render_text,
 )
-from app.schemas.edge_trace import (
+from agentic_auth.schemas.edge_trace import (
     DriftError,
     DriftInputs,
     DriftReport,

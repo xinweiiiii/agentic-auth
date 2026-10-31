@@ -5,7 +5,7 @@ from __future__ import annotations
 import jwt
 import pytest
 
-from app.sdk.identity import AgentKey, sha256_b64url, thumbprint_of_jwk
+from agentic_auth.sdk.identity import AgentKey, sha256_b64url, thumbprint_of_jwk
 
 
 def test_round_trips_through_pem(tmp_path) -> None:

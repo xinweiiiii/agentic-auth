@@ -14,8 +14,8 @@ from pathlib import Path
 import yaml
 from typer.testing import CliRunner
 
-from app.cli import app
-from app.services.edge_trace import aggregate
+from agentic_auth.cli import app
+from agentic_auth.services.edge_trace import aggregate
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,

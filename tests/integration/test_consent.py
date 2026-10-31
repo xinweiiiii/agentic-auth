@@ -138,7 +138,7 @@ async def test_policy_compiled_before_this_phase_is_refused_not_guessed_at(
 
     Consent must say so and name the remedy, rather than pinning something unenforceable.
     """
-    from app.repositories import compiled_policies as policies_repo
+    from agentic_auth.repositories import compiled_policies as policies_repo
     from tests.fixtures.chains import compiled_dag
 
     await register_chain()

@@ -22,7 +22,7 @@ pytest.importorskip("opentelemetry.trace", reason="requires the 'otel' extra")
 
 from opentelemetry import trace as trace_api  # noqa: E402
 
-from app.observability.ids import session_parent_context, session_trace_id  # noqa: E402
+from agentic_auth.observability.ids import session_parent_context, session_trace_id  # noqa: E402
 
 KEY = b"0123456789abcdef0123456789abcdef"
 OTHER_KEY = b"fedcba9876543210fedcba9876543210"

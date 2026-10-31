@@ -1,0 +1,256 @@
+# Publishes a tagged release: the same wheels and sdists to PyPI and to the GitHub release,
+# with checksums and signed build provenance, plus the server image at the same version.
+# contracts: specs/010-embedded-sdk-packaging/contracts/release-pipeline.md (planning repo);
+# how to cut one, and how to recover a half-finished one: RELEASING.md.
+#
+# No repository secret is used anywhere. PyPI trusts this workflow through OIDC (trusted
+# publishing, bound to this file and the `release` environment); provenance is signed with
+# the same OIDC identity; GHCR takes the job's own GITHUB_TOKEN.
+#
+# Every publishing step is safe to re-run, so a failure part-way is finished by re-running
+# the failed jobs — never by re-tagging, because PyPI never accepts a version twice.
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet build twine packaging
+
+      - name: Build
+        run: |
+          python -m build --outdir dist .
+          python -m twine check --strict dist/*
+
+      # The tag is the version. A wheel built at any other number is refused here, before
+      # anything is published under the wrong name.
+      - name: Version matches the tag
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, zipfile
+          from email.parser import Parser
+          from packaging.version import Version
+
+          tag = Version(os.environ["TAG"].removeprefix("v"))
+          for wheel in sorted(pathlib.Path("dist").glob("*.whl")):
+              with zipfile.ZipFile(wheel) as zf:
+                  meta = next(n for n in zf.namelist() if n.endswith(".dist-info/METADATA"))
+                  version = Version(Parser().parsestr(zf.read(meta).decode())["Version"])
+              assert version == tag, f"{wheel.name} is {version}, the tag is {tag}"
+              print(f"{wheel.name}: {version} == {tag}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"version={tag}\n")
+              out.write(f"prerelease={'true' if tag.is_prerelease else 'false'}\n")
+          PY
+
+      - name: Release notes from CHANGELOG.md
+        run: python scripts/changelog_section.py --version "${{ steps.version.outputs.version }}" --out notes.md
+
+      - name: Checksums
+        run: (cd dist && sha256sum -- *) > SHA256SUMS && cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-meta
+          path: |
+            SHA256SUMS
+            notes.md
+          if-no-files-found: error
+
+  verify:
+    name: Verify
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e '.[dev]'
+      # What each install option brings, measured on wheels built from this commit in
+      # fresh environments, and the embedded control plane end to end — none of it needs
+      # PostgreSQL or Redis. The full suite, and the conformance comparison against the
+      # server, already ran on the pull request this tag points at.
+      - name: Packaging
+        run: pytest -m packaging tests/packaging -q
+      - name: Embedded control plane
+        run: pytest tests/embedded -q
+
+  attest:
+    name: Provenance
+    needs: [build, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/project/authzai/${{ needs.build.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      # A pre-release (v0.2.0rc1) goes to TestPyPI: the dry run RELEASING.md describes.
+      - if: needs.build.outputs.prerelease == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+      - if: needs.build.outputs.prerelease != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+
+  image:
+    name: Server image
+    needs: [build, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ needs.build.outputs.version }}
+            ${{ needs.build.outputs.prerelease != 'true' && format('{0}:latest', env.IMAGE) || '' }}
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  github-release:
+    name: GitHub release
+    needs: [build, attest, publish-pypi, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-meta
+          path: meta
+      # Create, or on a re-run add to the release that already exists.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          flags=()
+          [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" --clobber dist/* meta/SHA256SUMS
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file meta/notes.md \
+              "${flags[@]}" dist/* meta/SHA256SUMS
+          fi
+
+  confirm:
+    name: Confirm every channel
+    needs: [build, github-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          set -uo pipefail
+          missing=()
+          index="https://pypi.org"
+          [ "$PRERELEASE" = "true" ] && index="https://test.pypi.org"
+          curl -sSf -o /dev/null "$index/pypi/authzai/$VERSION/json" || missing+=("$index authzai $VERSION")
+          assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')" || missing+=("GitHub release $TAG")
+          for file in dist/* SHA256SUMS; do
+            grep -qx "$(basename "$file")" <<< "$assets" || missing+=("release asset $(basename "$file")")
+          done
+          docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1 || missing+=("image $IMAGE:$VERSION")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf '::error title=release incomplete::%s is missing; re-run the failed jobs (RELEASING.md)\n' "${missing[@]}"
+            exit 1
+          fi
+          echo "$VERSION is on PyPI, the GitHub release and GHCR."

@@ -1,4 +1,4 @@
-"""A protected tool server that admits calls with ``app.verify``.
+"""A protected tool server that admits calls with ``agentic_auth.verify``.
 
 Two tools: ``read_balance`` (ordinary) and ``terminate_account`` (privileged). Every
 request is decided by ``Verifier.admit()`` and recorded, so tests can assert the exact
@@ -16,7 +16,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from app.verify import Admission, Verifier
+from agentic_auth.verify import Admission, Verifier
 
 READ_BALANCE = "mcp://accounts.internal/read_balance"
 TERMINATE_ACCOUNT = "mcp://accounts.internal/terminate_account"

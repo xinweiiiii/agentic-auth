@@ -76,8 +76,8 @@ def _broken_control_plane(*, authorize_response, exchange_response) -> Starlette
 @pytest.fixture
 def broken_sidecar():
     """A sidecar pointed at a control plane that misbehaves in a specified way."""
-    from app.sidecar.app import build_app
-    from app.sidecar.config import SidecarConfig, Upstream
+    from agentic_auth.sidecar.app import build_app
+    from agentic_auth.sidecar.config import SidecarConfig, Upstream
     from tests.fixtures.upstream.server import build_upstream
 
     created: list[httpx.AsyncClient] = []
@@ -264,7 +264,7 @@ def test_the_module_has_no_bare_except_or_default_allow() -> None:
     import ast
     import inspect
 
-    from app.sidecar import enforce as module
+    from agentic_auth.sidecar import enforce as module
 
     source = inspect.getsource(module)
     tree = ast.parse(source)

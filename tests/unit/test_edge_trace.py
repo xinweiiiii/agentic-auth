@@ -11,8 +11,8 @@ from pathlib import Path
 import jsonschema
 import pytest
 
-from app.schemas.edge_trace import EdgeEvent
-from app.services.edge_trace import EdgeRecorder, aggregate
+from agentic_auth.schemas.edge_trace import EdgeEvent
+from agentic_auth.services.edge_trace import EdgeRecorder, aggregate
 from tests.fixtures.bank import BANK_ASSISTANT, KB_SEARCH_TOOL, SUPPORT_AGENT, TERMINATE_ACCOUNT
 from tests.fixtures.contracts import defs_schema
 

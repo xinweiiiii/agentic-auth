@@ -35,7 +35,7 @@ async def test_new_version_leaves_v1_byte_identical(
     read_v1 = (
         await client.get("/v1/manifests/kb-search-agent?version=1", headers=admin_headers)
     ).json()
-    from app.schemas.manifest import AgentManifest
+    from agentic_auth.schemas.manifest import AgentManifest
 
     assert (
         AgentManifest.model_validate(read_v1["doc"]).canonical_doc()

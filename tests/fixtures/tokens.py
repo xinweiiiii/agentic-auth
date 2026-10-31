@@ -10,9 +10,9 @@ from typing import Any
 
 import jwt
 
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import JwtTokenProfile
-from app.services.tokens.keys import ALGORITHM, IssuerKey, load_or_generate
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
+from agentic_auth.services.tokens.keys import ALGORITHM, IssuerKey, load_or_generate
 
 USER = "user:alice"
 

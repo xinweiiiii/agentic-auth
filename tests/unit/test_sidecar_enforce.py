@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 from starlette.responses import JSONResponse
 
-from app.sidecar.config import SidecarConfig, Upstream
-from app.sidecar.enforce import _has_traversal, _resolve_call
+from agentic_auth.sidecar.config import SidecarConfig, Upstream
+from agentic_auth.sidecar.enforce import _has_traversal, _resolve_call
 
 
 def _config() -> SidecarConfig:
@@ -81,7 +81,7 @@ def test_ordinary_paths_still_resolve(path: str) -> None:
 def test_an_upstream_prefix_that_would_shadow_the_telemetry_routes_is_refused(
     prefix: str,
 ) -> None:
-    from app.sidecar.config import SidecarConfig, SidecarConfigError, Upstream
+    from agentic_auth.sidecar.config import SidecarConfig, SidecarConfigError, Upstream
 
     with pytest.raises(SidecarConfigError, match="reserved"):
         SidecarConfig(
@@ -94,7 +94,7 @@ def test_an_upstream_prefix_that_would_shadow_the_telemetry_routes_is_refused(
 def test_ordinary_prefixes_are_unaffected(prefix: str) -> None:
     """Including `/metrics` and `/status`: those are exactly why the PEP's own routes live
     under a reserved namespace instead of at the obvious paths."""
-    from app.sidecar.config import SidecarConfig, Upstream
+    from agentic_auth.sidecar.config import SidecarConfig, Upstream
 
     config = SidecarConfig(
         pdp_url="http://pdp.test",
@@ -106,7 +106,7 @@ def test_ordinary_prefixes_are_unaffected(prefix: str) -> None:
 def test_telemetry_without_a_key_is_refused_at_startup() -> None:
     """A sidecar that came up exporting unkeyed identity references would be worse than one
     that refuses to start, for the same reason the rest of this config is strict."""
-    from app.sidecar.config import SidecarConfig, SidecarConfigError, Upstream
+    from agentic_auth.sidecar.config import SidecarConfig, SidecarConfigError, Upstream
 
     with pytest.raises(SidecarConfigError, match="telemetry_key"):
         SidecarConfig(

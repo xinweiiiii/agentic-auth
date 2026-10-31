@@ -3,7 +3,7 @@
 `customer_walkthrough.ipynb` is the product from the outside: a platform team at a fictional
 bank takes three agents from "here is what they are allowed to do" through consent,
 delegation, a privileged call, an attempted prompt injection, an audit review, a CI gate, a
-revocation and an outage — using only the SDK (`app.sdk`), as a customer would.
+revocation and an outage — using only the SDK (`agentic_auth.sdk`), as a customer would.
 
 Every cell asserts its own outcome, so the notebook is also a test: if it runs clean, the
 behaviour it documents is the behaviour you get. The checked-in copy keeps its outputs, so
@@ -48,7 +48,7 @@ by host. Real:
 - **the control plane** — the actual FastAPI app, on real PostgreSQL and Redis, running as
   the least-privileged database role it runs as in production (which is what makes §14's
   append-only demonstration a demonstration rather than a claim)
-- **the tool server** — a plain Starlette app guarded by `app.verify`, the same verifier
+- **the tool server** — a plain Starlette app guarded by `agentic_auth.verify`, the same verifier
   library a customer puts in front of their own MCP tools
 - **every decision, token, record, mint and revocation** — nothing is stubbed
 

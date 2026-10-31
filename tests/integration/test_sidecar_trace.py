@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.sdk import AgenticAuthClient, HopContext, PolicyDenied
+from agentic_auth.sdk import AgenticAuthClient, HopContext, PolicyDenied
 from tests.conftest import ADMIN_TOKEN
 from tests.fixtures.chains import ORCHESTRATOR, SUMMARIZER
 

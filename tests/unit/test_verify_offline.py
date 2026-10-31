@@ -9,11 +9,11 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 
-from app.schemas.authorize import Taint
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import JwtTokenProfile
-from app.services.tokens.keys import load_or_generate
-from app.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
+from agentic_auth.schemas.authorize import Taint
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
+from agentic_auth.services.tokens.keys import load_or_generate
+from agentic_auth.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
 from tests.fixtures.identity import agent_keypair, identity_assertion
 
 USER = "user:alice"
@@ -217,7 +217,7 @@ async def test_a_revocation_is_picked_up_on_refresh(issuer, key) -> None:
 
 
 def test_static_anchors_accept_the_identity_read_shape(issuer, key) -> None:
-    from app.verify import StaticAnchors
+    from agentic_auth.verify import StaticAnchors
 
     read = json.loads(
         json.dumps(

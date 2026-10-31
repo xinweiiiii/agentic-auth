@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from app.sidecar.config import Upstream
+from agentic_auth.sidecar.config import Upstream
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,
@@ -100,8 +100,8 @@ async def test_transaction_service_down_blocks(sidecar_stack, support, monkeypat
 async def test_a_mint_refusal_is_a_deny_not_an_outage(sidecar_stack, support, monkeypatch) -> None:
     """The mint answers 4xx: the sidecar blocks with the mint's reason and 403, never 503,
     and nothing is forwarded."""
-    from app.errors import PolicyDenied
-    from app.services import transactions
+    from agentic_auth.errors import PolicyDenied
+    from agentic_auth.services import transactions
 
     async def _refuse(self, db, redis, token, params):
         raise PolicyDenied(
@@ -147,7 +147,7 @@ async def test_a_configured_key_adds_agent_identity_and_an_actor_token(
 ) -> None:
     """With agent_name + identity_key_path, the sidecar signs an actor_token at the exchange
     (so identity_required passes) and puts Agent-Identity on the forwarded call."""
-    from app.sdk import AgentKey
+    from agentic_auth.sdk import AgentKey
     from tests.fixtures.hops import claims
 
     flags(taint_enforcement_enabled=False)
@@ -159,7 +159,7 @@ async def test_a_configured_key_adds_agent_identity_and_an_actor_token(
 
     # enroll bank-assistant (the root holder) and balance-agent; the sidecar is balance-agent's
     keys = {}
-    from app.sdk import AgenticAuthClient
+    from agentic_auth.sdk import AgenticAuthClient
     from tests.conftest import ADMIN_TOKEN
 
     sdk = AgenticAuthClient(base_url="http://test", admin_token=ADMIN_TOKEN, client=client)
@@ -188,7 +188,7 @@ async def test_a_configured_key_adds_agent_identity_and_an_actor_token(
         identity_key=keys[BANK_ASSISTANT],
         agent_name=BANK_ASSISTANT,
     )
-    from app.sdk import HopContext
+    from agentic_auth.sdk import HopContext
 
     _, ctx = await root.hop(
         HopContext(session_id=session["session_id"], token=session["root_grant"]),
@@ -240,7 +240,7 @@ async def test_without_a_key_and_identity_required_the_sidecar_blocks(
 
 
 def test_agent_name_and_key_path_must_come_together(tmp_path) -> None:
-    from app.sidecar.config import SidecarConfig, SidecarConfigError
+    from agentic_auth.sidecar.config import SidecarConfig, SidecarConfigError
 
     with pytest.raises(SidecarConfigError):
         SidecarConfig(

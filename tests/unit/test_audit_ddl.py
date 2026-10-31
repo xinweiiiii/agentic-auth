@@ -11,7 +11,7 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
-from app.models import audit_decision, step_up_grant, transaction_token
+from agentic_auth.models import audit_decision, step_up_grant, transaction_token
 
 MIGRATION = (
     Path(__file__).resolve().parents[2] / "migrations" / "versions" / "0003_audit_decisions.py"

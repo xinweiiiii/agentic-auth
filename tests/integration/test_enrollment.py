@@ -230,7 +230,7 @@ async def test_a_challenge_is_single_use(
 async def test_an_expired_challenge_is_refused(
     client, enroll_headers, registered, fake_idp, principal_assertion_for, redis_client
 ) -> None:
-    from app.services.enrollment import challenge_key
+    from agentic_auth.services.enrollment import challenge_key
 
     key = agent_keypair(AGENT)
     doc = identity_document(key, principal_assertion=principal_assertion_for(AGENT))

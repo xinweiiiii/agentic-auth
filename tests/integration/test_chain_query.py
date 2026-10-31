@@ -13,8 +13,8 @@ import jsonschema
 import pytest
 from sqlalchemy import text
 
-from app.api.service_deps import get_token_profile
-from app.config import get_settings
+from agentic_auth.api.service_deps import get_token_profile
+from agentic_auth.config import get_settings
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,

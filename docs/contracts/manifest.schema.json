@@ -228,5 +228,5 @@
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentic-auth.dev/schemas/agent-manifest/v1.json",
-  "x-generated-from": "app.schemas.manifest.AgentManifest"
+  "x-generated-from": "agentic_auth.schemas.manifest.AgentManifest"
 }

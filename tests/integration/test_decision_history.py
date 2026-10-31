@@ -15,8 +15,8 @@ from datetime import UTC, datetime, timedelta
 import jsonschema
 import pytest
 
-from app.repositories import audit_decisions as audit_repo
-from app.services.audit_cursor import encode_cursor
+from agentic_auth.repositories import audit_decisions as audit_repo
+from agentic_auth.services.audit_cursor import encode_cursor
 from tests.fixtures.contracts import component_schema
 
 AGENTS = ["orchestrator", "kb-search", "summarizer", "notifier"]

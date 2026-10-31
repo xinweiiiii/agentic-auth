@@ -11,7 +11,7 @@ BACKEND = pathlib.Path(__file__).resolve().parents[2]
 WORK = pathlib.Path(os.environ.get("AA4_DIR", "/tmp/aa4"))  # keys, issuer key, generated files
 sys.path.insert(0, str(BACKEND))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from app.sdk import AgenticAuthClient, AgentKey
+from agentic_auth.sdk import AgenticAuthClient, AgentKey
 
 CP = "http://127.0.0.1:8199"
 

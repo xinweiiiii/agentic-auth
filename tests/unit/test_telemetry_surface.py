@@ -1,7 +1,7 @@
 """The telemetry surface is a contract, not guidance.
 
 Phases 3 and 4 shipped dashboard guidance as prose tables. Prose cannot fail a build. This file
-holds ``app/observability/surface.py`` and the published telemetry surface
+holds ``agentic_auth/observability/surface.py`` and the published telemetry surface
 (https://authzai.dev/reference/telemetry-surface) to the same sets, the way
 ``test_edge_rules_parity.py`` holds runtime and CI to one edge rule.
 """
@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from app.observability import surface
+from agentic_auth.observability import surface
 from tests.fixtures.contracts import contract_path
 
 CONTRACT = contract_path("telemetry-surface.md")
@@ -193,7 +193,7 @@ def test_each_disclosed_attr_has_a_pseudonymous_counterpart() -> None:
 
 
 def test_every_cause_classify_can_return_is_allowlisted() -> None:
-    from app.observability.pep import _INFRA_CAUSES, _LOCAL_CAUSES, classify
+    from agentic_auth.observability.pep import _INFRA_CAUSES, _LOCAL_CAUSES, classify
 
     produced = set(_LOCAL_CAUSES.values()) | set(_INFRA_CAUSES.values()) | {"policy", "other"}
     assert produced <= surface.PEP_BLOCK_CAUSES, (
@@ -214,8 +214,8 @@ def test_every_infrastructure_deny_reason_maps_to_an_infra_cause() -> None:
     """Every reason the codebase classifies as an outage must produce a cause that pages. A new
     INFRASTRUCTURE_REASONS member that nobody mapped would otherwise be counted as `other` and
     quietly not alert."""
-    from app.observability.pep import classify
-    from app.schemas.authorize import INFRASTRUCTURE_REASONS
+    from agentic_auth.observability.pep import classify
+    from agentic_auth.schemas.authorize import INFRASTRUCTURE_REASONS
 
     for reason in INFRASTRUCTURE_REASONS:
         c = classify("blocked_infra", reason.value)
@@ -225,8 +225,8 @@ def test_every_infrastructure_deny_reason_maps_to_an_infra_cause() -> None:
 def test_no_policy_deny_reason_is_mistaken_for_an_outage() -> None:
     """The converse, and the more dangerous direction: a policy refusal counted as an outage
     would page an on-call engineer for a guardrail that is working correctly."""
-    from app.observability.pep import classify
-    from app.schemas.authorize import POLICY_REASONS
+    from agentic_auth.observability.pep import classify
+    from agentic_auth.schemas.authorize import POLICY_REASONS
 
     for reason in POLICY_REASONS:
         for edge_outcome in ("deny", "observed"):
@@ -236,7 +236,7 @@ def test_no_policy_deny_reason_is_mistaken_for_an_outage() -> None:
 
 
 def test_observed_is_never_counted_as_allowed_or_blocked() -> None:
-    from app.observability.pep import classify
+    from agentic_auth.observability.pep import classify
 
     c = classify("observed", "OUT_OF_SCOPE")
     assert c.outcome == "observed_would_block"

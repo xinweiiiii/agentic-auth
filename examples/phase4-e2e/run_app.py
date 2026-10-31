@@ -23,4 +23,4 @@ os.environ["AGENTIC_AUTH_REVOCATION_FRESHNESS_SECONDS"] = "6"
 os.environ["AGENTIC_AUTH_IDENTITY_REQUIRED"] = "true"
 import uvicorn
 
-uvicorn.run("app.main:app", host="127.0.0.1", port=8199, log_level="warning")
+uvicorn.run("agentic_auth.main:app", host="127.0.0.1", port=8199, log_level="warning")

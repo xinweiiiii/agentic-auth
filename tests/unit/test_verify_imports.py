@@ -1,7 +1,7 @@
-"""``app.verify`` must be importable without the control plane.
+"""``agentic_auth.verify`` must be importable without the control plane.
 
 A resource server installs this package to guard its tools. If any module under
-``app/verify/`` imported FastAPI, SQLAlchemy, Redis or the control plane's own services at
+``agentic_auth/verify/`` imported FastAPI, SQLAlchemy, Redis or the control plane's own services at
 module level, that promise would be broken silently. Checked in a subprocess so nothing
 the test process already imported can hide it.
 """
@@ -12,12 +12,19 @@ import subprocess
 import sys
 from pathlib import Path
 
-FORBIDDEN = ("app.services", "app.api", "app.models", "fastapi", "sqlalchemy", "redis")
+FORBIDDEN = (
+    "agentic_auth.services",
+    "agentic_auth.api",
+    "agentic_auth.models",
+    "fastapi",
+    "sqlalchemy",
+    "redis",
+)
 
 PROBE = r"""
 import importlib, pkgutil, sys
-import app.verify
-for m in pkgutil.iter_modules(app.verify.__path__, "app.verify."):
+import agentic_auth.verify
+for m in pkgutil.iter_modules(agentic_auth.verify.__path__, "agentic_auth.verify."):
     importlib.import_module(m.name)
 loaded = sorted(n for n in sys.modules if n.startswith(%r))
 print("\n".join(loaded))
@@ -33,7 +40,9 @@ def test_the_verifier_library_has_a_closed_import_graph() -> None:
         check=True,
     )
     leaked = [line for line in result.stdout.splitlines() if line]
-    assert leaked == [], f"app.verify imported the control plane or a heavy dependency: {leaked}"
+    assert leaked == [], (
+        f"agentic_auth.verify imported the control plane or a heavy dependency: {leaked}"
+    )
 
 
 def test_only_pyjwt_and_cryptography_are_required_for_static_verification() -> None:
@@ -42,7 +51,8 @@ def test_only_pyjwt_and_cryptography_are_required_for_static_verification() -> N
         [
             sys.executable,
             "-c",
-            "import sys, app.verify; assert 'httpx' not in sys.modules, sorted(sys.modules)",
+            "import sys, agentic_auth.verify; "
+            "assert 'httpx' not in sys.modules, sorted(sys.modules)",
         ],
         capture_output=True,
         text=True,
@@ -58,12 +68,12 @@ def test_only_pyjwt_and_cryptography_are_required_for_static_verification() -> N
 # (see the no-regression gate in tests/conftest.py).
 # ---------------------------------------------------------------------------------------
 
-PHASE_6_FORBIDDEN = ("opentelemetry", "app.observability", "prometheus_client")
+PHASE_6_FORBIDDEN = ("opentelemetry", "agentic_auth.observability", "prometheus_client")
 
 
 def test_the_telemetry_seam_adds_no_imports() -> None:
     """``Verifier(telemetry=...)`` takes a ``TelemetrySink`` Protocol, so the OTel-backed
-    implementation can live in ``app.observability`` without this package importing it."""
+    implementation can live in ``agentic_auth.observability`` without this package importing it."""
     result = subprocess.run(
         [sys.executable, "-c", PROBE % (PHASE_6_FORBIDDEN,)],
         capture_output=True,
@@ -72,7 +82,7 @@ def test_the_telemetry_seam_adds_no_imports() -> None:
         check=True,
     )
     leaked = [line for line in result.stdout.splitlines() if line]
-    assert leaked == [], f"app.verify pulled in telemetry machinery: {leaked}"
+    assert leaked == [], f"agentic_auth.verify pulled in telemetry machinery: {leaked}"
 
 
 def test_the_package_imports_with_only_pyjwt_installed() -> None:
@@ -97,10 +107,10 @@ class _Blocker:
 sys.meta_path.insert(0, _Blocker())
 
 import importlib, pkgutil
-import app.verify
-for m in pkgutil.iter_modules(app.verify.__path__, "app.verify."):
+import agentic_auth.verify
+for m in pkgutil.iter_modules(agentic_auth.verify.__path__, "agentic_auth.verify."):
     importlib.import_module(m.name)
-from app.verify import TelemetrySink, Verifier
+from agentic_auth.verify import TelemetrySink, Verifier
 assert TelemetrySink is not None and Verifier is not None
 print("IMPORTED")
 """
@@ -123,7 +133,7 @@ def test_the_verifier_never_installs_global_telemetry() -> None:
     import ast
 
     installers = {"set_tracer_provider", "set_logger_provider", "set_meter_provider"}
-    for path in (Path(__file__).resolve().parents[2] / "app" / "verify").glob("*.py"):
+    for path in (Path(__file__).resolve().parents[2] / "agentic_auth" / "verify").glob("*.py"):
         tree = ast.parse(path.read_text())
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
@@ -138,7 +148,7 @@ def test_the_verifier_never_installs_global_telemetry() -> None:
 def test_a_sink_that_raises_cannot_break_admission() -> None:
     """Telemetry is fail-open. A resource server must not refuse a legitimate call, or admit an
     illegitimate one, because the integrator's exporter is broken."""
-    from app.verify import Verifier
+    from agentic_auth.verify import Verifier
 
     class _Broken:
         def span(self, name, attributes):  # noqa: ANN001, ANN202

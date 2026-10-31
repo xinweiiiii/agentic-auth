@@ -13,7 +13,7 @@ import uvicorn
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from app.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
+from agentic_auth.verify import HttpAnchors, HttpJwks, InMemoryReplay, Verifier
 from tests.fixtures.resource.server import build_resource
 
 CP = "http://127.0.0.1:8199"

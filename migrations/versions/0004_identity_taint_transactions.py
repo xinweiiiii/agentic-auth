@@ -27,7 +27,7 @@ down_revision = "0003_audit_decisions"
 branch_labels = None
 depends_on = None
 
-# Frozen copies of the constants in app/models/transaction_token.py.
+# Frozen copies of the constants in agentic_auth/models/transaction_token.py.
 # tests/unit/test_audit_ddl.py asserts they are identical.
 TXN_APPEND_ONLY_SQL = (
     """CREATE OR REPLACE FUNCTION transaction_tokens_append_only() RETURNS trigger

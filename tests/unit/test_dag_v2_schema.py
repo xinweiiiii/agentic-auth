@@ -12,8 +12,8 @@ import json
 import pytest
 from jsonschema import Draft202012Validator
 
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DagCompiler
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DagCompiler
 from tests.fixtures.contracts import contract_path
 
 SCHEMA_PATH = contract_path("dag-v3.schema.json")

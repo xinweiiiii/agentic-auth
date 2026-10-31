@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.api.deps import require_audit_reader
-from app.config import get_settings
-from app.errors import UnauthorizedError
+from agentic_auth.api.deps import require_audit_reader
+from agentic_auth.config import get_settings
+from agentic_auth.errors import UnauthorizedError
 from tests.conftest import ADMIN_TOKEN
 
 READER_TOKEN = "test-audit-reader"
@@ -63,7 +63,7 @@ def test_both_bearer_checks_compare_in_constant_time() -> None:
     import ast
     import inspect
 
-    from app.api import deps
+    from agentic_auth.api import deps
 
     tree = ast.parse(inspect.getsource(deps))
     checkers = [
@@ -95,8 +95,8 @@ def test_both_bearer_checks_compare_in_constant_time() -> None:
 
 
 async def test_enroller_accepts_the_enroller_token_and_admin(monkeypatch) -> None:
-    from app.api.deps import require_enroller
-    from app.config import get_settings
+    from agentic_auth.api.deps import require_enroller
+    from agentic_auth.config import get_settings
 
     settings = get_settings()
     monkeypatch.setattr(settings, "enroll_token", "enroll-secret")
@@ -105,9 +105,9 @@ async def test_enroller_accepts_the_enroller_token_and_admin(monkeypatch) -> Non
 
 
 async def test_enroller_refuses_wrong_missing_and_empty(monkeypatch) -> None:
-    from app.api.deps import require_enroller
-    from app.config import get_settings
-    from app.errors import UnauthorizedError
+    from agentic_auth.api.deps import require_enroller
+    from agentic_auth.config import get_settings
+    from agentic_auth.errors import UnauthorizedError
 
     settings = get_settings()
     monkeypatch.setattr(settings, "enroll_token", "")
@@ -120,9 +120,9 @@ async def test_enroller_refuses_wrong_missing_and_empty(monkeypatch) -> None:
 
 
 async def test_identity_reader_accepts_audit_reader_and_admin(monkeypatch) -> None:
-    from app.api.deps import require_identity_reader
-    from app.config import get_settings
-    from app.errors import UnauthorizedError
+    from agentic_auth.api.deps import require_identity_reader
+    from agentic_auth.config import get_settings
+    from agentic_auth.errors import UnauthorizedError
 
     settings = get_settings()
     monkeypatch.setattr(settings, "audit_read_token", "reader-secret")

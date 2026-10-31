@@ -6,7 +6,7 @@ name: drift-check-fixture
 on:
   pull_request:
     paths:
-      - "app/**"
+      - "agentic_auth/**"
       - "tests/**"
       - "examples/drift-fixture/**"
       - "actions/**"
@@ -51,15 +51,17 @@ jobs:
           AGENTIC_AUTH_WRITE_FIXTURE_TRACES: "1"
         run: python -m pytest -q tests/integration/test_drift_fixture_traces.py
 
+      # The report is read from a run with fail-on-drift off, and failing the job is checked
+      # on its own below, so each assertion depends on one behaviour only.
       - name: Drifted manifests
         id: drifted
-        continue-on-error: true
         uses: ./actions/drift-check
         with:
           manifests: examples/drift-fixture/manifests
           trace: examples/drift-fixture/drifted.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: drifted-report.json
+          fail-on-drift: "false"
 
       - name: Expect drift, naming exactly one edge
         env:
@@ -69,6 +71,21 @@ jobs:
           test "$RESULT" = "drift" || { echo "expected drift, got '$RESULT'"; exit 1; }
           test "$COUNT" = "1" || { echo "expected 1 undeclared edge, got '$COUNT'"; exit 1; }
 
+      - name: Drifted manifests, failing the job
+        id: drifted-gate
+        continue-on-error: true
+        uses: ./actions/drift-check
+        with:
+          manifests: examples/drift-fixture/manifests
+          trace: examples/drift-fixture/drifted.edge-trace.json
+          package: ".[drift]"
+          report-path: drifted-gate-report.json
+
+      - name: Expect the drift to fail the step
+        env:
+          OUTCOME: ${{ steps.drifted-gate.outcome }}
+        run: test "$OUTCOME" = "failure" || { echo "expected failure, got '$OUTCOME'"; exit 1; }
+
       - name: Widened manifests
         id: widened
         continue-on-error: true
@@ -76,7 +93,7 @@ jobs:
         with:
           manifests: examples/drift-fixture/manifests-widened
           trace: examples/drift-fixture/drifted.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: widened-report.json
 
       - name: Expect pass
@@ -91,13 +108,14 @@ jobs:
         with:
           manifests: examples/drift-fixture/manifests
           trace: examples/drift-fixture/malformed.edge-trace.json
-          package: .
+          package: ".[drift]"
           report-path: malformed-report.json
 
+      # An error always fails the step, whatever fail-on-drift says: it can never pass.
       - name: Expect error, never pass
         env:
-          RESULT: ${{ steps.malformed.outputs.result }}
-        run: test "$RESULT" = "error" || { echo "expected error, got '$RESULT'"; exit 1; }
+          OUTCOME: ${{ steps.malformed.outcome }}
+        run: test "$OUTCOME" = "failure" || { echo "expected failure, got '$OUTCOME'"; exit 1; }
 
       - name: Upload reports
         if: always()
@@ -106,6 +124,7 @@ jobs:
           name: drift-reports
           path: |
             drifted-report.json
+            drifted-gate-report.json
             widened-report.json
             malformed-report.json
             examples/drift-fixture/drifted.edge-trace.json

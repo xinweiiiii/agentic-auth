@@ -10,22 +10,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from app.schemas.manifest import AgentManifest
+from agentic_auth.schemas.manifest import AgentManifest
 
-OUT = (
-    Path(__file__).resolve().parents[2]
-    / "specs"
-    / "001-manifest-and-dag"
-    / "contracts"
-    / "manifest.schema.json"
-)
+OUT = Path(__file__).resolve().parents[1] / "docs" / "contracts" / "manifest.schema.json"
 
 
 def build() -> dict:
     schema = AgentManifest.model_json_schema()
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
     schema["$id"] = "https://agentic-auth.dev/schemas/agent-manifest/v1.json"
-    schema["x-generated-from"] = "app.schemas.manifest.AgentManifest"
+    schema["x-generated-from"] = "agentic_auth.schemas.manifest.AgentManifest"
     return schema
 
 

@@ -37,7 +37,7 @@ down_revision = "0004_identity_taint_transactions"
 branch_labels = None
 depends_on = None
 
-# Frozen copy of the constant in app/models/step_up_grant.py.
+# Frozen copy of the constant in agentic_auth/models/step_up_grant.py.
 # tests/unit/test_audit_ddl.py asserts they are identical.
 STEP_UP_APPEND_ONLY_SQL = (
     """CREATE OR REPLACE FUNCTION step_up_grants_append_only() RETURNS trigger

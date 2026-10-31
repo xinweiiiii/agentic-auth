@@ -216,8 +216,8 @@ async def test_the_sidecar_pools_one_http_client_for_the_process(sidecar_stack) 
     setup. One pooled client is built at startup and reused."""
     import httpx
 
-    from app.sidecar.app import build_app
-    from app.sidecar.config import SidecarConfig, Upstream
+    from agentic_auth.sidecar.app import build_app
+    from agentic_auth.sidecar.config import SidecarConfig, Upstream
 
     calls: list[httpx.AsyncClient] = []
 

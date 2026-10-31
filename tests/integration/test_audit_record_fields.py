@@ -10,7 +10,7 @@ import json
 
 from sqlalchemy import select
 
-from app.models import AuditDecision
+from agentic_auth.models import AuditDecision
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,
@@ -88,7 +88,7 @@ async def test_a_policy_load_failure_is_recorded_as_a_deny(
 ) -> None:
     session = await _bank_session(client, admin_headers)
 
-    from app.services import policy_loader
+    from agentic_auth.services import policy_loader
 
     async def _broken(*_args, **_kwargs):
         raise RuntimeError("policy store unreachable")
@@ -188,7 +188,7 @@ async def test_legacy_rows_report_the_phase_4_fields_as_unavailable(
     import uuid
     from datetime import UTC, datetime
 
-    from app.repositories import audit_decisions as audit_repo
+    from agentic_auth.repositories import audit_decisions as audit_repo
 
     await register_agents(client, admin_headers, bank_docs())
     session = await consent_session(client, admin_headers, BANK_ASSISTANT)
@@ -237,7 +237,7 @@ async def test_no_phase_4_secret_lands_in_any_table(
     keys never appear in a stored row."""
     from sqlalchemy import text
 
-    from app.sdk import AgenticAuthClient, AgentKey
+    from agentic_auth.sdk import AgenticAuthClient, AgentKey
     from tests.conftest import ADMIN_TOKEN
     from tests.fixtures.bank import TERMINATE_PARAMS
     from tests.fixtures.identity import agent_keypair, identity_document, sign_challenge

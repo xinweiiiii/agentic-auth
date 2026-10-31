@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from app.verify.canonical import (
+from agentic_auth.verify.canonical import (
     CanonicalizationError,
     binding_document,
     binding_hash,

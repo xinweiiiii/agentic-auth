@@ -74,7 +74,7 @@ async def test_the_exchange_needs_no_actor_token(client, off) -> None:
 async def test_the_sidecar_forwards_a_privileged_call_without_buffering_or_a_txn_header(
     sidecar_stack, off
 ) -> None:
-    from app.sidecar.config import Upstream
+    from agentic_auth.sidecar.config import Upstream
 
     _, support = off
     sidecar = await sidecar_stack.client(
@@ -94,7 +94,7 @@ async def test_the_sidecar_forwards_a_privileged_call_without_buffering_or_a_txn
 
 
 async def test_the_sdk_needs_no_params_for_a_privileged_call(client, off) -> None:
-    from app.sdk import AgenticAuthClient, HopContext
+    from agentic_auth.sdk import AgenticAuthClient, HopContext
     from tests.conftest import ADMIN_TOKEN
 
     session, support = off

@@ -1,5 +1,5 @@
 """An independent canonicalizer, written ONLY from docs/canonicalization.md, must agree
-with ``app.verify.canonical`` on every vector.
+with ``agentic_auth.verify.canonical`` on every vector.
 
 Deliberately naive and separate: it shares no code with the implementation. Where the two
 disagree, one of them misreads the RFC — and the vectors say which.
@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from app.verify.canonical import canonical_json
+from agentic_auth.verify.canonical import canonical_json
 
 VECTORS = json.loads(
     (Path(__file__).resolve().parents[1] / "fixtures" / "jcs_vectors.json").read_text()

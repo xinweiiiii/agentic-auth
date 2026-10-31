@@ -1,6 +1,6 @@
 """Call-bound authority at the resource: mutate, replay, expire.
 
-Drives ``app.verify.transaction.verify_transaction`` directly with tokens the real profile
+Drives ``agentic_auth.verify.transaction.verify_transaction`` directly with tokens the real profile
 minted, so every row of the replay table is a resource-side fact, not a control-plane one.
 """
 
@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from app.schemas.authorize import Taint
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import JwtTokenProfile
-from app.services.tokens.keys import load_or_generate
-from app.verify import (
+from agentic_auth.schemas.authorize import Taint
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
+from agentic_auth.services.tokens.keys import load_or_generate
+from agentic_auth.verify import (
     InMemoryReplay,
     RedisReplay,
     ReplayStoreUnavailable,

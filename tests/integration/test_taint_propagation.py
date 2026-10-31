@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.schemas.authorize import DenyReason
-from app.services import taint as taint_module
+from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.services import taint as taint_module
 from tests.fixtures.bank import (
     BALANCE_AGENT,
     BANK_ASSISTANT,

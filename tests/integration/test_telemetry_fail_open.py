@@ -155,8 +155,8 @@ def _install(metrics_registry, exporter, *, synchronous: bool = True) -> None:
     ``synchronous=False`` to exercise the production BatchSpanProcessor path, which is the one
     whose bounded queue and background thread the loss bound relies on.
     """
-    from app import observability
-    from app.observability.config import ObservabilityConfig
+    from agentic_auth import observability
+    from agentic_auth.observability.config import ObservabilityConfig
 
     observability._reset_for_tests()
     observability.setup(
@@ -181,7 +181,7 @@ def _install(metrics_registry, exporter, *, synchronous: bool = True) -> None:
 async def test_no_authorization_outcome_changes_under_any_sink_fault(
     client, register_chain, consent, metrics_registry, fault: str
 ) -> None:
-    from app import observability
+    from agentic_auth import observability
 
     await register_chain()
 
@@ -206,7 +206,7 @@ async def test_the_broken_sink_was_actually_exercised(
     client, register_chain, consent, metrics_registry, fault: str
 ) -> None:
     """Without this, the test above could pass because nothing ever tried to export."""
-    from app import observability
+    from agentic_auth import observability
 
     await register_chain()
     exporter = FAULTS[fault]()
@@ -225,7 +225,7 @@ async def test_the_broken_sink_was_actually_exercised(
 async def test_a_broken_sink_cannot_turn_a_deny_into_an_allow(
     client, register_chain, consent, metrics_registry
 ) -> None:
-    from app import observability
+    from agentic_auth import observability
 
     _install(metrics_registry, _UnreachableExporter())
     try:
@@ -253,7 +253,7 @@ async def test_the_audit_record_is_still_written_when_telemetry_is_broken(
     client, register_chain, consent, metrics_registry, admin_headers
 ) -> None:
     """Telemetry is fail-open; audit is fail-closed. A broken sink must not cost us evidence."""
-    from app import observability
+    from agentic_auth import observability
 
     _install(metrics_registry, _UnreachableExporter())
     try:
@@ -291,7 +291,7 @@ async def test_a_slow_sink_does_not_add_unbounded_latency(
     client, register_chain, consent, metrics_registry
 ) -> None:
     """A two-second export must not become two seconds of request latency."""
-    from app import observability
+    from agentic_auth import observability
 
     # Deliberately NOT the synchronous test processor: SimpleSpanProcessor exports inline on
     # the thread that ended the span, so it would add the delay by design. The loss bound comes
@@ -327,7 +327,7 @@ async def test_telemetry_setup_failure_leaves_the_control_plane_serving(
 ) -> None:
     """A guardrail that refused to start because a collector was unreachable would be an
     availability regression caused by an observability feature."""
-    from app import observability
+    from agentic_auth import observability
 
     observability._reset_for_tests()
 
@@ -336,7 +336,7 @@ async def test_telemetry_setup_failure_leaves_the_control_plane_serving(
 
     await register_chain()
     monkeypatch.setattr(observability, "_build_pipeline", _explode)
-    from app.observability.config import ObservabilityConfig
+    from agentic_auth.observability.config import ObservabilityConfig
 
     resolved = observability.setup(
         resolved=ObservabilityConfig.resolve(
@@ -362,7 +362,7 @@ async def test_telemetry_setup_failure_leaves_the_control_plane_serving(
 async def test_a_recovering_sink_resumes_without_a_restart(
     client, register_chain, consent, metrics_registry
 ) -> None:
-    from app import observability
+    from agentic_auth import observability
 
     await register_chain()
     exporter = _RecoveringExporter(fail_for=1)
@@ -378,8 +378,8 @@ async def test_a_recovering_sink_resumes_without_a_restart(
 
 async def test_sampling_loss_is_reported(client, register_chain, consent, metrics_registry) -> None:
     """The telemetry loss must itself be reported."""
-    from app import observability
-    from app.observability.config import ObservabilityConfig
+    from agentic_auth import observability
+    from agentic_auth.observability.config import ObservabilityConfig
 
     observability._reset_for_tests()
     observability.setup(
@@ -422,7 +422,7 @@ async def test_sampling_loss_is_reported(client, register_chain, consent, metric
 async def test_a_broken_sink_does_not_change_what_the_pep_forwards(
     sidecar_stack, register_chain, consent
 ) -> None:
-    from app import observability
+    from agentic_auth import observability
 
     observability._reset_for_tests()
     await register_chain()

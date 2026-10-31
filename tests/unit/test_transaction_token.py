@@ -7,11 +7,11 @@ from datetime import UTC, datetime
 import jwt
 import pytest
 
-from app.schemas.authorize import Taint
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import JwtTokenProfile, TokenVerificationError
-from app.services.tokens.keys import load_or_generate
-from app.services.tokens.profile import TRANSACTION_TYP
+from agentic_auth.schemas.authorize import Taint
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile, TokenVerificationError
+from agentic_auth.services.tokens.keys import load_or_generate
+from agentic_auth.services.tokens.profile import TRANSACTION_TYP
 
 USER = "user:alice"
 TARGET = "mcp://accounts.internal/terminate_account"
@@ -89,7 +89,7 @@ def test_wrong_audience_is_refused(profile, hop) -> None:
 
 def test_expired_is_refused(hop) -> None:
     expired = JwtTokenProfile(load_or_generate(), issuer="agentic-auth", ttl_seconds=60)
-    from app.config import get_settings
+    from agentic_auth.config import get_settings
 
     settings = get_settings()
     previous = settings.transaction_token_ttl_seconds

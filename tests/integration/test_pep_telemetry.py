@@ -1,7 +1,7 @@
 """The enforcement point is no longer dark.
 
-Before this phase nothing under ``app/sidecar/`` emitted anything, so a sidecar that had been
-silently forwarding every call looked exactly like a healthy one. Everything asserted here is
+Before this phase nothing under ``agentic_auth/sidecar/`` emitted anything, so a sidecar that had
+been silently forwarding every call looked exactly like a healthy one. Everything asserted here is
 read from the PEP's own two routes — no database query, no log file — because that is the
 situation an on-call operator is actually in.
 """

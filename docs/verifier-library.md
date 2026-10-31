@@ -1,4 +1,4 @@
-# The Resource-Side Verifier Library (`app.verify`)
+# The Resource-Side Verifier Library (`agentic_auth.verify`)
 
 Normative contract for the verifier library. A resource server implements against this.
 
@@ -10,7 +10,7 @@ graph). Offline after bootstrap.
 ## Surface
 
 ```python
-from app.verify import Verifier, HttpJwks, HttpAnchors, RedisReplay, InMemoryReplay, Admission
+from agentic_auth.verify import Verifier, HttpJwks, HttpAnchors, RedisReplay, InMemoryReplay, Admission
 
 verifier = Verifier(
     issuer_jwks=HttpJwks("https://control-plane/.well-known/jwks.json"),   # or StaticJwks(dict)

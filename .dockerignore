@@ -1,0 +1,8 @@
+# Only what the image build reads: the built wheels and the migrations.
+*
+!dist/
+!dist/**
+!alembic.ini
+!migrations/
+!migrations/**
+migrations/**/__pycache__

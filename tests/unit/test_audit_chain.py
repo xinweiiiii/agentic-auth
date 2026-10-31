@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.audit_chain import ChainBreak, ChainEntry, ParentSnapshot, extend_chain
+from agentic_auth.services.audit_chain import ChainBreak, ChainEntry, ParentSnapshot, extend_chain
 
 SESSION = "5e1c0000-0000-4000-8000-000000000001"
 OTHER_SESSION = "5e1c0000-0000-4000-8000-000000000002"

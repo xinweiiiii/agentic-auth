@@ -32,7 +32,7 @@ agentic-auth manifest register-dir examples/drift-fixture/manifests \
 **2. Start the recording sidecar** (observe mode, trace path set):
 
 ```bash
-python -m app.sidecar --config examples/drift-fixture/sidecar.yaml &
+python -m agentic_auth.sidecar --config examples/drift-fixture/sidecar.yaml &
 ```
 
 **3. Record your agent's test run.** Point the agent's tool and delegation base URLs at the

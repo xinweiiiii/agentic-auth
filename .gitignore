@@ -4,6 +4,9 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+# python -m build output (the packaging tests build both wheels from the checkout)
+build/
+dist/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/

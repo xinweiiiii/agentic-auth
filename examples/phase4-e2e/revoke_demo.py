@@ -12,7 +12,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import httpx
 from walk import client
 
-from app.sdk import PolicyDenied
+from agentic_auth.sdk import PolicyDenied
 
 TARGET = "mcp://accounts.internal/read_balance"
 CP = "http://127.0.0.1:8199"

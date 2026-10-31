@@ -23,7 +23,7 @@ down_revision = "0002_sessions_and_decisions"
 branch_labels = None
 depends_on = None
 
-# Frozen copies of the constants in app/models/audit_decision.py.
+# Frozen copies of the constants in agentic_auth/models/audit_decision.py.
 # tests/unit/test_audit_ddl.py asserts they are identical, so the migrated schema and the
 # create_all() test schema enforce exactly the same rule.
 APPEND_ONLY_SQL = (

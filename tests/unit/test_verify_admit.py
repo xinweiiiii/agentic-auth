@@ -6,11 +6,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.schemas.authorize import Taint
-from app.services.tokens.act_chain import nest
-from app.services.tokens.jwt_profile import JwtTokenProfile
-from app.services.tokens.keys import load_or_generate
-from app.verify import InMemoryReplay, StaticAnchors, StaticJwks, Verifier, binding_hash
+from agentic_auth.schemas.authorize import Taint
+from agentic_auth.services.tokens.act_chain import nest
+from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
+from agentic_auth.services.tokens.keys import load_or_generate
+from agentic_auth.verify import InMemoryReplay, StaticAnchors, StaticJwks, Verifier, binding_hash
 from tests.fixtures.identity import agent_keypair, identity_assertion
 
 USER = "user:alice"
@@ -276,7 +276,7 @@ def test_metrics_count_admissions_and_rejection_causes(issuer, support_key) -> N
 
 
 def test_agent_key_repr_never_shows_the_key(support_key) -> None:
-    from app.sdk.identity import AgentKey
+    from agentic_auth.sdk.identity import AgentKey
 
     key = AgentKey.load(support_key.private_pem().decode(), kid="k")
     assert "PRIVATE" not in repr(key) and "-----" not in repr(key)
@@ -315,7 +315,7 @@ def test_a_transaction_token_from_another_issuer_name_is_refused(
 
 
 def test_the_default_issuer_is_agentic_auth(issuer, support_key) -> None:
-    from app.verify.admit import admit
+    from agentic_auth.verify.admit import admit
 
     grant = _grant(issuer, READ_BALANCE)
     a = admit(
@@ -367,7 +367,7 @@ def test_leeway_is_honoured_at_every_step(issuer, support_key) -> None:
     assert refused.ok is False and refused.reason == "IDENTITY_INVALID"
 
     # transaction only: fresh grant, fresh assertion, stale transaction token
-    from app.config import get_settings
+    from agentic_auth.config import get_settings
 
     fresh_t = _grant(issuer)
     ident_t = identity_assertion(support_key, fresh_t, TERMINATE)

@@ -17,15 +17,15 @@ from typing import Any
 
 import pytest
 
-from app.boundary.guarantee import Guarantee
-from app.schemas.authorize import AuthorizeRequest, DenyReason
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DagCompiler
-from app.services.drift import declared_graph
-from app.services.edge_rules import RUNTIME_REASON, EdgeVerdict, classify_edge, delegate_of
-from app.services.pdp import decide
-from app.services.policy_loader import PolicyIndex, build_index
-from app.services.tokens.profile import VerifiedToken
+from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.schemas.authorize import AuthorizeRequest, DenyReason
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DagCompiler
+from agentic_auth.services.drift import declared_graph
+from agentic_auth.services.edge_rules import RUNTIME_REASON, EdgeVerdict, classify_edge, delegate_of
+from agentic_auth.services.pdp import decide
+from agentic_auth.services.policy_loader import PolicyIndex, build_index
+from agentic_auth.services.tokens.profile import VerifiedToken
 from tests.fixtures import tokens
 from tests.fixtures.bank import BANK_ASSISTANT, bank_docs
 from tests.fixtures.chains import ORCHESTRATOR, chain_docs

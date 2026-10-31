@@ -21,14 +21,14 @@ import uuid
 
 import pytest
 
-from app.errors import NotFoundError
-from app.models.manifest import (
+from agentic_auth.errors import NotFoundError
+from agentic_auth.models.manifest import (
     MANIFEST_STATUSES,
     RESOLVABLE_STATUSES,
     STATUS_PROPOSED,
 )
-from app.repositories import manifests as manifests_repo
-from app.services import policy_loader
+from agentic_auth.repositories import manifests as manifests_repo
+from agentic_auth.services import policy_loader
 from tests.fixtures.manifests import base_manifest
 
 pytestmark = pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_proposed_is_a_status_but_not_a_resolvable_one() -> None:
 
 
 async def _agent(db_session, name: str):
-    from app.repositories import agents as agents_repo
+    from agentic_auth.repositories import agents as agents_repo
 
     return await agents_repo.create(db_session, name=name)
 
@@ -124,9 +124,9 @@ async def test_consent_against_a_proposal_only_agent_is_refused(db_session, redi
     ``NotFoundError`` before its insert. Because layer 1 kept the proposal out of the
     compiler, there is nothing to find.
     """
-    from app.schemas.consent import ConsentCreate
-    from app.services.sessions import SessionService
-    from app.services.tokens.jwt_profile import JwtTokenProfile
+    from agentic_auth.schemas.consent import ConsentCreate
+    from agentic_auth.services.sessions import SessionService
+    from agentic_auth.services.tokens.jwt_profile import JwtTokenProfile
 
     agent = await _agent(db_session, "never-consented-agent")
     await _manifest(db_session, agent, status=STATUS_PROPOSED)

@@ -264,6 +264,15 @@
               }
             ]
           },
+          "deployment": {
+            "default": "server",
+            "enum": [
+              "server",
+              "embedded"
+            ],
+            "title": "Deployment",
+            "type": "string"
+          },
           "enforced": {
             "title": "Enforced",
             "type": "boolean"
@@ -1778,7 +1787,7 @@
       },
       "StepUpChallenge": {
         "additionalProperties": false,
-        "description": "The challenge handed back on a recoverable deny.\n\nDefined here rather than in ``app.schemas.stepup`` to keep ``AuthorizeDecision``'s\nimports acyclic: the step-up schemas import the deny vocabulary from this module.",
+        "description": "The challenge handed back on a recoverable deny.\n\nDefined here rather than in ``agentic_auth.schemas.stepup`` to keep ``AuthorizeDecision``'s\nimports acyclic: the step-up schemas import the deny vocabulary from this module.",
         "properties": {
           "blocked_action_id": {
             "format": "uuid",
@@ -2082,7 +2091,7 @@
   "info": {
     "title": "Agentic Authorization SDK \u2014 Control Plane",
     "version": "0.1.0",
-    "x-generated-from": "app.main.create_app().openapi()"
+    "x-generated-from": "agentic_auth.main.create_app().openapi()"
   },
   "openapi": "3.1.0",
   "paths": {

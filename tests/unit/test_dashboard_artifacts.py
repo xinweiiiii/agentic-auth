@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 from prometheus_client import CollectorRegistry
 
-from app.observability import surface
-from app.services.metrics import (
+from agentic_auth.observability import surface
+from agentic_auth.services.metrics import (
     build_control_plane_metrics,
     build_pep_metrics,
     build_verifier_metrics,
@@ -85,7 +85,7 @@ def _live_families() -> dict[str, frozenset[str]]:
             if name:
                 out[name] = frozenset(getattr(collector, "_labelnames", ()) or ())
     # The drift metrics live in their own per-run registry.
-    from app.services.metrics import build_drift_metrics
+    from agentic_auth.services.metrics import build_drift_metrics
 
     for collector in list(build_drift_metrics().registry._collector_to_names):  # noqa: SLF001
         name = getattr(collector, "_name", None)

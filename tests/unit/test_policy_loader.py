@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from app.errors import PolicyRecompileRequired
-from app.schemas.manifest import AgentManifest
-from app.services.dag_compiler import DagCompiler
-from app.services.policy_loader import (
+from agentic_auth.errors import PolicyRecompileRequired
+from agentic_auth.schemas.manifest import AgentManifest
+from agentic_auth.services.dag_compiler import DagCompiler
+from agentic_auth.services.policy_loader import (
     REQUIRED_DAG_SCHEMA_VERSION,
     build_graph_index,
     build_index,
