@@ -6,6 +6,8 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-01
+
 ### Added
 
 The Phase 5 enforcement points and consent flows. They were declared in 0.1.x (the
@@ -18,9 +20,10 @@ reached this repository, so those commands could not start.
   - It supports observe mode, and runs as several stateless instances.
 - **Boundary adapters** (`agentic-auth-boundary`, `agentic_auth.boundary`), for agents you
   cannot modify:
-  - **Resource-server guard:** the tool admits only a grant plus identity.
-  - **MCP connector proxy:** filters `tools/list` to what the manifest declares.
-  - **Egress proxy.**
+  - **Resource-server guard** (`RequireAgenticAuth` middleware): the tool admits only a
+    grant plus identity.
+  - **MCP connector proxy** (`agentic-auth-boundary mcp-proxy`): filters `tools/list` to
+    what the manifest declares, and decides every `tools/call`.
   - Each labels its decisions with the guarantee level it can actually give.
 - **Step-up consent.** A recoverable refusal (`SCOPE_NOT_CONSENTED`) carries a challenge.
   - The consenting human approves it at `/v1/consent/step-up/complete` with their own
@@ -28,9 +31,13 @@ reached this repository, so those commands could not start.
     widening.
   - The blocked hop then resumes, with its hop budget intact.
   - `client.step_up()`, `client.approve()` and `client.resume()` now have a server to call.
-- **Cold start.** A first-time agent can be registered with no manifest and run in a sandbox
-  (`/v1/agents/{id}/sandbox`, `agentic-auth sandbox`). A manifest is proposed from what it was
-  observed doing, and a human ratifies it before it carries any authority.
+- **Cold start.** A first-time agent can be registered with no manifest. It then authorizes
+  nothing. To give it a manifest:
+  1. Record what it does under test with `agentic-auth drift record`.
+  2. Run `agentic-auth sandbox propose-local <trace> --agent <name>`, which proposes a manifest
+     covering exactly what was observed.
+  3. A person reviews the proposal, filling in data classes and marking privileged tools,
+     then registers it. That review is the ratification: nothing governs until then.
 - **Consent to a subset** (`consent(data_classes=...)`), behind
   `AGENTIC_AUTH_CONSENT_GRANULARITY_ENABLED`.
 - **Feature flags.** Each new control is off by default: `CONSENT_GRANULARITY_ENABLED`,
@@ -41,6 +48,17 @@ reached this repository, so those commands could not start.
   to the same decisions.
 - The embedded control plane serves step-up and sandbox too. The embedded/remote conformance
   suite now runs the full step-up flow: refused, approved by the human, resumed.
+
+### Not yet included
+
+- **Server-side sandbox observation.** `/v1/agents/{id}/sandbox` and `agentic-auth sandbox
+  run` open an observation run. Nothing yet feeds a run the agent's calls, so a run ends
+  empty and its proposal is marked `covers_no_behaviour`. Use `sandbox propose-local` (above)
+  until then. Ratifying a server-side proposal works.
+- **The egress proxy (network mode).** `agentic-auth-boundary egress-ca` generates the
+  certificate authority, and the connection-inspection logic is in place and tested.
+  `egress-proxy` itself does not run yet: it needs a CONNECT-capable listener, and it says
+  so and exits rather than starting a proxy that cannot enforce.
 
 ### Fixed
 
@@ -166,7 +184,8 @@ First public release.
   calls include an edge its manifests never declared.
 - **Offline verifier library** (`app.verify`) — installable with `pyjwt[crypto]` alone.
 
-[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...v0.1.1
