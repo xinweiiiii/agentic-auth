@@ -6,6 +6,8 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-01
+
 ### Added
 
 The Phase 5 enforcement points and consent flows. They were declared in 0.1.x (the
@@ -166,7 +168,8 @@ First public release.
   calls include an edge its manifests never declared.
 - **Offline verifier library** (`app.verify`) — installable with `pyjwt[crypto]` alone.
 
-[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/xinweiiiii/agentic-auth/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/xinweiiiii/agentic-auth/compare/v0.1.0...v0.1.1
