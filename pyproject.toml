@@ -1,6 +1,6 @@
 [project]
 name = "agentic-auth"
-version = "0.1.0"
+version = "0.1.1"
 description = "Authorization for AI agents: per-hop narrowing authority, verifiable delegation chains, and an append-only audit log"
 requires-python = ">=3.12"
 license = "Apache-2.0"
@@ -91,8 +91,10 @@ otel = [
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["app"]
+# Discover every subpackage. A bare `packages = ["app"]` ships app/__init__.py and its
+# siblings only, which an editable install hides and a wheel install does not.
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.ruff]
 line-length = 100
