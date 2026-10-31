@@ -273,3 +273,88 @@ def diff(
             rprint(f"  [red]{d['code']}[/red] {d['tool_ref']} — {d['remedy']}")
     if result["status"] != "reconciled":
         raise typer.Exit(EXIT_FINDINGS) from None
+
+
+async def replay_bundle(
+    client: httpx.AsyncClient,
+    control_plane: str,
+    admin_token: str,
+    plan: list[tuple[str, list[dict[str, Any]]]],
+    override_reason: str,
+) -> list[tuple[str, int, int, dict[str, Any]]]:
+    """Register each agent's first manifest, then submit every later version in order.
+    Returns ``(agent, version_index, status, body)`` per request; stops an agent at its
+    first refusal, since a later version cannot be submitted for an agent that never
+    registered."""
+    base = control_plane.rstrip("/")
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    override = {"reason": override_reason}
+    results: list[tuple[str, int, int, dict[str, Any]]] = []
+    for name, docs in plan:
+        for index, doc in enumerate(docs):
+            # The first version registers the agent; every later one is a new version of it.
+            if index == 0:
+                url, body = f"{base}/v1/agents", {"name": name, "manifest": doc}
+            else:
+                url, body = f"{base}/v1/manifests", {"agent": name, "manifest": doc}
+            response = await client.post(url, headers=headers, json={**body, "override": override})
+            try:
+                payload = response.json()
+            except ValueError:
+                payload = {}
+            results.append((name, index + 1, response.status_code, payload))
+            if response.status_code != 201:
+                break
+    return results
+
+
+@manifest_app.command("register-bundle")
+def register_bundle(
+    bundle: Path = typer.Argument(..., help="Export bundle from EmbeddedControlPlane.export"),
+    control_plane: str = typer.Option(..., "--control-plane", help="Control plane base URL"),
+    override_reason: str = typer.Option(
+        ..., "--override-reason", help="Recorded on every version that needs an override"
+    ),
+    timeout: float = typer.Option(10.0, "--timeout"),
+) -> None:
+    """Re-register an embedded instance's manifests, every version in order, downstream first.
+
+    Each version reconciles against this control plane's own capability discovery, exactly as
+    a fresh registration does. Enrollments are not carried over: an agent re-enrolls with its
+    own key. The admin token is read from AGENTIC_AUTH_ADMIN_TOKEN, never the command line.
+    """
+    from agentic_auth.services.bundle_import import BundleError, read_bundle, registration_plan
+
+    admin_token = os.environ.get("AGENTIC_AUTH_ADMIN_TOKEN", "")
+    if not admin_token:
+        rprint("[red]AGENTIC_AUTH_ADMIN_TOKEN is not set[/red]")
+        raise typer.Exit(EXIT_USAGE)
+    if not override_reason.strip():
+        rprint("[red]--override-reason must not be empty[/red]")
+        raise typer.Exit(EXIT_USAGE)
+    try:
+        plan = registration_plan(read_bundle(bundle))
+    except (OSError, BundleError) as exc:
+        rprint(f"[red]{exc}[/red]")
+        raise typer.Exit(EXIT_USAGE) from exc
+
+    async def run() -> list[tuple[str, int, int, dict[str, Any]]]:
+        client = _make_http_client(timeout)
+        try:
+            return await replay_bundle(client, control_plane, admin_token, plan, override_reason)
+        finally:
+            await client.aclose()
+
+    failed = False
+    for name, version, status, body in asyncio.run(run()):
+        if status == 201:
+            rprint(f"registered {name} v{version}: {body.get('status')}")
+            continue
+        failed = True
+        error = body.get("error", {}) if isinstance(body, dict) else {}
+        rprint(
+            f"[red]failed {name} v{version}: HTTP {status} {error.get('code', '')}[/red] "
+            f"{error.get('message', '')}"
+        )
+    if failed:
+        raise typer.Exit(EXIT_FINDINGS)

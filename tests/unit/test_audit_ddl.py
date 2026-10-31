@@ -119,3 +119,21 @@ def test_sandbox_runs_is_updatable_and_step_up_grants_is_not() -> None:
     }
     assert grants["step_up_grants"] == "SELECT, INSERT"
     assert grants["sandbox_runs"] == "SELECT, INSERT, UPDATE"
+
+
+# -- imported_audit (feature 010) is append-only the same way --------------------
+
+
+def _migration_0007() -> ModuleType:
+    return _load(
+        MIGRATION_0005.with_name("0007_imported_audit.py"), "migration_0007_imported_audit"
+    )
+
+
+def test_imported_audit_trigger_sql_matches_the_migration() -> None:
+    from agentic_auth.models import imported_audit
+
+    assert (
+        _migration_0007().IMPORTED_AUDIT_APPEND_ONLY_SQL
+        == imported_audit.IMPORTED_AUDIT_APPEND_ONLY_SQL
+    )

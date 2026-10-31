@@ -49,7 +49,7 @@ get_settings.cache_clear()
 ADMIN_TOKEN = "test-admin-token"
 _TABLES = (
     "agents, manifests, compiled_policies, reconciliation_reports, sessions, audit_decisions, "
-    "trust_anchors, transaction_tokens, step_up_grants, sandbox_runs"
+    "trust_anchors, transaction_tokens, step_up_grants, sandbox_runs, imported_audit"
 )
 
 
