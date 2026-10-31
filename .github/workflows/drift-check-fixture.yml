@@ -51,15 +51,18 @@ jobs:
           AGENTIC_AUTH_WRITE_FIXTURE_TRACES: "1"
         run: python -m pytest -q tests/integration/test_drift_fixture_traces.py
 
+      # A composite action that fails does not hand its outputs back to the caller, so the
+      # report is read from a run with fail-on-drift off, and failing the job is checked on
+      # its own below.
       - name: Drifted manifests
         id: drifted
-        continue-on-error: true
         uses: ./actions/drift-check
         with:
           manifests: examples/drift-fixture/manifests
           trace: examples/drift-fixture/drifted.edge-trace.json
           package: ".[drift]"
           report-path: drifted-report.json
+          fail-on-drift: "false"
 
       - name: Expect drift, naming exactly one edge
         env:
@@ -68,6 +71,21 @@ jobs:
         run: |
           test "$RESULT" = "drift" || { echo "expected drift, got '$RESULT'"; exit 1; }
           test "$COUNT" = "1" || { echo "expected 1 undeclared edge, got '$COUNT'"; exit 1; }
+
+      - name: Drifted manifests, failing the job
+        id: drifted-gate
+        continue-on-error: true
+        uses: ./actions/drift-check
+        with:
+          manifests: examples/drift-fixture/manifests
+          trace: examples/drift-fixture/drifted.edge-trace.json
+          package: ".[drift]"
+          report-path: drifted-gate-report.json
+
+      - name: Expect the drift to fail the step
+        env:
+          OUTCOME: ${{ steps.drifted-gate.outcome }}
+        run: test "$OUTCOME" = "failure" || { echo "expected failure, got '$OUTCOME'"; exit 1; }
 
       - name: Widened manifests
         id: widened
@@ -94,10 +112,12 @@ jobs:
           package: ".[drift]"
           report-path: malformed-report.json
 
+      # An error always fails the step (fail-on-drift does not apply), so its outputs are
+      # not available here; what matters is that it can never pass.
       - name: Expect error, never pass
         env:
-          RESULT: ${{ steps.malformed.outputs.result }}
-        run: test "$RESULT" = "error" || { echo "expected error, got '$RESULT'"; exit 1; }
+          OUTCOME: ${{ steps.malformed.outcome }}
+        run: test "$OUTCOME" = "failure" || { echo "expected failure, got '$OUTCOME'"; exit 1; }
 
       - name: Upload reports
         if: always()
@@ -106,6 +126,7 @@ jobs:
           name: drift-reports
           path: |
             drifted-report.json
+            drifted-gate-report.json
             widened-report.json
             malformed-report.json
             examples/drift-fixture/drifted.edge-trace.json

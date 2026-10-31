@@ -38,6 +38,8 @@ inputs:
     required: false
     default: "true"
 
+# Outputs are set only when the step succeeds: GitHub does not pass a failed composite
+# action's outputs to the caller. Read them with fail-on-drift "false", or read report-path.
 outputs:
   result:
     description: pass | drift | error
