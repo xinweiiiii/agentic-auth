@@ -32,11 +32,3 @@ def _run_from(env, project: Path):
 def test_customer_app_and_sdk_both_import(venv_factory, tmp_path) -> None:
     result = _run_from(venv_factory("all"), _customer_project(tmp_path / "proj"))
     assert result.returncode == 0, result.stderr[-2000:]
-
-
-def test_customer_app_still_wins_with_compat_installed(venv_factory, tmp_path) -> None:
-    """authzai-compat does install an ``app``. A project's own directory comes first on
-    ``sys.path``, so the project's package still wins — documented in compat/README.md, and
-    the reason compat is opt-in rather than bundled."""
-    result = _run_from(venv_factory("all", compat=True), _customer_project(tmp_path / "proj"))
-    assert result.returncode == 0, result.stderr[-2000:]

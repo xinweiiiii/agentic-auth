@@ -130,8 +130,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["agentic_auth*"]
 
-# One source for the version: agentic_auth.__version__. compat/pyproject.toml pins the same
-# number, and tests/unit/test_versions_agree.py fails if the two drift.
+# One source for the version: agentic_auth.__version__ (tests/unit/test_versions_agree.py).
 [tool.setuptools.dynamic]
 version = { attr = "agentic_auth.__version__" }
 

@@ -35,7 +35,6 @@ async def _clean() -> AsyncIterator[None]:
 @dataclass(frozen=True)
 class Wheels:
     main: Path
-    compat: Path
 
 
 @dataclass(frozen=True)
@@ -81,7 +80,6 @@ def built_wheels(tmp_path_factory: pytest.TempPathFactory) -> Wheels:
     base = tmp_path_factory.mktemp("wheels")
     return Wheels(
         main=_build(ROOT, base / "main"),
-        compat=_build(ROOT / "compat", base / "compat"),
     )
 
 
@@ -101,17 +99,16 @@ def fresh_venv(where: Path, *requirements: str, find_links: Path | None = None) 
 def venv_factory(tmp_path_factory: pytest.TempPathFactory, built_wheels: Wheels) -> Iterator:
     """``make(extra)`` → an environment with ``authzai[extra]`` from the built wheel, cached
     per extra for the session. ``extra=None`` is the base install."""
-    cache: dict[tuple[str | None, bool], Env] = {}
+    cache: dict[str | None, Env] = {}
 
-    def make(extra: str | None, *, compat: bool = False) -> Env:
-        key = (extra, compat)
-        if key not in cache:
+    def make(extra: str | None) -> Env:
+        if extra not in cache:
             spec = f"{built_wheels.main}[{extra}]" if extra else str(built_wheels.main)
-            reqs = [spec, str(built_wheels.compat)] if compat else [spec]
-            name = f"venv-{extra or 'base'}{'-compat' if compat else ''}"
-            cache[key] = fresh_venv(
-                tmp_path_factory.mktemp(name), *reqs, find_links=built_wheels.main.parent
+            cache[extra] = fresh_venv(
+                tmp_path_factory.mktemp(f"venv-{extra or 'base'}"),
+                spec,
+                find_links=built_wheels.main.parent,
             )
-        return cache[key]
+        return cache[extra]
 
     yield make

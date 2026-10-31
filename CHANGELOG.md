@@ -6,7 +6,7 @@ versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.2.0rc1] - 2026-11-01
+## [0.2.0rc2] - 2026-11-01
 
 ### Added
 
@@ -41,8 +41,8 @@ versioning](https://semver.org/spec/v2.0.0.html).
 - The import root is now `agentic_auth`, not `app`. A top-level `app` package collided with
   the application package of almost every FastAPI or Flask project that installed this one.
   Imports become `from agentic_auth.sdk import AgenticAuthClient`, and the control plane runs
-  as `uvicorn agentic_auth.main:app`. `app.*` imports are available through the opt-in
-  `authzai-compat` package for the 0.2.x line.
+  as `uvicorn agentic_auth.main:app`. To migrate:
+  `sed -E 's/\b(from|import) app\./\1 agentic_auth./g'`.
 - Logger names follow the module path, so `app.api.v1.authorize` is now
   `agentic_auth.api.v1.authorize`. Update any logging configuration that names them.
 

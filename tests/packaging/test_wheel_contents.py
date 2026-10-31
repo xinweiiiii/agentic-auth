@@ -72,7 +72,3 @@ def test_every_console_script_resolves(venv_factory, script) -> None:
     )
     result = venv_factory("server").run(code)
     assert result.returncode == 0, result.stderr[-2000:]
-
-
-def test_compat_wheel_ships_only_app(built_wheels) -> None:
-    assert _top_level(built_wheels.compat) == {"app", _dist_info(built_wheels.compat)}

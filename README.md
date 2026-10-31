@@ -74,8 +74,8 @@ Installs as `authzai`, imports as `agentic_auth`. Pick the part you need:
 | Running the control plane | `pip install 'authzai[server]'` | the control plane, sidecar, gateway and boundary adapter |
 
 Add `otel` to any of these for OpenTelemetry traces and logs, or install `all` for
-everything. Code written against 0.1.x imported `app.*`; see
-[`compat/README.md`](compat/README.md) to migrate.
+everything. Code written against 0.1.x imported `app.*`; rename the imports with
+`sed -E 's/\b(from|import) app\./\1 agentic_auth./g'`.
 
 ## Quickstart
 

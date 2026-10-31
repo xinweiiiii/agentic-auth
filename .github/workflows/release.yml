@@ -40,10 +40,9 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --quiet build twine packaging
 
-      - name: Build authzai and authzai-compat
+      - name: Build
         run: |
           python -m build --outdir dist .
-          python -m build --outdir dist compat
           python -m twine check --strict dist/*
 
       # The tag is the version. A wheel built at any other number is refused here, before
@@ -244,9 +243,7 @@ jobs:
           missing=()
           index="https://pypi.org"
           [ "$PRERELEASE" = "true" ] && index="https://test.pypi.org"
-          for name in authzai authzai-compat; do
-            curl -sSf -o /dev/null "$index/pypi/$name/$VERSION/json" || missing+=("$index $name $VERSION")
-          done
+          curl -sSf -o /dev/null "$index/pypi/authzai/$VERSION/json" || missing+=("$index authzai $VERSION")
           assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')" || missing+=("GitHub release $TAG")
           for file in dist/* SHA256SUMS; do
             grep -qx "$(basename "$file")" <<< "$assets" || missing+=("release asset $(basename "$file")")

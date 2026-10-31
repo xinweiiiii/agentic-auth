@@ -6,13 +6,13 @@ no repository secrets.
 
 | Channel | What |
 |---|---|
-| PyPI | `authzai` and `authzai-compat`, wheel and sdist, with PEP 740 attestations |
+| PyPI | `authzai`, wheel and sdist, with PEP 740 attestations |
 | GitHub release | the same files, `SHA256SUMS`, and the CHANGELOG section as notes |
 | GHCR | `ghcr.io/xinweiiiii/agentic-auth:X.Y.Z` (and `:latest`), built from the wheel, attested |
 
 ## One-time setup
 
-- On PyPI and TestPyPI, add a **trusted publisher** for both `authzai` and `authzai-compat`:
+- On PyPI and TestPyPI, add a **trusted publisher** for `authzai`:
   - owner `xinweiiiii`, repository `agentic-auth`
   - workflow `release.yml`, environment `release`
 - In the repository settings, create the environment **`release`**, with the maintainers as
@@ -22,9 +22,7 @@ no repository secrets.
 
 1. Move the `## [Unreleased]` notes in `CHANGELOG.md` under `## [X.Y.Z] - YYYY-MM-DD`, and add
    its compare link at the bottom. The workflow refuses a version with no section.
-2. Set `__version__ = "X.Y.Z"` in `agentic_auth/__init__.py`. Set the `version` and the
-   `authzai==` pin in `compat/pyproject.toml` to the same number
-   (`tests/unit/test_versions_agree.py` holds them equal).
+2. Set `__version__ = "X.Y.Z"` in `agentic_auth/__init__.py`, the version's only source.
 3. Merge that to `main`, then tag the merge commit and push the tag:
 
    ```bash
