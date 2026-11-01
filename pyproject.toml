@@ -181,6 +181,7 @@ addopts = "-m 'not packaging'"
 markers = [
     "packaging: installs the built wheels into fresh environments (deselected by default)",
     "conformance: a scenario run identically against the remote and embedded deployments",
+    "e2e: one test per row of the documentation's Features page, on the embedded control plane",
 ]
 
 [tool.mutmut]
