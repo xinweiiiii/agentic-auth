@@ -43,6 +43,7 @@ from agentic_auth.api.v1 import (
     stepup,
     token,
     transaction,
+    well_known,
 )
 from agentic_auth.config import get_settings
 from agentic_auth.db import get_engine, get_sessionmaker
@@ -121,6 +122,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
     app.include_router(decisions.router)
     app.include_router(audit.router)
     app.include_router(jwks.router)
+    app.include_router(well_known.router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict:

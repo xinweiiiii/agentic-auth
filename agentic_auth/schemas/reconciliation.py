@@ -15,6 +15,13 @@ class DiffCode(StrEnum):
     DATA_CLASS_CONFLICT = "DATA_CLASS_CONFLICT"
     DISCOVERY_UNAVAILABLE = "DISCOVERY_UNAVAILABLE"
     UNKNOWN_TOOL = "UNKNOWN_TOOL"
+    # 0.4.0 (feature 011, M3): the check against each MCP server's authorization server.
+    # A declared data class (an OAuth scope, research R7) that server does not issue.
+    DECLARED_EXCEEDS_AUTHORIZATION_SERVER = "DECLARED_EXCEEDS_AUTHORIZATION_SERVER"
+    # Its metadata could not be fetched: blocks like DISCOVERY_UNAVAILABLE does.
+    AUTHORIZATION_SERVER_UNAVAILABLE = "AUTHORIZATION_SERVER_UNAVAILABLE"
+    # There was nothing to check against. Informational: never changes the status.
+    AUTHORIZATION_SERVER_CHECK_SKIPPED = "AUTHORIZATION_SERVER_CHECK_SKIPPED"
 
 
 HARD_CODES = frozenset(
@@ -22,8 +29,12 @@ HARD_CODES = frozenset(
         DiffCode.DECLARED_EXCEEDS_DISCOVERED,
         DiffCode.DATA_CLASS_CONFLICT,
         DiffCode.UNKNOWN_TOOL,
+        DiffCode.DECLARED_EXCEEDS_AUTHORIZATION_SERVER,
     }
 )
+
+# Reported so the diff says what was and was not checked, but never a reason to block.
+INFORMATIONAL_CODES = frozenset({DiffCode.AUTHORIZATION_SERVER_CHECK_SKIPPED})
 
 
 class DiffEntry(BaseModel):
