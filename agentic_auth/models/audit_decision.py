@@ -176,6 +176,11 @@ class AuditDecision(UUIDPrimaryKey, Base):
     deployment: Mapped[str] = mapped_column(
         String(16), nullable=False, default="server", server_default="server"
     )
+    # 0.4.0 (feature 011): copied from the session at write time, so an auditor sees whether
+    # the consenting human was verified and which IdP client the chain began at. NULL on
+    # rows written before 0.4.0; no backfill, because the trigger refuses UPDATE.
+    principal_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    client_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Set on the audit event that records a step-up widening, pointing at the grant that
     # authorized it. NULL on every ordinary decision.
     step_up_ref: Mapped[uuid.UUID | None] = mapped_column(

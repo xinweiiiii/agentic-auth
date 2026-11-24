@@ -87,24 +87,20 @@ async def test_a_store_from_another_schema_is_refused(tmp_path) -> None:
     assert "export" in str(exc.value).lower()
 
 
-async def test_a_store_one_additive_revision_behind_moves_forward(tmp_path) -> None:
-    """A 0.2.0 store (revision 0006) lacks only imported_audit: opening it creates the
-    table, keeps every existing row, and records the current revision."""
+@pytest.mark.parametrize("older", ["0006_audit_deployment", "0007_imported_audit"])
+async def test_a_0_2_or_0_3_store_is_refused_and_says_to_recreate_it(tmp_path, older) -> None:
+    """0008 adds columns, which opening a store cannot add, so a 0.2.0 (0006) or 0.3.0
+    (0007) store is refused rather than half-read. The embedded-only exception in feature
+    011's spec (FR-019); a server deployment migrates instead."""
     store = tmp_path / "auth.db"
-    async with EmbeddedControlPlane.open(chain_docs(), store=store, capabilities=RESOURCES) as cp:
-        client = cp.client()
-        session = await client.consent(scope=ORCHESTRATOR, user_sub=USER)
-        grant, _ = await client.hop(
-            session.context(), target=f"agent://{KB_SEARCH}", data_class="kb.internal"
-        )
+    async with EmbeddedControlPlane.open(chain_docs(), store=store, capabilities=RESOURCES):
+        pass
     with sqlite3.connect(store) as raw:
-        raw.execute("DROP TABLE imported_audit")
-        raw.execute("UPDATE embedded_meta SET schema_revision = '0006_audit_deployment'")
+        raw.execute(f"UPDATE embedded_meta SET schema_revision = '{older}'")
 
-    async with EmbeddedControlPlane.open(store=store, capabilities=RESOURCES) as cp:
-        assert (await cp.client().audit.chain(grant.action_id))["complete"]
-    with sqlite3.connect(store) as raw:
-        (revision,) = raw.execute("SELECT schema_revision FROM embedded_meta").fetchone()
-        tables = {name for (name,) in raw.execute("SELECT name FROM sqlite_master")}
-    assert revision == "0007_imported_audit"
-    assert "imported_audit" in tables
+    with pytest.raises(StoreVersionMismatch) as exc:
+        async with EmbeddedControlPlane.open(store=store, capabilities=RESOURCES):
+            pass
+    assert exc.value.found == older
+    assert exc.value.expected == "0008_mcp_oauth_baseline"
+    assert "export" in str(exc.value).lower() and "new store" in str(exc.value)

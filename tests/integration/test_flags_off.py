@@ -198,3 +198,53 @@ async def _consent(client, admin_headers):
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+# -- 0.4.0: MCP OAuth 2.1 baseline (feature 011, FR-019) ---------------------------------
+# The three changes that apply with every flag off (relay credential stripping, algorithm
+# pinning, the embedded schema revision) are tested where they are built:
+# test_mcp_proxy_relay_headers.py, test_principal_alg_pinning.py and
+# test_embedded_schema_revision.py. Everything else must be invisible until opted into.
+
+
+async def test_no_mcp_oauth_route_is_advertised_when_its_flag_is_off(
+    client, admin_headers, flags
+) -> None:
+    flags(verified_consent_enabled=False, as_metadata_enabled=False, client_mapping_enabled=False)
+
+    metadata = await client.get("/.well-known/oauth-authorization-server")
+    mappings = await client.get(f"/v1/agents/{uuid.uuid4()}/clients", headers=admin_headers)
+    add = await client.post(
+        f"/v1/agents/{uuid.uuid4()}/clients", headers=admin_headers, json={"client_id": "c"}
+    )
+
+    assert metadata.status_code == 404
+    assert mappings.status_code == 404
+    assert add.status_code == 404
+
+
+async def test_consent_with_verified_consent_off_is_the_0_3_0_request(
+    client, admin_headers, flags
+) -> None:
+    """``user_sub`` is still required and still recorded as asserted."""
+    flags(verified_consent_enabled=False)
+    await register_agents(client, admin_headers, bank_docs(widened=True))
+
+    missing = await client.post(
+        "/v1/consent", headers=admin_headers, json={"scope": BANK_ASSISTANT}
+    )
+    ok = await client.post(
+        "/v1/consent", headers=admin_headers, json={"scope": BANK_ASSISTANT, "user_sub": USER}
+    )
+
+    assert missing.status_code == 422
+    assert ok.status_code == 201
+    assert ok.json()["user_sub"] == USER
+
+
+async def test_a_proxy_without_m1_serves_no_protected_resource_metadata(gateway_stack) -> None:
+    gateway = await gateway_stack.client()
+    response = await gateway.get("/.well-known/oauth-protected-resource")
+    # Whatever the 0.3.0 gateway answers for an unmapped path, it is not a metadata document.
+    assert response.status_code != 200
+    assert "authorization_servers" not in response.text

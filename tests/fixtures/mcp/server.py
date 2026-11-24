@@ -10,6 +10,7 @@ and how they assert the agent never receives the upstream's credential.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -35,6 +36,9 @@ class McpRecorder:
     #: narrowed token arrived rather than the one the agent presented.
     authorizations: list[str] = field(default_factory=list)
     headers: list[dict[str, str]] = field(default_factory=list)
+    #: Raw request bodies, so a no-passthrough test can scan what was sent, not just
+    #: which bearer arrived.
+    bodies: list[str] = field(default_factory=list)
 
     @property
     def last_tool(self) -> str:
@@ -47,7 +51,9 @@ def build_mcp_server(*, require_token: bool = False) -> tuple[Starlette, McpReco
     rec = McpRecorder()
 
     async def rpc(request: Request) -> JSONResponse:
-        body = await request.json()
+        raw = await request.body()
+        rec.bodies.append(raw.decode(errors="replace"))
+        body = json.loads(raw or b"{}")
         method = body.get("method")
         request_id = body.get("id")
         auth = request.headers.get("authorization", "")

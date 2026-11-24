@@ -7,6 +7,7 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from agentic_auth import runtime
+from agentic_auth.oauth.validate import DEFAULT_ALGORITHMS, check_algorithms
 
 
 class Settings(BaseSettings):
@@ -74,6 +75,10 @@ class Settings(BaseSettings):
     principal_idp_audience: str = ""
     # The ID-token claim that must equal "agent://<name>".
     principal_binding_claim: str = "agent"
+    # Signing algorithms accepted on any token from the human IdP: enrollment binding,
+    # step-up and verified consent. Comma-separated, asymmetric only. Before 0.4.0 the
+    # token's own header chose (feature 011, research F4); this applies with every flag off.
+    principal_idp_algorithms: str = ",".join(DEFAULT_ALGORITHMS)
     # How long an offline verifier may go without refreshing revocation state before it
     # refuses every identity as stale.
     revocation_freshness_seconds: int = 30
@@ -134,6 +139,36 @@ class Settings(BaseSettings):
     telemetry_identity_disclosure: bool = False
     telemetry_allow_sample_ratio: float = 1.0
 
+    # -- 0.4.0: MCP OAuth 2.1 baseline (feature 011) ---------------------------------
+    # Each milestone is off by default, so a 0.3.0 deployment is unchanged until an
+    # operator opts in. M1 is configured on each proxy or gateway (AGENTIC_AUTH_GATEWAY_*).
+    #
+    # verified_consent_enabled (M2): consent requires the user's IdP token as
+    #   ``subject_token``, verifies it against the principal IdP, and roots the session at
+    #   ``iss#sub``. An asserted ``user_sub`` alone is refused.
+    # as_metadata_enabled (M3): /.well-known/oauth-authorization-server is routed and
+    #   reconciliation follows each MCP server's authorization server. Needs an https
+    #   ``issuer``, which changes ``iss`` in new tokens.
+    # client_mapping_enabled (M4): /v1/agents/{id}/clients is routed, and consent picks the
+    #   scope from the agent the token's client maps to. Needs M2.
+    verified_consent_enabled: bool = False
+    as_metadata_enabled: bool = False
+    client_mapping_enabled: bool = False
+    # Bearer that may call POST /v1/consent and nothing else: what a connector proxy or
+    # gateway holds, so it never needs the admin token. Empty disables it.
+    consent_token: str = ""
+    # Audiences consent accepts on a subject_token, comma-separated: this control plane's
+    # own identifier plus the resource URL of every proxy that relays tokens to consent.
+    consent_idp_audiences: str = ""
+
+    @property
+    def principal_algorithms(self) -> tuple[str, ...]:
+        return check_algorithms(self.principal_idp_algorithms.split(","))
+
+    @property
+    def consent_audiences(self) -> tuple[str, ...]:
+        return tuple(a.strip() for a in self.consent_idp_audiences.split(",") if a.strip())
+
     def model_post_init(self, _context: object) -> None:
         """Refuse a configuration that cannot do what it claims.
 
@@ -150,6 +185,40 @@ class Settings(BaseSettings):
                 "recoverable deny reason (SCOPE_NOT_CONSENTED) fires only for a data class "
                 "the pinned policy never declared, which step-up may never grant. Set "
                 "AGENTIC_AUTH_CONSENT_GRANULARITY_ENABLED=true, or turn step-up off."
+            )
+        try:
+            _ = self.principal_algorithms
+        except ValueError as exc:
+            raise ValueError(f"AGENTIC_AUTH_PRINCIPAL_IDP_ALGORITHMS: {exc}") from exc
+        self._check_mcp_oauth()
+
+    def _check_mcp_oauth(self) -> None:
+        """Feature 011 start-up refusals (FR-020): each names the setting to fix."""
+        if self.client_mapping_enabled and not self.verified_consent_enabled:
+            raise ValueError(
+                "AGENTIC_AUTH_CLIENT_MAPPING_ENABLED requires "
+                "AGENTIC_AUTH_VERIFIED_CONSENT_ENABLED: a client is read from a verified IdP "
+                "token, and without verified consent there is none."
+            )
+        if self.verified_consent_enabled:
+            for name in ("principal_idp_issuer", "principal_idp_jwks_url"):
+                if not getattr(self, name):
+                    raise ValueError(
+                        f"AGENTIC_AUTH_VERIFIED_CONSENT_ENABLED requires "
+                        f"AGENTIC_AUTH_{name.upper()}: consent verifies the user's token "
+                        "against the principal IdP."
+                    )
+            if not self.consent_audiences:
+                raise ValueError(
+                    "AGENTIC_AUTH_VERIFIED_CONSENT_ENABLED requires "
+                    "AGENTIC_AUTH_CONSENT_IDP_AUDIENCES: the audiences a subject_token may be "
+                    "issued for (this control plane, and each proxy that relays to it)."
+                )
+        if self.as_metadata_enabled and not self.issuer.startswith("https://"):
+            raise ValueError(
+                "AGENTIC_AUTH_AS_METADATA_ENABLED requires AGENTIC_AUTH_ISSUER to be an https "
+                f"URL (RFC 8414), got {self.issuer!r}. Changing it changes `iss` in new "
+                "tokens: update any offline verifier pinned to the old value."
             )
 
     # NOTE: there is deliberately no server-side observe-mode setting. The PDP is

@@ -36,11 +36,18 @@ class Upstream:
     cannot supply them. Either pin them here, or let an SDK-aware agent send them per
     request as ``X-Agentic-Target`` / ``X-Agentic-Data-Class``. If neither produces a
     value the call is blocked — guessing a data class would be inventing consent.
+
+    ``relay_authorization`` is an operator credential the connector proxy sends upstream
+    on relayed, non-``tools/call`` methods. The client's own credentials are never relayed
+    (feature 011, research R4), so an upstream that wants one on ``initialize`` or
+    ``tools/list`` gets this instead. It is the operator's secret, so it stays out of
+    ``repr`` and therefore out of logs.
     """
 
     url: str
     target: str | None = None
     data_class: str | None = None
+    relay_authorization: str | None = field(default=None, repr=False)
 
     @classmethod
     def parse(cls, prefix: str, raw: Any) -> Upstream:
@@ -50,15 +57,25 @@ class Upstream:
             raise SidecarConfigError(
                 f"upstream_map[{prefix!r}] must be a URL string or an object with a 'url'"
             )
-        unknown = set(raw) - {"url", "target", "data_class"}
+        unknown = set(raw) - {"url", "target", "data_class", "relay_authorization"}
         if unknown:
             raise SidecarConfigError(
                 f"upstream_map[{prefix!r}] has unknown keys: {sorted(unknown)}"
+            )
+        relay_authorization = raw.get("relay_authorization")
+        if relay_authorization is not None and (
+            not isinstance(relay_authorization, str) or not relay_authorization.strip()
+        ):
+            # An empty secret would send an empty Authorization header, which some servers
+            # treat differently from none. Refuse it rather than guess which was meant.
+            raise SidecarConfigError(
+                f"upstream_map[{prefix!r}].relay_authorization must be a non-empty string"
             )
         return cls(
             url=str(raw["url"]).rstrip("/"),
             target=raw.get("target"),
             data_class=raw.get("data_class"),
+            relay_authorization=relay_authorization,
         )
 
 

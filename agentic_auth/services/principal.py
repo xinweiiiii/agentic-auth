@@ -11,20 +11,19 @@ Three outcomes are distinct on purpose:
   the network — and must never become a quarantine.
 
 The IdP's JWKS is fetched over ``httpx`` through a module-level factory so tests can route
-it to an in-process fake; PyJWT's ``PyJWK`` loads the OKP/EC/RSA key it names.
+it to an in-process fake. Verification itself is ``agentic_auth.oauth.validate``.
 """
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import Any
 
 import httpx
-import jwt
 
 from agentic_auth import runtime
 from agentic_auth.config import Settings, get_settings
+from agentic_auth.oauth.validate import IdpUnavailable, JwksCache, TokenInvalid, TokenValidator
 from agentic_auth.services.enrollment_rules import (
     Bound,
     NotConfigured,
@@ -38,10 +37,6 @@ logger = logging.getLogger(__name__)
 AGENT_PREFIX = "agent://"
 
 
-class _IdpUnreachable(Exception):
-    """Internal: the JWKS fetch failed. ``bind`` turns it into ``Unreachable``."""
-
-
 def _default_client() -> httpx.AsyncClient:
     return httpx.AsyncClient(timeout=httpx.Timeout(5.0))
 
@@ -50,7 +45,26 @@ def _default_client() -> httpx.AsyncClient:
 jwks_http_client: Callable[[], httpx.AsyncClient] = _default_client
 
 
+def idp_http() -> httpx.AsyncClient:
+    """The client for this request's IdP calls.
+
+    An embedded instance reaches its own identity provider through its own transport,
+    whatever this module's hook has been pointed at for the rest of the process.
+    """
+    current = runtime.override()
+    return current.http if current is not None else jwks_http_client()
+
+
 class PrincipalBinder:
+    """Verifies human IdP tokens through the shared validator (feature 011, research F4).
+
+    Before 0.4.0 this decoded with ``algorithms=[header["alg"]]``, which let the token
+    choose how it was checked. It now goes through ``agentic_auth.oauth.validate`` with the
+    operator's algorithm list, like every other place an IdP token enters. Clock leeway
+    stays at zero here, as it was: enrollment and step-up keep their 0.3.0 semantics apart
+    from the algorithm pin.
+    """
+
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
 
@@ -61,6 +75,17 @@ class PrincipalBinder:
             s.principal_idp_issuer and s.principal_idp_jwks_url and s.principal_idp_audience
         )
 
+    def _validator(self) -> TokenValidator:
+        s = self._settings
+        return TokenValidator(
+            issuer=s.principal_idp_issuer,
+            audiences=[s.principal_idp_audience],
+            jwks=JwksCache(s.principal_idp_jwks_url, idp_http),
+            algorithms=s.principal_algorithms,
+            leeway=0,
+            require=("exp", "iat", "sub", "iss", "aud"),
+        )
+
     async def bind(self, assertion: str | None, agent_name: str) -> PrincipalResult:
         if not self.configured:
             return NotConfigured()
@@ -68,42 +93,22 @@ class PrincipalBinder:
             return Unbindable("no principal assertion presented")
 
         try:
-            header = jwt.get_unverified_header(assertion)
-        except jwt.PyJWTError as exc:
-            return Unbindable(f"assertion is not a JWT: {exc}")
-        kid = header.get("kid")
-
-        try:
-            jwks = await self._fetch_jwks()
-        except _IdpUnreachable as exc:
+            verified = await self._validator().validate(assertion)
+        except IdpUnavailable as exc:
             logger.warning("principal identity provider unreachable: %s", exc)
             return Unreachable(str(exc))
-
-        key = _key_for(jwks, kid)
-        if key is None:
-            return Unbindable(f"assertion kid {kid!r} is not in the identity provider's JWKS")
+        except TokenInvalid as exc:
+            return Unbindable(f"assertion did not verify: {exc.check.value}")
 
         s = self._settings
-        try:
-            claims: dict[str, Any] = jwt.decode(
-                assertion,
-                key,
-                algorithms=[header.get("alg", "EdDSA")],
-                issuer=s.principal_idp_issuer,
-                audience=s.principal_idp_audience,
-                options={"require": ["exp", "iat", "sub", "iss", "aud"]},
-            )
-        except jwt.PyJWTError as exc:
-            return Unbindable(f"assertion did not verify: {exc}")
-
-        bound_agent = claims.get(s.principal_binding_claim)
+        bound_agent = verified.claims.get(s.principal_binding_claim)
         expected = f"{AGENT_PREFIX}{agent_name}"
         if bound_agent != expected:
             return Unbindable(
                 f"assertion names {bound_agent!r}, not {expected!r} "
                 f"(claim {s.principal_binding_claim!r})"
             )
-        return Bound(f"{claims['iss']}#{claims['sub']}")
+        return Bound(verified.principal)
 
     async def verify_human(self, assertion: str) -> str:
         """Verify a HUMAN's ID token and return its subject (Phase 5, FR-025).
@@ -118,64 +123,11 @@ class PrincipalBinder:
         """
         if not self.configured:
             raise ValueError("no human identity provider is configured")
-
         try:
-            header = jwt.get_unverified_header(assertion)
-        except jwt.PyJWTError as exc:
-            raise ValueError(f"credential is not a JWT: {exc}") from exc
-
-        jwks = await self._fetch_jwks()
-        key = _key_for(jwks, header.get("kid"))
-        if key is None:
-            raise ValueError(f"kid {header.get('kid')!r} is not in the provider's JWKS")
-
-        s = self._settings
-        try:
-            claims: dict[str, Any] = jwt.decode(
-                assertion,
-                key,
-                algorithms=[header.get("alg", "EdDSA")],
-                issuer=s.principal_idp_issuer,
-                audience=s.principal_idp_audience,
-                options={"require": ["exp", "iat", "sub", "iss", "aud"]},
-            )
-        except jwt.PyJWTError as exc:
-            raise ValueError(f"credential did not verify: {exc}") from exc
-        return f"{claims['iss']}#{claims['sub']}"
-
-    async def _fetch_jwks(self) -> dict[str, Any]:
-        # An embedded instance reaches its own identity provider through its own transport,
-        # whatever this module's hook has been pointed at for the rest of the process.
-        current = runtime.override()
-        client = current.http if current is not None else jwks_http_client()
-        try:
-            response = await client.get(self._settings.principal_idp_jwks_url)
-        except httpx.HTTPError as exc:
-            raise _IdpUnreachable(f"could not fetch JWKS: {type(exc).__name__}") from exc
-        if response.status_code >= 500:
-            raise _IdpUnreachable(f"identity provider returned {response.status_code}")
-        if response.status_code != 200:
-            # A 4xx is the IdP telling us the URL is wrong: a configuration fact, so a
-            # deployment notices, but not something a retry fixes. Treated as unreachable
-            # because enrolling nobody is safer than quarantining everybody.
-            raise _IdpUnreachable(f"identity provider returned {response.status_code}")
-        try:
-            body = response.json()
-        except ValueError as exc:
-            raise _IdpUnreachable("identity provider JWKS is not JSON") from exc
-        if not isinstance(body, dict) or not isinstance(body.get("keys"), list):
-            raise _IdpUnreachable("identity provider JWKS is malformed")
-        return body
+            verified = await self._validator().validate(assertion)
+        except TokenInvalid as exc:
+            raise ValueError(f"credential did not verify: {exc.check.value}") from exc
+        return verified.principal
 
 
-def _key_for(jwks: dict[str, Any], kid: str | None) -> Any:
-    for entry in jwks.get("keys", []):
-        if entry.get("kid") == kid:
-            try:
-                return jwt.PyJWK(dict(entry)).key
-            except jwt.PyJWTError:
-                return None
-    return None
-
-
-__all__ = ["PrincipalBinder", "jwks_http_client"]
+__all__ = ["PrincipalBinder", "idp_http", "jwks_http_client"]

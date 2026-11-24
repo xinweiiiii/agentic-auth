@@ -5,15 +5,14 @@ The migrations are not shipped in the wheel, so the revision is recorded here.
 moving with it. A store created at a different revision is refused rather than half-read.
 """
 
-SCHEMA_REVISION = "0007_imported_audit"
+SCHEMA_REVISION = "0008_mcp_oauth_baseline"
 
 # Revisions an older store may be at that differ from SCHEMA_REVISION only by new tables, so
 # opening one creates the missing tables and moves it forward. Anything not listed here is
 # refused rather than guessed at. Add a revision only when the step after it is purely
 # additive for the embedded store.
-ADDITIVE_FROM = frozenset(
-    {
-        # 0007 adds imported_audit, which the embedded store never writes.
-        "0006_audit_deployment",
-    }
-)
+#
+# Empty since 0008: it adds columns to sessions and audit_decisions, which creating missing
+# tables cannot do, so a 0.2.0 or 0.3.0 store is refused and must be re-created. This is the
+# embedded-only exception listed in feature 011's spec (FR-019); server deployments migrate.
+ADDITIVE_FROM: frozenset[str] = frozenset()
