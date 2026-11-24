@@ -28,6 +28,7 @@ import agentic_auth
 from agentic_auth import observability
 from agentic_auth.api.errors import register_error_handlers
 from agentic_auth.api.v1 import (
+    agent_clients,
     agents,
     audit,
     authorize,
@@ -116,6 +117,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
     app.include_router(identity.router)
     app.include_router(stepup.router)
     app.include_router(sandbox.router)
+    app.include_router(agent_clients.router)
     app.include_router(decisions.router)
     app.include_router(audit.router)
     app.include_router(jwks.router)
