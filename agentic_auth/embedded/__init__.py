@@ -214,22 +214,26 @@ class EmbeddedControlPlane:
             issuer_key = IssuerKey(private_key=private, kid=_thumbprint(private.public_key()))
             await remember_issuer_key(handle, issuer_key.private_pem().decode())
 
-        config = _EmbeddedSettings(
+        defaults: dict[str, Any] = {
             # Informational only: the engine below is what the instance uses.
-            database_url=f"sqlite+aiosqlite:///{handle.path}",
-            redis_url="redis://embedded.invalid/0",
+            "database_url": f"sqlite+aiosqlite:///{handle.path}",
+            "redis_url": "redis://embedded.invalid/0",
             # Per-instance bearers. Nothing outside this object ever needs them.
-            admin_token=secrets.token_urlsafe(32),
-            audit_read_token=secrets.token_urlsafe(32),
-            enroll_token=secrets.token_urlsafe(32),
-            principal_idp_issuer=_idp.ISSUER,
-            principal_idp_jwks_url=f"{_idp.ISSUER}/.well-known/jwks.json",
-            principal_idp_audience=_idp.AUDIENCE,
-            principal_binding_claim=_idp.BINDING_CLAIM,
-            identity_required=identity_required,
-            telemetry_enabled=False,
-            **settings,
-        )
+            "admin_token": secrets.token_urlsafe(32),
+            "audit_read_token": secrets.token_urlsafe(32),
+            "enroll_token": secrets.token_urlsafe(32),
+            "consent_token": secrets.token_urlsafe(32),
+            "principal_idp_issuer": _idp.ISSUER,
+            "principal_idp_jwks_url": f"{_idp.ISSUER}/.well-known/jwks.json",
+            "principal_idp_audience": _idp.AUDIENCE,
+            "principal_binding_claim": _idp.BINDING_CLAIM,
+            # 0.4.0: what the built-in IdP mints for, so turning on verified consent needs
+            # nothing else. A test that puts a proxy in front adds the proxy's URL.
+            "consent_idp_audiences": _idp.AUDIENCE,
+            "identity_required": identity_required,
+            "telemetry_enabled": False,
+        }
+        config = _EmbeddedSettings(**{**defaults, **settings})
 
         router = HostRouter()
         http = httpx.AsyncClient(transport=router, timeout=httpx.Timeout(10.0))

@@ -263,3 +263,58 @@ async def test_the_dedicated_reader_token_can_read_the_chain(
         get_settings.cache_clear()
 
     assert r.status_code == 200
+
+
+# -- 0.4.0: verified consent on the chain root (feature 011) ------------------------------
+
+
+async def test_the_chain_root_says_how_the_human_was_established(
+    client, admin_headers, register_chain, consent, chain_schema
+) -> None:
+    await register_chain()
+    session = await consent()
+    decision = (
+        await authorize(
+            client, session["root_grant"], target=f"agent://{KB_SEARCH}", data_class="kb.internal"
+        )
+    ).json()
+
+    body = (
+        await client.get(f"/v1/audit/actions/{decision['action_id']}/chain", headers=admin_headers)
+    ).json()
+
+    assert body["root_consent"]["principal_source"] == "asserted"
+    assert body["root_consent"]["client_id"] is None
+    assert_matches_contract(body, chain_schema)
+
+
+async def test_a_row_recorded_before_0_4_0_reports_no_principal_source(
+    client, admin_headers, register_chain, consent, chain_schema, _engine
+) -> None:
+    await register_chain()
+    session = await consent()
+    decision = (
+        await authorize(
+            client, session["root_grant"], target=f"agent://{KB_SEARCH}", data_class="kb.internal"
+        )
+    ).json()
+    # A pre-0008 row: the columns exist but were never written. Inserted rows cannot be
+    # updated (append-only), so stand one up beside the real one by copying it with NULLs.
+    async with _engine.begin() as conn:
+        await conn.execute(text("ALTER TABLE audit_decisions DISABLE TRIGGER USER"))
+        try:
+            await conn.execute(
+                text(
+                    "UPDATE audit_decisions SET principal_source = NULL, client_id = NULL "
+                    "WHERE id = :id"
+                ),
+                {"id": decision["action_id"]},
+            )
+        finally:
+            await conn.execute(text("ALTER TABLE audit_decisions ENABLE TRIGGER USER"))
+
+    body = (
+        await client.get(f"/v1/audit/actions/{decision['action_id']}/chain", headers=admin_headers)
+    ).json()
+    assert body["root_consent"]["principal_source"] is None
+    assert_matches_contract(body, chain_schema)

@@ -37,6 +37,7 @@ from agentic_auth.services.audit import AuditService, RecordResult
 from agentic_auth.services.guarantee import note_level
 from agentic_auth.services.metrics import get_metrics
 from agentic_auth.services.pdp import Decision, decide
+from agentic_auth.services.sessions import PinnedSession
 from agentic_auth.services.stepup import StepUpService, granted_classes
 from agentic_auth.services.taint import (
     Marked,
@@ -140,6 +141,7 @@ async def authorize(
                     message="taint state could not be read for a protected target",
                 ),
                 policy_version=session.policy_version,
+                session=session,
                 token=token,
                 headers=request.headers,
             )
@@ -215,6 +217,7 @@ async def authorize(
         body,
         decision,
         policy_version=session.policy_version,
+        session=session,
         token=token,
         taint_source=taint_source,
         headers=request.headers,
@@ -379,6 +382,7 @@ async def _record(
     taint_source: str | None = None,
     step_up_ref: uuid.UUID | None = None,
     headers: Mapping[str, str] | None = None,
+    session: PinnedSession | None = None,
 ) -> tuple[AuthorizeDecision, RecordResult]:
     """Record, commit, then render from the result. Every decision is recorded — including
     the ones caused by an unreachable dependency, which are the ones an operator most needs
@@ -408,6 +412,9 @@ async def _record(
         # Phase 5. What the enforcement point said it is; recorded on every row.
         guarantee_level=body.guarantee.value,
         step_up_ref=step_up_ref,
+        # 0.4.0. None only when the session itself could not be read.
+        principal_source=session.principal_source if session is not None else None,
+        client_id=session.client_id if session is not None else None,
     )
 
     # A call leaves the host on an allow, and on an unenforced (observe-mode) deny. Either

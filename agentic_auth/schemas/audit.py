@@ -24,6 +24,7 @@ from pydantic import (
 
 from agentic_auth.boundary.guarantee import Guarantee
 from agentic_auth.schemas.authorize import DenyReason
+from agentic_auth.schemas.common import PrincipalSource
 from agentic_auth.services.audit_chain import ChainBreak
 
 
@@ -36,6 +37,10 @@ class RootConsent(BaseModel):
     scope: str
     consented_at: datetime
     session_id: uuid.UUID
+    # 0.4.0 (feature 011). How the human was established, and the IdP client the chain began
+    # at. Null on actions recorded before 0.4.0.
+    principal_source: PrincipalSource | None = None
+    client_id: str | None = None
 
 
 class ChainBreakRead(BaseModel):

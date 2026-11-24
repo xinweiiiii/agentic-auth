@@ -100,6 +100,8 @@ class AuditService:
         privileged: bool = False,
         guarantee_level: str | None = None,
         step_up_ref: uuid.UUID | None = None,
+        principal_source: str | None = None,
+        client_id: str | None = None,
     ) -> RecordResult:
         action_id = uuid.uuid4()
         ts = datetime.now(UTC)
@@ -173,6 +175,10 @@ class AuditService:
                 guarantee_level=guarantee_level,
                 deployment=runtime.deployment(),
                 step_up_ref=step_up_ref,
+                # 0.4.0. Copied from the session, so the row says whether its root was a
+                # verified human and which IdP client the chain began at.
+                principal_source=principal_source,
+                client_id=client_id,
             )
             await self._commit(db)
         except Exception as exc:

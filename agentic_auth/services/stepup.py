@@ -322,6 +322,8 @@ class StepUpService:
                 policy_version=blocked.policy_version,
                 act_chain=blocked.act_chain,
                 guarantee_level=blocked.guarantee_level,
+                principal_source=blocked.principal_source,
+                client_id=blocked.client_id,
                 step_up_ref=grant.id,
                 parent_action_id=blocked.parent_action_id,
                 chain=None,

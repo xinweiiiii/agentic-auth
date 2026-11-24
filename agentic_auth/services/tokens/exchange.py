@@ -70,6 +70,9 @@ class ExchangeDenied(Exception):
     # any traceback or `logger.exception` that renders this exception. The audit record only
     # ever reads jti/holder/act_chain/action_id off it.
     token: VerifiedToken = field(repr=False, kw_only=True)
+    # 0.4.0. From the session, for the record.
+    principal_source: str | None = field(default=None, kw_only=True)
+    client_id: str | None = field(default=None, kw_only=True)
 
     def __str__(self) -> str:
         return self.decision.message or "hop denied"
@@ -195,6 +198,8 @@ class TokenExchangeService:
                 act_chain=subject.act_chain,
                 taint_source=taint_source,
                 token=subject,
+                principal_source=session.principal_source,
+                client_id=session.client_id,
             )
 
         if body.audience is not None and body.audience != body.resource:

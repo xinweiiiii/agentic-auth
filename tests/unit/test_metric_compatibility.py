@@ -65,10 +65,16 @@ PHASE_5_CONTROL_PLANE: dict[str, tuple[str, ...]] = {
     "agentic_auth_proposals_ratified": ("edited",),
 }
 
+# 0.4.0 (feature 011). Frozen on publication, like the others.
+V0_4_0_CONTROL_PLANE: dict[str, tuple[str, ...]] = {
+    "agentic_auth_consent_refusals": ("reason",),
+}
+
 PHASE_3_4_CONTROL_PLANE: dict[str, tuple[str, ...]] = {
     **PHASE_3_CONTROL_PLANE,
     **PHASE_4_CONTROL_PLANE,
     **PHASE_5_CONTROL_PLANE,
+    **V0_4_0_CONTROL_PLANE,
 }
 
 PHASE_3_DRIFT: dict[str, tuple[str, ...]] = {
@@ -183,6 +189,7 @@ def test_the_new_families_match_the_surface_contract() -> None:
         ("phase4.md", PHASE_4_CONTROL_PLANE),
         ("phase4.md", PHASE_4_VERIFIER),
         ("phase5.md", PHASE_5_CONTROL_PLANE),
+        ("v0.4.0.md", V0_4_0_CONTROL_PLANE),
     ],
     ids=[
         "phase3-control-plane",
@@ -190,6 +197,7 @@ def test_the_new_families_match_the_surface_contract() -> None:
         "phase4-control-plane",
         "phase4-verifier",
         "phase5-control-plane",
+        "v0.4.0-control-plane",
     ],
 )
 def test_the_phase_contracts_still_name_every_family(

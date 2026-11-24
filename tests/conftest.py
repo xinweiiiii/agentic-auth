@@ -226,13 +226,19 @@ async def fake_idp(flags) -> AsyncIterator:
         principal_idp_audience=AUDIENCE,
         principal_binding_claim="agent",
     )
+    from agentic_auth.services import sessions as sessions_module
+
     http = httpx.AsyncClient(transport=ASGITransport(app=app))
     previous = principal_module.jwks_http_client
     principal_module.jwks_http_client = lambda: http
+    # Each test's fake IdP mints fresh keys under the same kid and URL, so cached keys from
+    # an earlier test would refuse this one's tokens.
+    sessions_module.reset_validators()
     try:
         yield state
     finally:
         principal_module.jwks_http_client = previous
+        sessions_module.reset_validators()
         await http.aclose()
 
 
@@ -646,3 +652,132 @@ def telemetry(metrics_registry):
     from agentic_auth import observability as _obs
 
     _obs._reset_for_tests()
+
+
+@pytest_asyncio.fixture
+async def oauth_stack(client, redis_client, fake_idp, flags, register_chain):
+    """A connector proxy and a gateway as OAuth protected resources (feature 011, M1).
+
+    In-process, no ports: one router sends ``pdp.test`` to the control plane, ``idp.test`` to
+    the fake IdP, ``kb.internal`` to a recording MCP server and anything else to a recording
+    upstream. The control plane has verified consent on, accepting tokens issued for either
+    enforcement point, and a consent token the enforcement points hold instead of the admin
+    token. The orchestrator scope is registered; its root agent declares
+    ``mcp://kb.internal/search`` with ``kb.public``.
+    """
+    from types import SimpleNamespace
+
+    from agentic_auth.boundary.mcp import build_app as build_proxy
+    from agentic_auth.gateway.app import build_app as build_gateway
+    from agentic_auth.gateway.config import GatewayConfig
+    from agentic_auth.sidecar.config import Upstream
+    from tests.fixtures.chains import ORCHESTRATOR
+    from tests.fixtures.idp.server import ISSUER, JWKS_URL, build_idp
+    from tests.fixtures.mcp.server import build_mcp_server
+    from tests.fixtures.upstream.server import build_upstream
+
+    proxy_url = "https://mcp-proxy.test"
+    gateway_url = "https://gateway.test"
+    consent_token = "pep-consent-token"
+    flags(
+        verified_consent_enabled=True,
+        consent_idp_audiences=f"{proxy_url},{gateway_url}",
+        consent_token=consent_token,
+    )
+    await register_chain()
+
+    idp_app, _ = build_idp(fake_idp)
+    mcp_app, mcp_recorder = build_mcp_server()
+    upstream_app, upstream_recorder = build_upstream()
+
+    class _Router(httpx.AsyncBaseTransport):
+        def __init__(self) -> None:
+            self.pdp = ASGITransport(app=client._transport.app)
+            self.idp = ASGITransport(app=idp_app)
+            self.mcp = ASGITransport(app=mcp_app)
+            self.upstream = ASGITransport(app=upstream_app)
+            self.pdp_down = False
+            self.upstream_down = False
+            self.consent_calls = 0
+
+        async def handle_async_request(self, request):
+            host = request.url.host
+            if host == "pdp.test":
+                if self.pdp_down:
+                    raise httpx.ConnectError("PDP is down")
+                if request.url.path == "/v1/consent":
+                    self.consent_calls += 1
+                return await self.pdp.handle_async_request(request)
+            if host == "idp.test":
+                return await self.idp.handle_async_request(request)
+            if self.upstream_down:
+                raise httpx.ConnectError("upstream is down")
+            if host == "kb.internal":
+                return await self.mcp.handle_async_request(request)
+            return await self.upstream.handle_async_request(request)
+
+    router = _Router()
+    m1 = {
+        "oauth_resource_enabled": True,
+        "idp_issuer": ISSUER,
+        "idp_jwks_url": JWKS_URL,
+        "consent_token": consent_token,
+        "consent_scope": ORCHESTRATOR,
+    }
+    clients: list[httpx.AsyncClient] = []
+
+    def _client(app, base_url: str) -> httpx.AsyncClient:
+        c = httpx.AsyncClient(transport=ASGITransport(app=app), base_url=base_url)
+        clients.append(c)
+        return c
+
+    def proxy(**overrides) -> httpx.AsyncClient:
+        settings = {**m1, "resource_url": proxy_url, **overrides}
+        table = settings.pop(
+            "route_table",
+            {(None, "/mcp"): Upstream(url="http://kb.internal", data_class="kb.public")},
+        )
+        config = GatewayConfig(pdp_url="http://pdp.test", route_table=table, **settings)
+        app = build_proxy(config.validate(), client=httpx.AsyncClient(transport=router))
+        return _client(app, "https://mcp-proxy.test")
+
+    def gateway(**overrides) -> httpx.AsyncClient:
+        settings = {**m1, "resource_url": gateway_url, **overrides}
+        table = settings.pop(
+            "route_table",
+            {
+                (None, "/kb"): Upstream(
+                    url="http://upstream.test",
+                    target="mcp://kb.internal/search",
+                    data_class="kb.public",
+                )
+            },
+        )
+        from prometheus_client import CollectorRegistry
+
+        config = GatewayConfig(pdp_url="http://pdp.test", route_table=table, **settings)
+        app = build_gateway(
+            config.validate(),
+            client=httpx.AsyncClient(transport=router),
+            registry=CollectorRegistry(),
+        )
+        return _client(app, "https://gateway.test")
+
+    def token(**claims) -> str:
+        """An IdP access token for the proxy, unless ``aud`` says otherwise."""
+        return fake_idp.mint_access_token(**{"aud": proxy_url, **claims})
+
+    yield SimpleNamespace(
+        idp=fake_idp,
+        router=router,
+        mcp=mcp_recorder,
+        upstream=upstream_recorder,
+        proxy=proxy,
+        gateway=gateway,
+        token=token,
+        proxy_url=proxy_url,
+        gateway_url=gateway_url,
+        scope=ORCHESTRATOR,
+    )
+    for c in clients:
+        await c.aclose()

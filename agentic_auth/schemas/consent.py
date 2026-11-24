@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer
+
+from agentic_auth.schemas.common import PrincipalSource
 
 MIN_SESSION_TTL = 60
 MAX_SESSION_TTL = 86_400
@@ -13,13 +17,29 @@ MAX_SESSION_TTL = 86_400
 MAX_CONSENTED_DATA_CLASSES = 256
 
 
+class SubjectTokenType(StrEnum):
+    """RFC 8693 token type URIs consent accepts as evidence of the human."""
+
+    ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token"
+    ID_TOKEN = "urn:ietf:params:oauth:token-type:id_token"
+
+
 class ConsentCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    scope: str = Field(max_length=255, min_length=1)
-    # Asserted by the integrator in this phase. Binding it to a verified IdP identity is
-    # Phase 4's identity work.
-    user_sub: str = Field(max_length=255, min_length=1)
+    # Required, except when client mapping (M4) is on and the token's client is mapped: the
+    # scope is then the mapped agent's, and if given here it must equal it.
+    scope: str | None = Field(default=None, max_length=255, min_length=1)
+    # The consenting human. With verified consent off (the default) it is asserted by the
+    # integrator and required. With it on it is optional, taken from ``subject_token``, and
+    # if given must equal the verified ``iss#sub``. Required-ness depends on a setting, so
+    # the service enforces it, not this schema.
+    user_sub: str | None = Field(default=None, max_length=255, min_length=1)
+    # 0.4.0 (feature 011, M2). The user's IdP token, as evidence of who consented. Verified
+    # by the control plane itself, even when a proxy already verified it. Never stored:
+    # only its SHA-256 lands on the session.
+    subject_token: str | None = Field(default=None, min_length=1, max_length=16384, repr=False)
+    subject_token_type: SubjectTokenType = SubjectTokenType.ACCESS_TOKEN
     ttl_seconds: int | None = Field(default=None, ge=MIN_SESSION_TTL, le=MAX_SESSION_TTL)
     # Phase 5. The subset of the pinned policy's data classes this consent covers.
     #
@@ -57,6 +77,20 @@ class ConsentRead(BaseModel):
     expires_at: datetime
     # Phase 5. What was actually pinned: null means every class the policy declares.
     data_classes: list[str] | None = None
+    # 0.4.0. How the consenting human was established, and the IdP client (M4). Omitted from
+    # the response, not sent as null, until they carry information: a 0.3.0 SDK builds its
+    # Session from every key it receives, so a new key would break every deployed client
+    # that has not opted into 0.4.0's features (spec FR-019).
+    principal_source: PrincipalSource | None = None
+    client_id: str | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_0_4_0_fields(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data: dict[str, Any] = handler(self)
+        for name in ("principal_source", "client_id"):
+            if data.get(name) is None:
+                data.pop(name, None)
+        return data
 
 
 class SessionRead(BaseModel):

@@ -118,6 +118,10 @@ class ChainQueryService:
             scope=session.scope,
             consented_at=session.created_at,
             session_id=session.id,
+            # From the row, not the session: a row written before 0.4.0 says null rather
+            # than claiming the column default it never recorded.
+            principal_source=row.principal_source,
+            client_id=row.client_id,
         )
 
         if row.chain is None:

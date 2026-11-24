@@ -225,6 +225,12 @@ components:
         scope: { type: string }
         consented_at: { type: string, format: date-time }
         session_id: { type: string, format: uuid }
+        # 0.4.0 (feature 011). Whether the consenting human was verified from an IdP token,
+        # and the IdP client the chain began at. Null on actions recorded before 0.4.0.
+        principal_source:
+          type: [string, 'null']
+          enum: [asserted, verified, embedded-test, null]
+        client_id: { type: [string, 'null'] }
 
     ChainHop:
       type: object

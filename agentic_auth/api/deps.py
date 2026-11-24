@@ -60,6 +60,25 @@ async def require_enroller(authorization: Annotated[str | None, Header()] = None
         raise UnauthorizedError("invalid enroller bearer token")
 
 
+async def require_consenter(authorization: Annotated[str | None, Header()] = None) -> None:
+    """Consent is called with the dedicated consent token or the admin token (feature 011).
+
+    A connector proxy or gateway starts sessions for the users it validates, so it needs to
+    call consent; it must not hold the admin token, which could register manifests (research
+    F2). An empty setting disables the consent token, never accepts an empty bearer.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise UnauthorizedError("missing or malformed consenter bearer token")
+    presented = authorization.removeprefix("Bearer ").strip().encode()
+    settings = get_settings()
+    accepted = [t.encode() for t in (settings.consent_token, settings.admin_token) if t]
+    # Compare against every accepted token, not just until the first match, so timing does
+    # not reveal which one was presented.
+    matches = [hmac.compare_digest(presented, token) for token in accepted]
+    if not presented or not any(matches):
+        raise UnauthorizedError("invalid consenter bearer token")
+
+
 async def require_identity_reader(authorization: Annotated[str | None, Header()] = None) -> None:
     """Identity material and the revocation list are readable by verifiers and operators:
     the audit reader token or the admin token."""
@@ -149,6 +168,7 @@ async def require_consenting_human(
 AdminDep = Depends(require_admin)
 AuditReaderDep = Depends(require_audit_reader)
 EnrollerDep = Depends(require_enroller)
+ConsenterDep = Depends(require_consenter)
 IdentityReaderDep = Depends(require_identity_reader)
 ConsentingHumanDep = Annotated[str, Depends(require_consenting_human)]
 PaginationDep = Annotated[PaginationParams, Depends(pagination_params)]
