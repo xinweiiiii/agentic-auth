@@ -13,6 +13,7 @@ customer would:
 7. a CI gate
 8. a revocation
 9. an outage
+10. a standard MCP client signing in with the company's own IdP (from 0.4.0)
 
 Every cell asserts its own outcome, so the notebook is also a test: if it runs clean, the
 behaviour it documents is the behaviour you get. The checked-in copy keeps its outputs, so

@@ -185,10 +185,37 @@ def _tool_app(verifier: Verifier) -> tuple[Starlette, ToolCallLog]:
 # -- the stack ----------------------------------------------------------------------------
 
 
+# -- an MCP tool server behind the connector proxy (0.4.0) --------------------------------
+
+
+@dataclass
+class McpProxy:
+    """The connector proxy's MCP endpoint, the client an MCP client would use to reach it,
+    and the ``Authorization`` headers the tool server behind it received."""
+
+    url: str
+    http: httpx.AsyncClient
+    upstream: list[str]
+
+
+def _mcp_app() -> tuple[Starlette, list[str]]:
+    """A one-tool MCP server (``search``) that records the bearer it was sent."""
+    received: list[str] = []
+
+    async def rpc(request: Request) -> JSONResponse:
+        received.append(request.headers.get("authorization", ""))
+        body = await request.json()
+        result = {"content": [{"type": "text", "text": "3 articles about account closure"}]}
+        return JSONResponse({"jsonrpc": "2.0", "id": body.get("id"), "result": result})
+
+    return Starlette(routes=[Route("/{path:path}", rpc, methods=["POST"])]), received
+
+
 @dataclass
 class LocalStack:
     cp: EmbeddedControlPlane
     _servers: list[ToolServer] = field(default_factory=list)
+    _proxies: list[McpProxy] = field(default_factory=list)
 
     # -- lifecycle -------------------------------------------------------------
 
@@ -201,6 +228,8 @@ class LocalStack:
     async def aclose(self) -> None:
         for server in self._servers:
             await server.aclose()
+        for proxy in self._proxies:
+            await proxy.http.aclose()
         await self.cp.aclose()
 
     # -- what the notebook uses ------------------------------------------------
@@ -255,6 +284,57 @@ class LocalStack:
         self.cp.mount(host, app)
         server = ToolServer(url=f"https://{host}", http=self.cp.http, log=log, verifier=verifier)
         self._servers.append(server)
+        return server
+
+    async def mcp_proxy(
+        self,
+        *,
+        resource_url: str,
+        consent_token: str,
+        upstream_host: str = "kb.internal",
+        data_class: str = "kb.public",
+    ) -> McpProxy:
+        """The connector proxy as an OAuth protected resource (0.4.0), in front of a small MCP
+        tool server at ``upstream_host``, and the network an MCP client would see.
+
+        The proxy validates the IdP's tokens itself, starts sessions through consent with
+        ``consent_token`` (the consent-only credential, never the admin token), and forwards
+        only narrowed hop tokens. ``McpProxy.upstream`` records what the tool server received.
+        """
+        from agentic_auth.boundary.mcp import build_app as build_proxy
+        from agentic_auth.embedded import idp as test_idp
+        from agentic_auth.gateway.config import GatewayConfig
+        from agentic_auth.sidecar.config import Upstream
+
+        config = GatewayConfig(
+            pdp_url=BASE_URL,
+            route_table={
+                (None, "/mcp"): Upstream(url=f"http://{upstream_host}", data_class=data_class)
+            },
+            oauth_resource_enabled=True,
+            resource_url=resource_url,
+            idp_issuer=test_idp.ISSUER,
+            idp_jwks_url=f"{test_idp.ISSUER}/.well-known/jwks.json",
+            consent_token=consent_token,
+        ).validate()
+        app, received = _mcp_app()
+        self.cp.mount(upstream_host, app)
+        proxy = httpx.ASGITransport(app=build_proxy(config, client=self.cp.http))
+        proxy_host = httpx.URL(resource_url).host
+        cp_http = self.cp.http
+
+        class _Network(httpx.AsyncBaseTransport):
+            """What the client can reach: the proxy, and everything else the stack serves
+            (the IdP among it)."""
+
+            async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+                if request.url.host == proxy_host:
+                    return await proxy.handle_async_request(request)
+                return await cp_http.send(request)
+
+        client = httpx.AsyncClient(transport=_Network())
+        server = McpProxy(url=f"{resource_url}/mcp", http=client, upstream=received)
+        self._proxies.append(server)
         return server
 
     def flags(self, **values: Any) -> dict[str, Any]:
