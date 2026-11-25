@@ -326,3 +326,31 @@ async def test_a_refusal_in_asserted_mode_says_the_root_is_asserted(oauth_stack,
     oauth_stack.router.pdp_down = True
     r = await proxy.post("/mcp", json=_call(), headers=_bearer(oauth_stack.token(sub="carol")))
     assert r.json()["error"]["data"]["root_of_authority"] == "asserted"
+
+
+# -- with client mapping (M4): the token's client picks the agent ----------------------------
+
+
+async def test_a_mapped_client_runs_as_its_agent_and_an_unmapped_one_is_cold_start(
+    oauth_stack, flags, client, admin_headers
+) -> None:
+    flags(client_mapping_enabled=True)
+    agents = (await client.get("/v1/agents?limit=100", headers=admin_headers)).json()["data"]
+    orchestrator = next(a["id"] for a in agents if a["name"] == oauth_stack.scope)
+    await client.post(
+        f"/v1/agents/{orchestrator}/clients", headers=admin_headers, json={"client_id": "desk"}
+    )
+    proxy = oauth_stack.proxy(consent_scope=None)  # the mapping chooses
+
+    allowed = await proxy.post("/mcp", json=_call(), headers=_bearer(oauth_stack.token(azp="desk")))
+    assert allowed.json()["result"]
+
+    refused = await proxy.post(
+        "/mcp", json=_call(), headers=_bearer(oauth_stack.token(azp="stranger"))
+    )
+    data = refused.json()["error"]["data"]
+    assert data["reason"] == "CLIENT_NOT_AUTHORIZED"
+    assert data["recoverable"] is False
+    assert data["next"] == "cold_start"
+    assert data["client_id"] == "stranger"
+    assert len(oauth_stack.mcp.calls) == 1  # only the mapped client's call was dispatched
