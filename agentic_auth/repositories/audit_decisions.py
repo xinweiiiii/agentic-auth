@@ -51,6 +51,8 @@ async def append(
     guarantee_level: str | None = None,
     deployment: str = "server",
     step_up_ref: uuid.UUID | None = None,
+    principal_source: str | None = None,
+    client_id: str | None = None,
 ) -> AuditDecision:
     row = AuditDecision(
         id=action_id,
@@ -75,6 +77,8 @@ async def append(
         guarantee_level=guarantee_level,
         deployment=deployment,
         step_up_ref=step_up_ref,
+        principal_source=principal_source,
+        client_id=client_id,
         parent_action_id=parent_action_id,
         chain=chain,
         chain_complete=chain_complete,

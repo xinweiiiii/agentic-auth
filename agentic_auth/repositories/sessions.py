@@ -23,8 +23,14 @@ async def create(
     hop_budget: int,
     expires_at: datetime,
     consented_data_classes: list[str] | None = None,
+    principal_source: str = "asserted",
+    client_id: str | None = None,
+    subject_token_hash: str | None = None,
 ) -> Session:
     row = Session(
+        principal_source=principal_source,
+        client_id=client_id,
+        subject_token_hash=subject_token_hash,
         scope=scope,
         user_sub=user_sub,
         policy_version=policy_version,

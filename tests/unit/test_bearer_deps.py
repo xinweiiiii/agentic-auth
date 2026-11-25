@@ -79,6 +79,8 @@ def test_both_bearer_checks_compare_in_constant_time() -> None:
         # Phase 5. Approving a step-up widening is a credential check like any other, and
         # its admin fallback compares a secret — so it belongs under the same rule.
         "require_consenting_human",
+        # 0.4.0. The narrow role a connector proxy or gateway holds to call consent.
+        "require_consenter",
     }
 
     for func in checkers:
@@ -133,3 +135,42 @@ async def test_identity_reader_accepts_audit_reader_and_admin(monkeypatch) -> No
     await require_identity_reader(authorization=f"Bearer {settings.admin_token}")
     with pytest.raises(UnauthorizedError):
         await require_identity_reader(authorization="Bearer nope")
+
+
+# -- 0.4.0: the consenter role (feature 011, research F2) --------------------------------
+
+
+async def test_consenter_accepts_the_consent_token_and_admin(monkeypatch) -> None:
+    from agentic_auth.api.deps import require_consenter
+    from agentic_auth.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "consent_token", "consent-secret")
+    await require_consenter(authorization="Bearer consent-secret")
+    await require_consenter(authorization=f"Bearer {settings.admin_token}")
+
+
+async def test_consenter_refuses_wrong_missing_and_empty(monkeypatch) -> None:
+    from agentic_auth.api.deps import require_consenter
+    from agentic_auth.config import get_settings
+    from agentic_auth.errors import UnauthorizedError
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "consent_token", "")
+    with pytest.raises(UnauthorizedError):
+        await require_consenter(authorization="Bearer ")  # empty setting never accepts empty
+    with pytest.raises(UnauthorizedError):
+        await require_consenter(authorization="Bearer nope")
+    with pytest.raises(UnauthorizedError):
+        await require_consenter(authorization=None)
+
+
+async def test_the_consent_token_is_not_an_admin_token(monkeypatch) -> None:
+    from agentic_auth.api.deps import require_admin, require_audit_reader, require_enroller
+    from agentic_auth.config import get_settings
+    from agentic_auth.errors import UnauthorizedError
+
+    monkeypatch.setattr(get_settings(), "consent_token", "consent-secret")
+    for dependency in (require_admin, require_audit_reader, require_enroller):
+        with pytest.raises(UnauthorizedError):
+            await dependency(authorization="Bearer consent-secret")

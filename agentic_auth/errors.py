@@ -143,3 +143,45 @@ class IdpUnavailable(DomainError):
 
     status_code = 503
     code = "idp_unavailable"
+
+
+# -- 0.4.0: verified consent (feature 011, M2) ------------------------------------------
+
+
+class SubjectTokenRequired(DomainError):
+    """Verified consent is on and no IdP token was presented as evidence of the human."""
+
+    status_code = 422
+    code = "subject_token_required"
+
+
+class SubjectTokenInvalid(DomainError):
+    """The presented IdP token failed verification. ``details.check`` names the rule."""
+
+    status_code = 401
+    code = "subject_token_invalid"
+
+
+class ClientNotAuthorized(DomainError):
+    """The token's IdP client is identified but has no authority (feature 011, M4): it is
+    unmapped, or its agent has no pinned manifest. Never recoverable by retrying or by a
+    consent prompt; ``details.next`` names the cold-start path. Not a PDP deny reason: no
+    session exists, so it is never a decision and never an audit row."""
+
+    status_code = 403
+    code = "client_not_authorized"
+
+
+class ClientAlreadyMapped(DomainError):
+    """The IdP client already acts as an agent. One client, one agent (spec FR-012)."""
+
+    status_code = 409
+    code = "client_already_mapped"
+
+
+class SubjectMismatch(DomainError):
+    """An asserted ``user_sub`` disagrees with the verified one. The asserted value is never
+    echoed: it may be a probe, and repeating it back helps nobody legitimate."""
+
+    status_code = 422
+    code = "subject_mismatch"

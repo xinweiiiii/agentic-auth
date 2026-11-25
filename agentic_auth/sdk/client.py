@@ -11,6 +11,7 @@ decision service verified — the same shape the sidecar records.
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -111,6 +112,16 @@ class Session:
     # Phase 5. What the session actually consented to: None means every data class the
     # pinned policy declares, which is the Phase 2-4 behaviour and the default.
     data_classes: list[str] | None = None
+    # 0.4.0. "verified" when consent verified the human's IdP token; None when asserted.
+    principal_source: str | None = None
+    client_id: str | None = None
+
+    @classmethod
+    def from_response(cls, body: dict[str, Any]) -> Session:
+        """Keep the fields this SDK knows and ignore the rest, so a newer control plane
+        adding a response field never breaks an older client."""
+        known = {f.name for f in dataclasses.fields(cls)}
+        return cls(**{k: v for k, v in body.items() if k in known})
 
     def context(self) -> HopContext:
         return HopContext(session_id=self.session_id, token=self.root_grant)
@@ -243,7 +254,7 @@ class AgenticAuthClient:
             raise ControlPlaneUnavailable(
                 f"consent failed with {response.status_code}: {response.text}"
             )
-        return Session(**response.json())
+        return Session.from_response(response.json())
 
     async def enroll(
         self,

@@ -131,6 +131,8 @@ async def exchange_token(
             privileged=denied.decision.privileged,
             policy_version=denied.policy_version,
             token=denied.token,
+            principal_source=denied.principal_source,
+            client_id=denied.client_id,
         )
         if denied.decision.reason is not None:
             get_metrics().denials.labels(reason=denied.decision.reason.value).inc()

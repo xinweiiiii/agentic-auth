@@ -279,3 +279,27 @@ async def test_the_flag_off_means_no_transaction_token(sdk, rooted, flags) -> No
         ctx, target="mcp://accounts.internal/close_account", data_class="account.write"
     )
     assert grant.transaction_token is None
+
+
+# -- 0.4.0: forward compatibility (feature 011) -------------------------------------------
+
+
+def test_a_consent_response_with_unknown_fields_still_builds_a_session() -> None:
+    """A newer control plane adding a field must not break an older SDK's consent()."""
+    from agentic_auth.sdk.client import Session
+
+    session = Session.from_response(
+        {
+            "session_id": "s",
+            "root_grant": "t",
+            "policy_version": 1,
+            "scope": "x",
+            "user_sub": "u",
+            "hop_budget": 2,
+            "expires_at": "2026-01-01T00:00:00Z",
+            "principal_source": "verified",
+            "some_future_field": {"anything": True},
+        }
+    )
+    assert session.principal_source == "verified"
+    assert not hasattr(session, "some_future_field")

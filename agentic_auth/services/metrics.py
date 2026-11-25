@@ -61,6 +61,10 @@ class ControlPlaneMetrics:
     step_up_resumptions: Counter
     sandbox_runs: Counter
     proposals_ratified: Counter
+    # -- 0.4.0: verified consent --
+    # reason=subject_token_required|subject_token_invalid|subject_mismatch|idp_unavailable|
+    #        client_not_authorized
+    consent_refusals: Counter
     # -- Phase 6: the observability layer --
     # The layer observing itself, so telemetry loss and telemetry posture are both visible.
     # cause=malformed|absent|baggage_dropped
@@ -193,6 +197,13 @@ def build_control_plane_metrics(registry: CollectorRegistry | None = None) -> Co
             "Ratifications, labelled by whether the administrator edited the proposal "
             "first. A high edited rate means the generator is missing things.",
             ["edited"],
+            registry=registry,
+        ),
+        consent_refusals=Counter(
+            "agentic_auth_consent_refusals",
+            "Consent requests refused before a session existed, by reason. No session and no "
+            "audit row exists for these, so this and the log are their only record",
+            ["reason"],
             registry=registry,
         ),
         trace_context_rejected=Counter(

@@ -4,6 +4,11 @@ Enrollment requires an accountable principal: an ID token from the organisation'
 the agent. An embedded instance has no IdP, so it carries this one. Anything it binds is a
 *test* principal, and says so: the enrollment's principal assertion carries
 ``principal_source: embedded-test``, so an exported record can never pass for a real binding.
+
+0.4.0 (feature 011): it also mints the access tokens an MCP client's login would produce, with
+``azp`` and ``scope``, and serves a discovery document, so verified consent, client mapping
+and a connector proxy in front of an embedded instance work with no infrastructure. Sessions
+it roots are recorded as ``embedded-test``.
 """
 
 from __future__ import annotations
@@ -27,6 +32,8 @@ ISSUER = f"https://{HOST}"
 AUDIENCE = "agentic-auth"
 BINDING_CLAIM = "agent"
 PRINCIPAL_SOURCE = "embedded-test"
+#: The client id an embedded login reports in ``azp`` unless a test names another.
+DEFAULT_CLIENT_ID = "embedded-client"
 
 
 def _b64url(raw: bytes) -> str:
@@ -73,8 +80,58 @@ class TestIdp:
         )
         return jwt.encode(claims, pem, algorithm="EdDSA", headers={"kid": self.kid})
 
+    def mint_access_token(
+        self,
+        *,
+        sub: str,
+        audience: str | list[str] = AUDIENCE,
+        client_id: str | None = DEFAULT_CLIENT_ID,
+        scope: str | None = None,
+        expires_in: int = 300,
+    ) -> str:
+        """An access token as an MCP client receives it after the user signs in."""
+        now = datetime.now(UTC)
+        claims: dict[str, Any] = {
+            "iss": ISSUER,
+            "sub": sub,
+            "aud": audience,
+            "iat": int(now.timestamp()),
+            "exp": int((now + timedelta(seconds=expires_in)).timestamp()),
+            "jti": str(uuid.uuid4()),
+            "principal_source": PRINCIPAL_SOURCE,
+        }
+        if client_id is not None:
+            claims["azp"] = client_id
+        if scope is not None:
+            claims["scope"] = scope
+        return jwt.encode(claims, self._pem(), algorithm="EdDSA", headers={"kid": self.kid})
+
+    def _pem(self) -> bytes:
+        return self.key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+
+    def discovery(self) -> dict[str, Any]:
+        """RFC 8414 metadata. No authorization endpoint: nothing logs in here."""
+        return {
+            "issuer": ISSUER,
+            "jwks_uri": f"{ISSUER}/.well-known/jwks.json",
+            "grant_types_supported": ["urn:ietf:params:oauth:grant-type:token-exchange"],
+        }
+
     def app(self) -> Starlette:
         async def jwks(_: Request) -> JSONResponse:
             return JSONResponse(self.jwks())
 
-        return Starlette(routes=[Route("/.well-known/jwks.json", jwks)])
+        async def discovery(_: Request) -> JSONResponse:
+            return JSONResponse(self.discovery())
+
+        return Starlette(
+            routes=[
+                Route("/.well-known/jwks.json", jwks),
+                Route("/.well-known/oauth-authorization-server", discovery),
+                Route("/.well-known/openid-configuration", discovery),
+            ]
+        )
