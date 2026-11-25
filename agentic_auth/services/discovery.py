@@ -20,7 +20,6 @@ from urllib.parse import urlsplit
 import httpx
 from pydantic import BaseModel, ConfigDict
 
-from agentic_auth.config import get_settings
 from agentic_auth.oauth.metadata import MetadataUnavailable
 from agentic_auth.oauth.metadata import discover as discover_authorization_server
 
@@ -60,6 +59,17 @@ class DiscoveryResult:
     error: str | None = None
     # 0.4.0. Set only when the check ran (as_metadata_enabled); None means "not attempted".
     authorization_server: DiscoveredAuthorizationServer | None = None
+
+
+def _following_authorization_servers() -> bool:
+    """Whether M3 is on, read lazily: this module ships in the ``drift`` extra, whose CLI
+    registers manifests, and that install has no server settings (``pydantic-settings``)
+    and therefore no M3 to turn on."""
+    try:
+        from agentic_auth.config import get_settings
+    except ImportError:
+        return False
+    return get_settings().as_metadata_enabled
 
 
 def authority_for(tool_ref: str) -> str:
@@ -116,7 +126,7 @@ class DiscoveryClient:
                 out[authority] = DiscoveryResult(authority, ok=False, error=str(exc))
                 continue
             result = DiscoveryResult(authority, ok=True, resource=resource)
-            if get_settings().as_metadata_enabled:
+            if _following_authorization_servers():
                 result.authorization_server = await self._authorization_server(client, resource)
             out[authority] = result
         return out
