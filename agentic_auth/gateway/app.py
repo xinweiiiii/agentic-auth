@@ -16,6 +16,12 @@ rules, the observe-mode behaviour, the deny envelope — is ``agentic_auth.sidec
 called unmodified. That is what makes the conformance suite able to prove parity rather
 than merely assert it.
 
+**As an OAuth 2.1 protected resource** (feature 011, M1): the same gate as the connector
+proxy (``agentic_auth.oauth.resource``) runs before route resolution. It publishes Protected
+Resource Metadata, challenges a missing or bad token with ``401``, validates the IdP token
+itself and starts a session through consent; ``enforce()`` then sees only that session's root
+grant. The client's token is never forwarded, and observe mode is refused with M1.
+
 Horizontal scaling needs no new coordination: hop depth is derived from the verified act
 chain in the token, the single-use guard is ``spent:{action_id}`` in Redis, the decision
 cache is Redis, and the session row is immutable. Nothing here is per-process
@@ -42,9 +48,11 @@ from agentic_auth.boundary.guarantee import Guarantee
 from agentic_auth.gateway.config import GatewayConfig
 from agentic_auth.gateway.metrics import GatewayMetrics, build_gateway_metrics
 from agentic_auth.gateway.resolve import agent_name, agent_of, resolve
+from agentic_auth.oauth.resource import Refused, gate_for, metadata_paths
 from agentic_auth.services.edge_trace import EdgeRecorder
 from agentic_auth.sidecar.app import _SKIP_REQUEST_HEADERS, _SKIP_RESPONSE_HEADERS
-from agentic_auth.sidecar.enforce import Allow, Blocked, Observed, enforce
+from agentic_auth.sidecar.deny import deny_body
+from agentic_auth.sidecar.enforce import SESSION_HEADER, Allow, Blocked, Observed, enforce
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +88,11 @@ def build_app(
     http = client or httpx.AsyncClient()
     recorder = EdgeRecorder(config.trace_path, "sidecar") if config.trace_path else None
     gauge = metrics or build_gateway_metrics(registry)
+    gate = gate_for(config, http) if config.oauth_resource_enabled else None
+
+    async def resource_metadata(_request: Request) -> JSONResponse:
+        assert gate is not None  # routed only when M1 is on
+        return JSONResponse(gate.metadata(), headers={"cache-control": "public, max-age=300"})
 
     async def proxy(request: Request) -> Response:
         started = time.perf_counter()
@@ -97,16 +110,41 @@ def build_app(
             return b"".join(chunks)
 
         # -- resolve the route, from the token's agent and the shared table -------
-        authorization = request.headers.get("authorization", "")
+        headers: dict[str, str] = dict(request.headers.items())
+        authorization = headers.get("authorization", "")
         token = (
             authorization.removeprefix("Bearer ").strip()
             if authorization.startswith("Bearer ")
             else ""
         )
-        agent = agent_name(agent_of(token)) if token else None
+        # Under M1 the inbound token is the IdP's, whose claims name no agent route.
+        agent = agent_name(agent_of(token)) if token and gate is None else None
         resolved = resolve(config, agent=agent, path=path, headers=request.headers)
         if isinstance(resolved, JSONResponse):
             gauge.route_misses.inc()
+
+        # -- M1: the IdP token stops here; enforce() sees only the session's grant ---
+        if gate is not None:
+            data_class = None if isinstance(resolved, JSONResponse) else resolved[3]
+            target = None if isinstance(resolved, JSONResponse) else resolved[2]
+            admitted = await gate.admit(headers, request.query_params, data_class=data_class)
+            if isinstance(admitted, Refused):
+                outcome_label = "blocked_infra" if admitted.kind == "infra" else "blocked_local"
+                if recorder is not None:
+                    recorder.record(
+                        acting_agent=None,
+                        target=target if _is_target(target) else None,
+                        outcome=outcome_label,
+                        reason=admitted.reason,
+                    )
+                gauge.decisions.labels(outcome=outcome_label, reason=admitted.reason).inc()
+                return _gate_refusal(admitted, asserted_root=gate.asserted_root)
+            token = admitted.root_grant
+            headers = {
+                **{k: v for k, v in headers.items() if k != SESSION_HEADER},
+                "authorization": f"Bearer {admitted.root_grant}",
+                SESSION_HEADER: admitted.session_id,
+            }
 
         # -- relay identity; never mint it (research.md R2) ----------------------
         actor_token = request.headers.get(ACTOR_TOKEN_HEADER)
@@ -124,7 +162,7 @@ def build_app(
                     http,
                     config,
                     path=path,
-                    headers=request.headers,
+                    headers=headers,
                     body_reader=read_body,
                     identity=None,  # a gateway holds no key
                     actor_token=actor_token,
@@ -149,6 +187,8 @@ def build_app(
             return outcome.response
 
         if isinstance(outcome, Observed):
+            if gate is not None:  # pragma: no cover - start-up refuses observe mode with M1
+                return _unavailable("observe mode is not available on a protected resource")
             forwarded_token = token
             upstream, prefix = outcome.upstream, outcome.prefix
         elif isinstance(outcome, Allow):
@@ -160,24 +200,24 @@ def build_app(
         suffix = path[len(prefix.rstrip("/")) :] or "/"
         url = httpx.URL(f"{upstream.url}{suffix}", query=request.url.query.encode())
 
-        headers = {
+        upstream_headers = {
             k: v for k, v in request.headers.items() if k.lower() not in _SKIP_REQUEST_HEADERS
         }
-        headers["authorization"] = f"Bearer {forwarded_token}"
+        upstream_headers["authorization"] = f"Bearer {forwarded_token}"
         content: object = request.stream()
         if isinstance(outcome, Allow):
             if outcome.transaction_token is not None:
-                headers["txn-token"] = outcome.transaction_token
+                upstream_headers["txn-token"] = outcome.transaction_token
             # Relayed through untouched: the agent signed it, not us.
             if identity_assertion is not None:
-                headers[IDENTITY_HEADER] = identity_assertion
+                upstream_headers[IDENTITY_HEADER] = identity_assertion
             if outcome.body is not None:
                 content = outcome.body
 
         upstream_request = http.build_request(
             request.method,
             url,
-            headers=headers,
+            headers=upstream_headers,
             content=content,  # type: ignore[arg-type]
             timeout=httpx.Timeout(config.request_timeout_seconds),
         )
@@ -275,11 +315,37 @@ def build_app(
             Route("/v1/gateway/healthz", healthz, methods=["GET"]),
             Route("/v1/gateway/routes", routes_view, methods=["GET"]),
             Route("/metrics", metrics_view, methods=["GET"]),
+            *(
+                Route(p, resource_metadata, methods=["GET"])
+                for p in (metadata_paths(config.resource_url) if gate is not None else [])
+            ),
             # Last: every other path is a proxied tool call.
             Route("/{path:path}", proxy, methods=METHODS),
         ],
         lifespan=lifespan,
     )
+
+
+def _is_target(value: str | None) -> bool:
+    return value is not None and value.startswith(("mcp://", "agent://"))
+
+
+def _gate_refusal(refused: Refused, *, asserted_root: bool) -> JSONResponse:
+    """A challenge as RFC 6750 says; anything else in the deny envelope every refusal uses."""
+    if refused.kind == "challenge":
+        return JSONResponse(
+            status_code=refused.status,
+            content={"error": refused.reason.lower(), "error_description": refused.message},
+            headers={"www-authenticate": refused.www_authenticate or ""},
+        )
+    body = deny_body(refused.reason, refused.message, recoverable=refused.recoverable)
+    extra = {k: v for k, v in refused.details.items() if k not in {"reason", "recoverable"}}
+    body["error"]["details"].update(extra)
+    if asserted_root:
+        body["error"]["details"]["root_of_authority"] = "asserted"
+    if refused.kind == "infra":
+        body["error"]["code"] = "unavailable"
+    return JSONResponse(status_code=refused.status, content=body)
 
 
 def guarantee_for(config: GatewayConfig, *, identity_verified: bool) -> Guarantee:

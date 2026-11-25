@@ -25,6 +25,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"agentic-auth-gateway: {exc}", file=sys.stderr)
         return 2
 
+    import asyncio
+
+    from agentic_auth.oauth.resource import startup_check
+
+    problem = asyncio.run(startup_check(config))
+    if problem is not None:
+        print(f"agentic-auth-gateway: {problem}", file=sys.stderr)
+        return 2
+
     import uvicorn
 
     uvicorn.run(build_app(config), host=config.host, port=config.port, log_level="info")

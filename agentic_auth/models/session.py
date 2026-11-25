@@ -39,6 +39,10 @@ class Session(UUIDPrimaryKey, TimestampCreated, Base):
         CheckConstraint("hop_budget >= 1", name="ck_sessions_hop_budget_positive"),
         CheckConstraint("expires_at > created_at", name="ck_sessions_expiry_after_creation"),
         CheckConstraint("user_sub <> ''", name="ck_sessions_user_sub_nonempty"),
+        CheckConstraint(
+            "principal_source IN ('asserted', 'verified', 'embedded-test')",
+            name="ck_sessions_principal_source",
+        ),
         Index("ix_sessions_expires_at", "expires_at"),
     )
 
@@ -61,3 +65,13 @@ class Session(UUIDPrimaryKey, TimestampCreated, Base):
     consented_data_classes: Mapped[list[str] | None] = mapped_column(
         PortableArray(String(128)), nullable=True
     )
+    # 0.4.0 (feature 011). Where ``user_sub`` came from: ``asserted`` by the integrator (every
+    # session before 0.4.0, and every one with verified consent off), ``verified`` from the
+    # user's IdP token, or ``embedded-test`` from an embedded control plane's built-in IdP.
+    principal_source: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="asserted", server_default="asserted"
+    )
+    # The IdP client the session was started through, when consent mapped one (M4).
+    client_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # SHA-256 hex of the IdP token presented as evidence. The token itself is stored nowhere.
+    subject_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

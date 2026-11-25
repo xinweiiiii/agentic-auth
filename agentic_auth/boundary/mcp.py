@@ -7,10 +7,11 @@ never knows.
 
 Two deliberate limits on how much protocol this module implements (research.md R8):
 
-- **The upstream server's own authorization handshake is passed through untouched.** We
-  add a policy layer; we are not an MCP implementation. That protocol's auth model is
-  still hardening, so anything we wrote here would be depreciating from the day it
-  shipped.
+- **The client's credentials are never relayed** (feature 011, research R4). Relayed
+  methods lose ``authorization``, ``cookie`` and ``proxy-authorization``; an upstream that
+  wants a credential on them gets the route's operator-owned ``relay_authorization``.
+  Everything else in the upstream's own protocol passes through: we add a policy layer,
+  we are not an MCP implementation.
 - **No MCP SDK dependency.** The envelope this needs to understand is a handful of JSON
   fields, and a dependency whose release cadence tracks a moving spec is a liability on
   a fail-closed path.
@@ -26,6 +27,13 @@ everything else  Relayed unchanged.
 
 Refusals come back as JSON-RPC errors, carrying the same ``reason``/``recoverable`` pair
 every other enforcement point returns, so an SDK-aware caller branches identically.
+
+**As an OAuth 2.1 protected resource** (feature 011, M1, ``oauth_resource_enabled``): every
+method needs a bearer token from the customer's IdP. The proxy publishes Protected Resource
+Metadata, answers a missing or bad token with an HTTP ``401`` and a ``WWW-Authenticate``
+challenge (MCP clients discover authorization from HTTP, not JSON-RPC), validates the token
+itself, and starts a session with it through consent. ``enforce()`` then runs unchanged with
+that session's root grant. The client's token never goes upstream.
 """
 
 from __future__ import annotations
@@ -46,9 +54,10 @@ from starlette.routing import Route
 from agentic_auth.boundary.guarantee import Guarantee
 from agentic_auth.gateway.config import GatewayConfig
 from agentic_auth.gateway.resolve import agent_name, agent_of
+from agentic_auth.oauth.resource import Admitted, Refused, ResourceGate, gate_for, metadata_paths
 from agentic_auth.services.edge_trace import EdgeRecorder
 from agentic_auth.sidecar.config import Upstream
-from agentic_auth.sidecar.enforce import Allow, Blocked, Observed, enforce
+from agentic_auth.sidecar.enforce import SESSION_HEADER, Allow, Blocked, Observed, enforce
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +75,19 @@ INVALID_REQUEST = -32600
 
 TOOLS_CALL = "tools/call"
 TOOLS_LIST = "tools/list"
+
+# Never relayed: they are the client's credentials, and the upstream is not who the client
+# authenticated to (research F1). ``host`` and ``content-length`` are recomputed by httpx.
+_NOT_RELAYED = frozenset(
+    {"host", "content-length", "authorization", "cookie", "proxy-authorization"}
+)
+
+
+def _relay_headers(request: Request, upstream: Upstream) -> dict[str, str]:
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in _NOT_RELAYED}
+    if upstream.relay_authorization is not None:
+        headers["authorization"] = upstream.relay_authorization
+    return headers
 
 
 def _error(request_id: object, code: int, message: str, **data: object) -> JSONResponse:
@@ -105,6 +127,11 @@ def build_app(
     owned = client is None
     http = client or httpx.AsyncClient()
     recorder = EdgeRecorder(config.trace_path, "sidecar") if config.trace_path else None
+    gate = gate_for(config, http) if config.oauth_resource_enabled else None
+
+    async def metadata(_request: Request) -> JSONResponse:
+        assert gate is not None  # routed only when M1 is on
+        return JSONResponse(gate.metadata(), headers={"cache-control": "public, max-age=300"})
 
     async def rpc(request: Request) -> Response:
         raw = await request.body()
@@ -119,8 +146,11 @@ def build_app(
 
         request_id = envelope.get("id")
         method = envelope.get("method")
-        token = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
-        agent = agent_name(agent_of(token)) if token else None
+        headers: dict[str, str] = dict(request.headers.items())
+        token = headers.get("authorization", "").removeprefix("Bearer ").strip()
+        # Under M1 the inbound token is the IdP's: its claims say nothing about which agent
+        # route to take, so only the any-agent routes apply.
+        agent = agent_name(agent_of(token)) if token and gate is None else None
 
         match = config.resolve(agent, request.url.path)
         if match is None:
@@ -129,9 +159,40 @@ def build_app(
             )
         prefix, upstream = match
 
+        if gate is not None:
+            target = None
+            if method == TOOLS_CALL:
+                name = (envelope.get("params") or {}).get("name")
+                target = _tool_target(upstream, name) if isinstance(name, str) and name else None
+            admitted = await gate.admit(
+                headers,
+                request.query_params,
+                data_class=upstream.data_class if method == TOOLS_CALL else None,
+            )
+            if isinstance(admitted, Refused):
+                if recorder is not None:
+                    recorder.record(
+                        acting_agent=None,
+                        target=target,
+                        outcome="blocked_infra" if admitted.kind == "infra" else "blocked_local",
+                        reason=admitted.reason,
+                    )
+                return _gate_refusal(request_id, admitted, gate)
+            token = admitted.root_grant
+            headers = _with_session(headers, admitted)
+
         if method == TOOLS_CALL:
             return await _tools_call(
-                request, envelope, request_id, prefix, upstream, token, http, recorder, config
+                request,
+                headers,
+                envelope,
+                request_id,
+                prefix,
+                upstream,
+                token,
+                http,
+                recorder,
+                config,
             )
 
         relayed = await _relay(request, raw, upstream, http, config)
@@ -141,6 +202,7 @@ def build_app(
 
     async def _tools_call(
         request: Request,
+        headers: dict[str, str],
         envelope: dict[str, Any],
         request_id: Any,
         prefix: str,
@@ -156,7 +218,7 @@ def build_app(
             return _error(request_id, INVALID_REQUEST, "tools/call needs a tool name")
 
         target = _tool_target(upstream, tool_name)
-        data_class = upstream.data_class or request.headers.get("x-agentic-data-class")
+        data_class = upstream.data_class or headers.get("x-agentic-data-class")
         if not data_class:
             # Guessing a data class would be inventing consent. Same rule as everywhere.
             return _error(
@@ -177,10 +239,10 @@ def build_app(
             http,
             config,
             path=request.url.path,
-            headers=request.headers,
+            headers=headers,
             body_reader=body_reader,
             identity=None,
-            actor_token=request.headers.get("actor-token"),
+            actor_token=headers.get("actor-token"),
             resolved=(prefix, upstream, target, data_class),
         )
         if recorder is not None:
@@ -189,24 +251,26 @@ def build_app(
         if isinstance(outcome, Blocked):
             return _jsonrpc_refusal(request_id, outcome)
 
+        # Observed forwards what was presented. Under M1 that is the session's root grant,
+        # never the client's token, and M1 refuses observe mode at start-up regardless.
         forwarded = token if isinstance(outcome, Observed) else outcome.token
-        headers = {
+        upstream_headers = {
             "authorization": f"Bearer {forwarded}",
             "content-type": "application/json",
-            "accept": request.headers.get("accept", "application/json"),
+            "accept": headers.get("accept", "application/json"),
         }
         if isinstance(outcome, Allow):
             if outcome.transaction_token is not None:
-                headers["txn-token"] = outcome.transaction_token
+                upstream_headers["txn-token"] = outcome.transaction_token
             if outcome.identity_assertion is not None:
-                headers["agent-identity"] = outcome.identity_assertion
+                upstream_headers["agent-identity"] = outcome.identity_assertion
 
         # The narrowed token, the transaction token and the upstream's own credentials
         # go OUT; none of them is ever returned to the agent (FR-011).
         try:
             upstream_response = await http.post(
                 f"{upstream.url}{request.url.path[len(prefix.rstrip('/')) :] or '/'}",
-                headers=headers,
+                headers=upstream_headers,
                 content=await request.body(),
                 timeout=httpx.Timeout(config.request_timeout_seconds),
             )
@@ -231,11 +295,7 @@ def build_app(
         try:
             response = await http.post(
                 f"{upstream.url}{request.url.path}",
-                headers={
-                    k: v
-                    for k, v in request.headers.items()
-                    if k.lower() not in {"host", "content-length"}
-                },
+                headers=_relay_headers(request, upstream),
                 content=raw,
                 timeout=httpx.Timeout(config.request_timeout_seconds),
             )
@@ -253,7 +313,58 @@ def build_app(
         if owned:
             await http.aclose()
 
-    return Starlette(routes=[Route("/{path:path}", rpc, methods=["POST"])], lifespan=lifespan)
+    routes = [
+        *(
+            Route(path, metadata, methods=["GET"])
+            for path in (metadata_paths(config.resource_url) if gate is not None else [])
+        ),
+        Route("/{path:path}", rpc, methods=["POST"]),
+    ]
+    return Starlette(routes=routes, lifespan=lifespan)
+
+
+def _with_session(headers: dict[str, str], admitted: Admitted) -> dict[str, str]:
+    """What ``enforce()`` sees: the session's root grant in place of the client's token, and
+    that session's id, so nothing the client sent can point the decision at another."""
+    return {
+        **{k: v for k, v in headers.items() if k != SESSION_HEADER},
+        "authorization": f"Bearer {admitted.root_grant}",
+        SESSION_HEADER: admitted.session_id,
+    }
+
+
+def _gate_refusal(request_id: object, refused: Refused, gate: ResourceGate) -> Response:
+    """A challenge in HTTP, where MCP clients look for one; anything else as the JSON-RPC
+    refusal every other path returns."""
+    if refused.kind == "challenge":
+        body: dict[str, Any] = {
+            "error": refused.reason.lower(),
+            "error_description": refused.message,
+        }
+        return JSONResponse(
+            body,
+            status_code=refused.status,
+            headers={"www-authenticate": refused.www_authenticate or ""},
+        )
+    data: dict[str, Any] = {
+        "reason": refused.reason,
+        "recoverable": refused.recoverable,
+        "guarantee_level": GUARANTEE.value,
+        **{k: v for k, v in refused.details.items() if k not in {"reason", "recoverable"}},
+    }
+    if gate.asserted_root:
+        # Spec edge case: M1 with verified consent off roots sessions in an asserted subject,
+        # and the refusal says so rather than implying a verified one.
+        data["root_of_authority"] = "asserted"
+    response = _error(
+        request_id,
+        INFRASTRUCTURE if refused.kind == "infra" else POLICY_REFUSED,
+        refused.message,
+        **data,
+    )
+    if refused.kind == "infra":
+        response.status_code = 503
+    return response
 
 
 def _jsonrpc_refusal(request_id: object, outcome: Blocked) -> JSONResponse:

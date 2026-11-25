@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agentic_auth.boundary.guarantee import Guarantee
+from agentic_auth.oauth.validate import DEFAULT_ALGORITHMS, DEFAULT_LEEWAY_SECONDS, check_algorithms
 from agentic_auth.sidecar.config import Upstream
 
 ENV_PREFIX = "AGENTIC_AUTH_GATEWAY_"
@@ -57,6 +58,38 @@ class GatewayConfig:
     # What this gateway reports when it cannot verify relayed identity. `full` is only
     # honest when identity is off, or on and the agent supplied headers that verified.
     guarantee_level: str = Guarantee.FULL.value
+
+    # -- 0.4.0: an OAuth 2.1 protected resource (feature 011, M1) ---------------------
+    # Off by default. On, the proxy publishes Protected Resource Metadata, answers 401 with
+    # a challenge, validates the inbound IdP token itself, and starts a session by calling
+    # consent with it. The inbound token never goes upstream.
+    oauth_resource_enabled: bool = False
+    # This proxy's public URL: the PRM `resource`, and the audience inbound tokens must carry.
+    resource_url: str = ""
+    # The customer IdP: named in PRM `authorization_servers`, and the `iss` tokens must carry.
+    idp_issuer: str = ""
+    # Overrides the `jwks_uri` read from the IdP's discovery document at start-up.
+    idp_jwks_url: str = ""
+    idp_algorithms: tuple[str, ...] = DEFAULT_ALGORITHMS
+    clock_leeway_seconds: int = DEFAULT_LEEWAY_SECONDS
+    # Bearer for POST /v1/consent: the control plane's consent-only role, never admin.
+    consent_token: str = field(default="", repr=False)
+    session_cache_size: int = 10_000
+    # The scope consent is asked for. Unset lets the control plane choose from the client
+    # mapping (M4).
+    consent_scope: str | None = None
+    # Only for a control plane with verified consent off: consent gets the validated subject
+    # as an *asserted* user_sub, and this scope. The weaker root, chosen explicitly.
+    asserted_root_scope: str | None = None
+    # AGENTIC_AUTH_DEV: allows an http://localhost resource URL, for local runs only.
+    dev: bool = False
+
+    @property
+    def scopes_supported(self) -> tuple[str, ...]:
+        """What PRM advertises: the data classes this proxy's routes carry (research R7)."""
+        return tuple(
+            sorted({u.data_class for u in self.route_table.values() if u.data_class is not None})
+        )
 
     @property
     def host(self) -> str:
@@ -128,7 +161,47 @@ class GatewayConfig:
                 f"guarantee_level must be one of {[g.value for g in Guarantee]}, "
                 f"got {self.guarantee_level!r}"
             ) from exc
+        if self.oauth_resource_enabled:
+            self._validate_oauth_resource()
         return self
+
+    def _validate_oauth_resource(self) -> None:
+        """Feature 011 start-up refusals (FR-020). Each names the setting to fix."""
+        for name in ("resource_url", "idp_issuer", "consent_token"):
+            if not getattr(self, name):
+                raise GatewayConfigError(
+                    f"{ENV_PREFIX}OAUTH_RESOURCE_ENABLED requires {ENV_PREFIX}{name.upper()}"
+                )
+        url = self.resource_url
+        local = url.startswith(("http://localhost", "http://127.0.0.1"))
+        if not url.startswith("https://") and not (local and self.dev):
+            hint = " (http://localhost is allowed with AGENTIC_AUTH_DEV=true)" if local else ""
+            raise GatewayConfigError(
+                f"{ENV_PREFIX}RESOURCE_URL must be an https URL, got {url!r}{hint}: it is the "
+                "audience every inbound token must carry"
+            )
+        if self.observe_mode:
+            # Observe mode forwards calls it decided not to allow, and with M1 there is no
+            # legitimate token to forward for them: only the client's, which must never go
+            # upstream (research R4).
+            raise GatewayConfigError(
+                f"{ENV_PREFIX}OBSERVE_MODE cannot be used with {ENV_PREFIX}OAUTH_RESOURCE_ENABLED:"
+                " observe mode forwards would-be denials, and the only token it could forward "
+                "is the client's. Roll out with M1 off first, then turn observe mode off."
+            )
+        try:
+            check_algorithms(self.idp_algorithms)
+        except ValueError as exc:
+            raise GatewayConfigError(f"{ENV_PREFIX}IDP_ALGORITHMS: {exc}") from exc
+        if not 0 <= self.clock_leeway_seconds <= 300:
+            raise GatewayConfigError(f"{ENV_PREFIX}CLOCK_LEEWAY_SECONDS must be 0 to 300 seconds")
+        if self.session_cache_size < 1:
+            raise GatewayConfigError(f"{ENV_PREFIX}SESSION_CACHE_SIZE must be at least 1")
+        if self.consent_scope and self.asserted_root_scope:
+            raise GatewayConfigError(
+                f"set {ENV_PREFIX}CONSENT_SCOPE or {ENV_PREFIX}ASSERTED_ROOT_SCOPE, not both: "
+                "the second is for a control plane with verified consent off"
+            )
 
 
 def parse_route_table(raw: Any) -> dict[RouteKey, Upstream]:
@@ -165,6 +238,7 @@ def _from_mapping(raw: dict[str, Any]) -> GatewayConfig:
         "trace_path",
         "max_privileged_body_bytes",
         "guarantee_level",
+        *_OAUTH_KEYS,
     }
     if unknown:
         # Named explicitly, because `agent_name`/`identity_key_path` are the plausible
@@ -189,7 +263,45 @@ def _from_mapping(raw: dict[str, Any]) -> GatewayConfig:
         trace_path=str(trace_path) if trace_path else None,
         max_privileged_body_bytes=int(raw.get("max_privileged_body_bytes", 1_048_576)),
         guarantee_level=str(raw.get("guarantee_level") or Guarantee.FULL.value),
+        oauth_resource_enabled=_bool(raw.get("oauth_resource_enabled")),
+        resource_url=str(raw.get("resource_url") or "").rstrip("/"),
+        idp_issuer=str(raw.get("idp_issuer") or ""),
+        idp_jwks_url=str(raw.get("idp_jwks_url") or ""),
+        idp_algorithms=_list(raw.get("idp_algorithms")) or DEFAULT_ALGORITHMS,
+        clock_leeway_seconds=int(raw.get("clock_leeway_seconds") or DEFAULT_LEEWAY_SECONDS),
+        consent_token=str(raw.get("consent_token") or ""),
+        session_cache_size=int(raw.get("session_cache_size") or 10_000),
+        consent_scope=raw.get("consent_scope") or None,
+        asserted_root_scope=raw.get("asserted_root_scope") or None,
+        dev=_bool(raw.get("dev")) or _bool(os.environ.get("AGENTIC_AUTH_DEV")),
     )
+
+
+_OAUTH_KEYS = (
+    "oauth_resource_enabled",
+    "resource_url",
+    "idp_issuer",
+    "idp_jwks_url",
+    "idp_algorithms",
+    "clock_leeway_seconds",
+    "consent_token",
+    "session_cache_size",
+    "consent_scope",
+    "asserted_root_scope",
+    "dev",
+)
+
+
+def _bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in ("1", "true", "yes")
+
+
+def _list(value: Any) -> tuple[str, ...]:
+    if isinstance(value, (list, tuple)):
+        return tuple(str(v).strip() for v in value if str(v).strip())
+    return tuple(v.strip() for v in str(value or "").split(",") if v.strip())
 
 
 def load(path: str | os.PathLike[str] | None = None) -> GatewayConfig:
@@ -220,5 +332,10 @@ def load(path: str | os.PathLike[str] | None = None) -> GatewayConfig:
             "decision_deadline_ms": os.environ.get(f"{ENV_PREFIX}DECISION_DEADLINE_MS", "2000"),
             "trace_path": os.environ.get(f"{ENV_PREFIX}TRACE_PATH", ""),
             "guarantee_level": os.environ.get(f"{ENV_PREFIX}GUARANTEE_LEVEL", "full"),
+            **{
+                key: os.environ[f"{ENV_PREFIX}{key.upper()}"]
+                for key in _OAUTH_KEYS
+                if f"{ENV_PREFIX}{key.upper()}" in os.environ
+            },
         }
     ).validate()

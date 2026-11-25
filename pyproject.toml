@@ -207,10 +207,14 @@ source_paths = [
     "agentic_auth/observability/ids.py",
     "agentic_auth/observability/surface.py",
     "agentic_auth/observability/tracing.py",
+    # 0.4.0: the one validator every IdP token passes through. A surviving mutant here is
+    # a token that should have been refused.
+    "agentic_auth/oauth/validate.py",
 ]
 
 # Passed straight to pytest inside each mutant's sandboxed copy.
 pytest_add_cli_args_test_selection = [
+    "tests/unit/oauth/test_validate.py",
     "tests/unit/test_reconciler.py",
     "tests/unit/test_dag_compiler.py",
     "tests/unit/test_dag_compiler_v2.py",
