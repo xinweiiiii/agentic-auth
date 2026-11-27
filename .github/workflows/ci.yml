@@ -112,7 +112,14 @@ jobs:
       - name: pytest
         env:
           COLUMNS: "120"
-        run: pytest -q --durations=10
+        run: pytest -q --durations=10 --ignore=tests/conformance/mcp_auth
+
+      # The release gate's suite (feature 011), on every pull request, so release.yml is never
+      # the first place it fails. Its own step so a failure names the MCP requirement.
+      - name: MCP authorization conformance
+        env:
+          COLUMNS: "120"
+        run: pytest tests/conformance/mcp_auth -v --junitxml=mcp-conformance.xml
 
   secrets:
     name: Secret scan

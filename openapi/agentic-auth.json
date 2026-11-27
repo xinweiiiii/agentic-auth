@@ -1,6 +1,89 @@
 {
   "components": {
     "schemas": {
+      "AgentClientCreate": {
+        "additionalProperties": false,
+        "description": "Map the IdP client ``client_id`` (the ``azp`` of its tokens) to this agent.\n\nThe issuer is not accepted from the request: it is always the deployment's configured\nprincipal IdP, the only one whose tokens consent will verify.",
+        "properties": {
+          "client_id": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Client Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ],
+        "title": "AgentClientCreate",
+        "type": "object"
+      },
+      "AgentClientRead": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "format": "uuid",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issuer": {
+            "title": "Issuer",
+            "type": "string"
+          },
+          "removed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed At"
+          },
+          "removed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed By"
+          }
+        },
+        "required": [
+          "id",
+          "agent_id",
+          "issuer",
+          "client_id",
+          "created_at",
+          "created_by"
+        ],
+        "title": "AgentClientRead",
+        "type": "object"
+      },
       "AgentCreate": {
         "additionalProperties": false,
         "properties": {
@@ -915,10 +998,34 @@
             "title": "Data Classes"
           },
           "scope": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Scope",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "subject_token": {
+            "anyOf": [
+              {
+                "maxLength": 16384,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Token"
+          },
+          "subject_token_type": {
+            "$ref": "#/components/schemas/SubjectTokenType",
+            "default": "urn:ietf:params:oauth:token-type:access_token"
           },
           "ttl_seconds": {
             "anyOf": [
@@ -934,77 +1041,24 @@
             "title": "Ttl Seconds"
           },
           "user_sub": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "User Sub",
-            "type": "string"
-          }
-        },
-        "required": [
-          "scope",
-          "user_sub"
-        ],
-        "title": "ConsentCreate",
-        "type": "object"
-      },
-      "ConsentRead": {
-        "additionalProperties": false,
-        "description": "What the integrator gets back. ``root_grant`` is the hop-1 token.",
-        "properties": {
-          "data_classes": {
             "anyOf": [
               {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Data Classes"
-          },
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
-          "hop_budget": {
-            "title": "Hop Budget",
-            "type": "integer"
-          },
-          "policy_version": {
-            "title": "Policy Version",
-            "type": "integer"
-          },
-          "root_grant": {
-            "title": "Root Grant",
-            "type": "string"
-          },
-          "scope": {
-            "title": "Scope",
-            "type": "string"
-          },
-          "session_id": {
-            "title": "Session Id",
-            "type": "string"
-          },
-          "user_sub": {
-            "title": "User Sub",
-            "type": "string"
+            "title": "User Sub"
           }
         },
-        "required": [
-          "session_id",
-          "root_grant",
-          "policy_version",
-          "scope",
-          "user_sub",
-          "hop_budget",
-          "expires_at"
-        ],
-        "title": "ConsentRead",
+        "title": "ConsentCreate",
+        "type": "object"
+      },
+      "ConsentRead": {
+        "additionalProperties": true,
         "type": "object"
       },
       "DataClassDecl": {
@@ -1049,7 +1103,10 @@
           "DECLARED_EXCEEDS_DISCOVERED",
           "DATA_CLASS_CONFLICT",
           "DISCOVERY_UNAVAILABLE",
-          "UNKNOWN_TOOL"
+          "UNKNOWN_TOOL",
+          "DECLARED_EXCEEDS_AUTHORIZATION_SERVER",
+          "AUTHORIZATION_SERVER_UNAVAILABLE",
+          "AUTHORIZATION_SERVER_CHECK_SKIPPED"
         ],
         "title": "DiffCode",
         "type": "string"
@@ -1570,6 +1627,26 @@
         "title": "PageInfo",
         "type": "object"
       },
+      "Page_AgentClientRead_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AgentClientRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "data",
+          "page"
+        ],
+        "title": "Page[AgentClientRead]",
+        "type": "object"
+      },
       "Page_AgentListItem_": {
         "properties": {
           "data": {
@@ -1589,6 +1666,16 @@
         ],
         "title": "Page[AgentListItem]",
         "type": "object"
+      },
+      "PrincipalSource": {
+        "description": "Where a session's consenting human came from (feature 011).\n\n``asserted``: the integrator supplied ``user_sub``; nothing verified it. ``verified``:\ntaken from an IdP token consent verified itself. ``embedded-test``: an embedded control\nplane's built-in test IdP, development and testing only.",
+        "enum": [
+          "asserted",
+          "verified",
+          "embedded-test"
+        ],
+        "title": "PrincipalSource",
+        "type": "string"
       },
       "ProposedManifestRead": {
         "additionalProperties": false,
@@ -1838,10 +1925,31 @@
         "additionalProperties": false,
         "description": "The human at the start of every chain, and what they approved.",
         "properties": {
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
           "consented_at": {
             "format": "date-time",
             "title": "Consented At",
             "type": "string"
+          },
+          "principal_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrincipalSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "scope": {
             "title": "Scope",
@@ -2277,6 +2385,15 @@
         "title": "StepUpRequest",
         "type": "object"
       },
+      "SubjectTokenType": {
+        "description": "RFC 8693 token type URIs consent accepts as evidence of the human.",
+        "enum": [
+          "urn:ietf:params:oauth:token-type:access_token",
+          "urn:ietf:params:oauth:token-type:id_token"
+        ],
+        "title": "SubjectTokenType",
+        "type": "string"
+      },
       "Taint": {
         "enum": [
           "trusted_internal",
@@ -2557,6 +2674,27 @@
         ]
       }
     },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "operationId": "get_authorization_server_metadata__well_known_oauth_authorization_server_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Authorization Server Metadata  Well Known Oauth Authorization Server Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Authorization Server Metadata",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
     "/healthz": {
       "get": {
         "operationId": "healthz_healthz_get",
@@ -2754,6 +2892,231 @@
         "summary": "Register Agent",
         "tags": [
           "agents"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/clients": {
+      "get": {
+        "operationId": "list_clients_v1_agents__agent_id__clients_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_removed",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Removed",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AgentClientRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Clients",
+        "tags": [
+          "client-mapping"
+        ]
+      },
+      "post": {
+        "operationId": "map_client_v1_agents__agent_id__clients_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentClientCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentClientRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Map Client",
+        "tags": [
+          "client-mapping"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/clients/{client_id}": {
+      "delete": {
+        "operationId": "unmap_client_v1_agents__agent_id__clients__client_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unmap Client",
+        "tags": [
+          "client-mapping"
         ]
       }
     },

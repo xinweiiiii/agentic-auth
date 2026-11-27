@@ -109,6 +109,61 @@ jobs:
       - name: Embedded control plane
         run: pytest tests/embedded -q
 
+  # MCP authorization conformance, against the wheel about to be published (feature 011,
+  # FR-018). Every publishing job needs it, so a failure here publishes nothing anywhere.
+  # Both deployments: the server one needs PostgreSQL and Redis, the embedded one nothing.
+  conformance:
+    name: MCP authorization conformance
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: agentic_auth
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app -d agentic_auth"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      # The built wheel, not the checkout: remove the source package so every import of
+      # agentic_auth resolves to what PyPI will serve. The tests come from the checkout.
+      - name: Install the built wheel
+        run: |
+          set -euo pipefail
+          wheel=$(ls dist/authzai-*.whl)
+          python -m pip install --quiet "${wheel}[server,otel]" -r requirements-dev.txt
+          rm -rf agentic_auth
+          python -c "import agentic_auth, sys; print(agentic_auth.__file__); assert 'site-packages' in agentic_auth.__file__"
+      - name: Conformance suite
+        env:
+          COLUMNS: "120"
+        run: pytest tests/conformance/mcp_auth -v --junitxml=mcp-conformance.xml
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-conformance
+          path: mcp-conformance.xml
+          if-no-files-found: error
+
   attest:
     name: Provenance
     needs: [build, verify]
@@ -128,7 +183,7 @@ jobs:
 
   publish-pypi:
     name: Publish to PyPI
-    needs: [build, attest]
+    needs: [build, attest, conformance]
     runs-on: ubuntu-latest
     environment:
       name: release
@@ -153,7 +208,7 @@ jobs:
 
   image:
     name: Server image
-    needs: [build, verify]
+    needs: [build, verify, conformance]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -190,7 +245,7 @@ jobs:
 
   github-release:
     name: GitHub release
-    needs: [build, attest, publish-pypi, image]
+    needs: [build, attest, publish-pypi, image, conformance]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -203,6 +258,11 @@ jobs:
         with:
           name: release-meta
           path: meta
+      # The conformance report rides along, so a release states what it was tested against.
+      - uses: actions/download-artifact@v4
+        with:
+          name: mcp-conformance
+          path: meta
       # Create, or on a re-run add to the release that already exists.
       - env:
           GH_TOKEN: ${{ github.token }}
@@ -214,10 +274,10 @@ jobs:
           flags=()
           [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" --clobber dist/* meta/SHA256SUMS
+            gh release upload "$TAG" --clobber dist/* meta/SHA256SUMS meta/mcp-conformance.xml
           else
             gh release create "$TAG" --verify-tag --title "$TAG" --notes-file meta/notes.md \
-              "${flags[@]}" dist/* meta/SHA256SUMS
+              "${flags[@]}" dist/* meta/SHA256SUMS meta/mcp-conformance.xml
           fi
 
   confirm:
