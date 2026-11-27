@@ -2646,7 +2646,7 @@
   },
   "info": {
     "title": "Agentic Authorization SDK \u2014 Control Plane",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "x-generated-from": "agentic_auth.main.create_app().openapi()"
   },
   "openapi": "3.1.0",
