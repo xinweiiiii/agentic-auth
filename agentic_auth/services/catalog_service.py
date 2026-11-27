@@ -17,6 +17,22 @@ from agentic_auth.repositories import compiled_policies as policies_repo
 from agentic_auth.schemas.dag import ScopeCatalog
 
 
+async def pinned_data_classes(session: AsyncSession) -> set[str]:
+    """Every data class any current policy declares: the scopes this deployment can issue
+    (an OAuth scope is a data class, feature 011 research R7)."""
+    from agentic_auth.repositories import compiled_policies
+
+    classes: set[str] = set()
+    for dag in await compiled_policies.latest_dags(session):
+        nodes = dag.get("nodes") or {}
+        for node in nodes.values():
+            declared = node.get("data_classes", {})
+            classes.update(declared.get("reads", []), declared.get("writes", []))
+        top = dag.get("data_classes") or {}
+        classes.update(top.get("reads", []), top.get("writes", []))
+    return classes
+
+
 def _key(scope: str, version: int) -> str:
     return f"dag:{scope}:{version}"
 

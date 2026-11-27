@@ -70,3 +70,19 @@ async def latest_version_number(session: AsyncSession, scope: str) -> int | None
             select(func.max(CompiledPolicy.version)).where(CompiledPolicy.scope == scope)
         )
     ).scalar_one()
+
+
+async def latest_dags(session: AsyncSession) -> list[dict[str, Any]]:
+    """The newest compiled DAG of every scope: what a new session would pin."""
+    newest = (
+        select(CompiledPolicy.scope, func.max(CompiledPolicy.version).label("version"))
+        .group_by(CompiledPolicy.scope)
+        .subquery()
+    )
+    rows = await session.execute(
+        select(CompiledPolicy.dag).join(
+            newest,
+            (CompiledPolicy.scope == newest.c.scope) & (CompiledPolicy.version == newest.c.version),
+        )
+    )
+    return [row[0] for row in rows]

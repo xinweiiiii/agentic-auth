@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import httpx
+import pytest
 from httpx import ASGITransport
 
 from agentic_auth.schemas.manifest import AgentManifest
@@ -137,3 +138,74 @@ def test_resource_present_but_none_is_treated_as_unavailable() -> None:
     outcome = ReconcilerService().reconcile(manifest, broken)
     assert outcome.status == "needs_review"
     assert outcome.diff[0].code == DiffCode.DISCOVERY_UNAVAILABLE
+
+
+# -- 0.4.0: the resource's authorization server (feature 011, M3, research R9) -------------
+
+
+def _one_tool(ref: str, data_classes: list[str]) -> dict:
+    from tests.fixtures.chains import manifest_doc
+
+    return manifest_doc(
+        "as-check-agent",
+        hop_budget=2,
+        tools=[{"ref": ref, "data_classes": data_classes, "privileged": False}],
+    )
+
+
+@pytest.fixture
+def as_check(monkeypatch):
+    from agentic_auth.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "as_metadata_enabled", True)
+
+
+async def test_scopes_the_authorization_server_issues_reconcile(as_check) -> None:
+    outcome = await _reconcile(_one_tool("mcp://kb.internal/search", ["kb.public"]))
+    assert outcome.status == "reconciled"
+    assert outcome.diff == []
+
+
+async def test_a_scope_the_authorization_server_does_not_issue_is_rejected(as_check) -> None:
+    """payments.internal advertises payments.write on refund, but its authorization server
+    never issues it: nobody could hold that capability."""
+    doc = _one_tool("mcp://payments.internal/refund", ["payments.read", "payments.write"])
+    outcome = await _reconcile(doc)
+
+    assert outcome.status == "rejected"
+    [entry] = [d for d in outcome.diff if d.code is DiffCode.DECLARED_EXCEEDS_AUTHORIZATION_SERVER]
+    assert entry.tool_ref == "mcp://payments.internal/refund"
+    assert entry.declared == ["payments.read", "payments.write"]
+    assert entry.discovered == ["payments.read"]
+    assert "payments.write" in entry.remedy and "https://as.payments.internal" in entry.remedy
+    _assert_all_actionable(outcome.diff)
+
+
+async def test_an_unreachable_authorization_server_blocks_for_review(as_check) -> None:
+    outcome = await _reconcile(_one_tool("mcp://asdown.internal/read_notes", ["notes.read"]))
+    assert outcome.status == "needs_review"
+    assert not outcome.discovery_ok
+    [entry] = outcome.diff
+    assert entry.code is DiffCode.AUTHORIZATION_SERVER_UNAVAILABLE
+    assert "https://down.internal" in entry.remedy
+
+
+@pytest.mark.parametrize(
+    "tool",
+    [
+        ("mcp://ledger.internal/read_ledger", ["ledger.read"]),  # PRM names no AS
+        ("mcp://noscopes.internal/read_wiki", ["wiki.read"]),  # AS has no scopes_supported
+    ],
+)
+async def test_nothing_to_check_against_is_noted_and_never_blocks(as_check, tool) -> None:
+    outcome = await _reconcile(_one_tool(*tool))
+    assert outcome.status == "reconciled"
+    assert [d.code for d in outcome.diff] == [DiffCode.AUTHORIZATION_SERVER_CHECK_SKIPPED]
+    _assert_all_actionable(outcome.diff)
+
+
+async def test_with_the_flag_off_the_authorization_server_is_not_consulted() -> None:
+    doc = _one_tool("mcp://payments.internal/refund", ["payments.read", "payments.write"])
+    outcome = await _reconcile(doc)
+    assert outcome.status == "reconciled"
+    assert outcome.diff == []
